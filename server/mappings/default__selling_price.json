@@ -1,0 +1,8 @@
+{
+  "pharmacyId": "default",
+  "fingerprint": "selling_price",
+  "mapping": {
+    "Selling_Price": "selling_price"
+  },
+  "savedAt": "2026-07-17T11:58:32.005Z"
+}

@@ -1,0 +1,14 @@
+{
+  "pharmacyId": "default",
+  "fingerprint": "brand|cost|expiry|product|reorder|selling|stock",
+  "mapping": {
+    "Product": "product_name",
+    "Brand": "brand",
+    "Stock": "current_stock",
+    "Cost": "cost_price",
+    "Selling": "selling_price",
+    "Reorder": "reorder_level",
+    "Expiry": "expiry_date"
+  },
+  "savedAt": "2026-07-21T21:51:30.017Z"
+}

@@ -1,0 +1,21 @@
+ItemCode,ItemName,Category,Supplier,PurchasePrice,SellingPrice,CurrentStock,ReorderLevel,ExpiryDate,BatchNumber,Location
+MED001,Paracetamol 500mg,Analgesics,PharmaDistributors Inc,2.50,5.99,245,50,2027-05-15,BATCH-2024-A1,Shelf-A1
+MED002,Ibuprofen 400mg,NSAID,MedSupply Co,3.20,7.49,189,40,2026-12-20,BATCH-2024-B2,Shelf-A2
+MED003,Amoxicillin 250mg,Antibiotics,GlobalPharma Ltd,8.75,15.99,67,30,2026-08-10,BATCH-2024-C3,Shelf-B1
+MED004,Lisinopril 10mg,Cardiovascular,HeartCare Pharma,12.40,22.99,134,25,2027-02-28,BATCH-2024-D4,Shelf-B2
+MED005,Metformin 500mg,Antidiabetic,DiabeticCare Inc,5.60,11.49,210,60,2026-11-05,BATCH-2024-E5,Shelf-C1
+MED006,Omeprazole 20mg,Gastrointestinal,GastroHealth Ltd,9.30,17.99,78,20,2027-03-12,BATCH-2024-F6,Shelf-C2
+MED007,Amlodipine 5mg,Cardiovascular,HeartCare Pharma,11.80,21.49,156,30,2027-01-18,BATCH-2024-G7,Shelf-D1
+MED008,Azithromycin 500mg,Antibiotics,GlobalPharma Ltd,14.25,25.99,45,15,2025-09-22,BATCH-2024-H8,Shelf-D2
+MED009,Losartan 50mg,Cardiovascular,HeartCare Pharma,13.50,24.49,92,20,2027-04-07,BATCH-2024-I9,Shelf-E1
+MED010,Atorvastatin 20mg,Lipid Lowering,CardioCare Inc,18.90,34.99,56,15,2026-07-30,BATCH-2024-J10,Shelf-E2
+MED011,Ciprofloxacin 500mg,Antibiotics,GlobalPharma Ltd,10.60,19.99,34,10,2025-11-14,BATCH-2024-K11,Shelf-F1
+MED012,Pantoprazole 40mg,Gastrointestinal,GastroHealth Ltd,15.30,27.99,123,25,2027-06-01,BATCH-2024-L12,Shelf-F2
+MED013,Salbutamol Inhaler,Respiratory,RespireCare Inc,22.40,39.99,88,15,2026-09-19,BATCH-2024-M13,Shelf-G1
+MED014,Furosemide 40mg,Diuretic,RenalCare Pharma,7.80,14.99,210,40,2027-03-25,BATCH-2024-N14,Shelf-G2
+MED015,Sertraline 50mg,Antidepressant,MentalHealth Ltd,16.75,29.99,67,15,2026-12-03,BATCH-2024-O15,Shelf-H1
+MED016,Tramadol 50mg,Opioid Analgesic,PainCare Inc,19.20,34.99,43,10,2025-10-28,BATCH-2024-P16,Shelf-H2
+MED017,Clopidogrel 75mg,Antiplatelet,HeartCare Pharma,21.60,38.99,72,15,2027-02-14,BATCH-2024-Q17,Shelf-I1
+MED018,Gabapentin 300mg,Anticonvulsant,NeuroCare Ltd,14.80,26.99,98,20,2027-01-09,BATCH-2024-R18,Shelf-I2
+MED019,Telmisartan 80mg,Cardiovascular,HeartCare Pharma,16.40,29.49,115,25,2027-05-22,BATCH-2024-S19,Shelf-J1
+MED020,Diclofenac 50mg,NSAID,MedSupply Co,4.90,9.99,189,45,2026-08-07,BATCH-2024-T20,Shelf-J2

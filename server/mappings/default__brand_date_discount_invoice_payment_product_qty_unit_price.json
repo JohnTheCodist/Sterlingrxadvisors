@@ -1,0 +1,15 @@
+{
+  "pharmacyId": "default",
+  "fingerprint": "brand|date|discount|invoice|payment|product|qty|unit price",
+  "mapping": {
+    "Invoice": "invoice_number",
+    "Date": "date",
+    "Product": "product_name",
+    "Brand": "brand",
+    "Qty": "quantity",
+    "Unit Price": "selling_price",
+    "Discount": "discount",
+    "Payment": "payment_method"
+  },
+  "savedAt": "2026-07-21T22:00:29.620Z"
+}

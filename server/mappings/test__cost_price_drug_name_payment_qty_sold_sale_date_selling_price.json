@@ -1,0 +1,13 @@
+{
+  "pharmacyId": "test",
+  "fingerprint": "cost price|drug name|payment|qty sold|sale date|selling price",
+  "mapping": {
+    "Drug Name": "product_name",
+    "Qty Sold": "quantity",
+    "Selling Price": "selling_price",
+    "Cost Price": "cost_price",
+    "Sale Date": "transaction_date",
+    "Payment": "payment_method"
+  },
+  "savedAt": "2026-07-24T03:12:41.355Z"
+}

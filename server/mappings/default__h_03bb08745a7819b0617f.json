@@ -1,0 +1,19 @@
+{
+  "pharmacyId": "default",
+  "fingerprint": "cost|customer_type|date|discount|drug_category|drug_name|invoice_id|payment_method|profit|quantity|sales|unit_price",
+  "mapping": {
+    "Invoice_ID": "invoice_number",
+    "Date": "transaction_date",
+    "Drug_Name": "product_name",
+    "Quantity": "quantity",
+    "Unit_Price": "selling_price",
+    "Discount": "discount",
+    "Sales": "revenue",
+    "Cost": "cost_price",
+    "Profit": "profit",
+    "Payment_Method": "payment_method",
+    "Customer_Type": "customer",
+    "Drug_Category": "subcategory"
+  },
+  "savedAt": "2026-07-25T07:19:41.254Z"
+}

@@ -1,0 +1,18 @@
+{
+  "pharmacyId": "default",
+  "fingerprint": "customer type|dosage form|drug name|manufacturer|package size|region|revenue|sale date|sales representative|strength|units sold",
+  "mapping": {
+    "Drug Name": "product_name",
+    "Manufacturer": "manufacturer",
+    "Dosage Form": "supplier",
+    "Strength": "branch",
+    "Package Size": "selling_price",
+    "Units Sold": "quantity",
+    "Revenue": "revenue",
+    "Sale Date": "date",
+    "Region": "discount",
+    "Sales Representative": "sales_representative",
+    "Customer Type": "customer"
+  },
+  "savedAt": "2026-07-18T19:11:05.331Z"
+}

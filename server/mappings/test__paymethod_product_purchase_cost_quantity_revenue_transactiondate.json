@@ -1,0 +1,13 @@
+{
+  "pharmacyId": "test",
+  "fingerprint": "paymethod|product|purchase cost|quantity|revenue|transactiondate",
+  "mapping": {
+    "Product": "product_name",
+    "Quantity": "quantity",
+    "Revenue": "revenue",
+    "Purchase Cost": "cost_price",
+    "TransactionDate": "transaction_date",
+    "PayMethod": "payment_method"
+  },
+  "savedAt": "2026-07-24T03:12:41.356Z"
+}

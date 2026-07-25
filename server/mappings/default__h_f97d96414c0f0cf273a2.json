@@ -1,0 +1,20 @@
+{
+  "pharmacyId": "default",
+  "fingerprint": "brand name|category|company|cost price (₦)|days out of stock|expiry date|form|generic|nafdac no|registration date|reorder level|route|sales channel|selling price (₦)|sku class|status|strength|therapeutic group|therapeutic subgroup|units expired (last 6mo)|units in stock|units sold monthly",
+  "mapping": {
+    "NAFDAC No": "invoice_number",
+    "Brand Name": "brand",
+    "Generic": "generic_name",
+    "Company": "manufacturer",
+    "Selling Price (₦)": "selling_price",
+    "Cost Price (₦)": "cost_price",
+    "Expiry Date": "expiry_date",
+    "Sales Channel": "sales_channel",
+    "Reorder Level": "reorder_level",
+    "Units In Stock": "quantity",
+    "Registration Date": "transaction_date",
+    "Form": "dosage_form",
+    "Strength": "strength"
+  },
+  "savedAt": "2026-07-24T14:40:27.988Z"
+}

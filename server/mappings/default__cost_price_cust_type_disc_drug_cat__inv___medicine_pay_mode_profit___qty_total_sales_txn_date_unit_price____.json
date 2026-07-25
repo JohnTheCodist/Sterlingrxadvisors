@@ -1,0 +1,18 @@
+{
+  "pharmacyId": "default",
+  "fingerprint": "cost_price|cust_type|disc|drug cat.|inv #|medicine|pay mode|profit ₦|qty|total sales|txn date|unit price (₦)",
+  "mapping": {
+    " Txn Date ": "transaction_date",
+    "Inv #": "invoice_number",
+    "Drug Cat.": "category",
+    "Medicine ": "product_name",
+    "Qty ": "quantity",
+    "Unit Price (₦)": "selling_price",
+    "Disc": "discount",
+    "Total Sales ": "revenue",
+    "Cost_Price": "cost_price",
+    "Profit ₦": "profit",
+    "Pay Mode": "payment_method"
+  },
+  "savedAt": "2026-07-24T08:40:45.207Z"
+}

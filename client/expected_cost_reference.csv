@@ -1,0 +1,502 @@
+Date,Invoice_ID,Customer_Type,Drug_Category,Drug_Name,Quantity,Unit_Price,Discount,Sales,Cost,Profit,Payment_Method,Expected_Cost,Expected_Profit,Expected_Margin_Pct,Row_Mode
+2025-08-19,INV00001,HMO,Vitamin,Vitamin C,2,1500,200,2800,1800,1000,Transfer,1800,1000,35.71,total_value
+2025-07-09,INV00002,HMO,Vitamin,Vitamin C,4,1500,500,5500,3600,1900,POS,3600,1900,34.55,total_value
+2025-07-02,INV00003,Repeat,Antibiotic,Augmentin 625mg,3,8500,0,25500,18600,6900,Transfer,18600,6900,27.06,total_value
+2025-06-21,INV00004,HMO,GI,Omeprazole,3,2200,200,6400,4200,2200,POS,4200,2200,34.38,total_value
+2025-04-26,INV00005,HMO,Vitamin,Vitamin C,2,1500,500,2500,1800,700,POS,1800,700,28.0,total_value
+2025-11-27,INV00006,Walk-in,Analgesic,Paracetamol,2,800,0,1600,800,800,POS,800,800,50.0,total_value
+2025-07-04,INV00007,Walk-in,Antibiotic,Augmentin 625mg,4,8500,0,34000,24800,9200,Transfer,24800,9200,27.06,total_value
+2025-03-04,INV00008,HMO,Vitamin,Vitamin C,4,1500,0,6000,3600,2400,Cash,3600,2400,40.0,total_value
+2025-10-15,INV00009,Repeat,Vitamin,Vitamin C,1,1500,0,1500,900,600,Cash,900,600,40.0,total_value
+2025-05-21,INV00010,Walk-in,Analgesic,Paracetamol,5,800,500,3500,2000,1500,Cash,2000,1500,42.86,total_value
+2025-08-09,INV00011,HMO,GI,Omeprazole,1,2200,0,2200,1400,800,POS,1400,800,36.36,total_value
+2025-06-12,INV00012,Walk-in,Analgesic,Paracetamol,4,800,200,3000,1600,1400,Transfer,1600,1400,46.67,total_value
+2025-02-18,INV00013,HMO,Vitamin,Vitamin C,4,1500,100,5900,3600,2300,Transfer,3600,2300,38.98,total_value
+2025-05-13,INV00014,Walk-in,Antihypertensive,Amlodipine,2,2500,200,4800,3200,1600,Cash,3200,1600,33.33,total_value
+2025-08-19,INV00015,Repeat,Antibiotic,Augmentin 625mg,4,8500,0,34000,24800,9200,POS,24800,9200,27.06,total_value
+2025-09-22,INV00016,Walk-in,Antimalarial,Coartem,3,4200,100,12500,8400,4100,POS,8400,4100,32.8,total_value
+2025-12-08,INV00017,HMO,Antihypertensive,Amlodipine,4,2500,0,10000,6400,3600,Cash,6400,3600,36.0,total_value
+2025-11-10,INV00018,Walk-in,Analgesic,Paracetamol,1,800,200,600,400,200,Transfer,400,200,33.33,total_value
+2025-11-03,INV00019,Repeat,Antihypertensive,Amlodipine,3,2500,0,7500,4800,2700,Cash,4800,2700,36.0,total_value
+2025-01-09,INV00020,HMO,Vitamin,Vitamin C,5,1500,500,7000,4500,2500,POS,4500,2500,35.71,total_value
+2025-02-07,INV00021,Walk-in,Antihypertensive,Amlodipine,3,2500,0,7500,4800,2700,Transfer,4800,2700,36.0,total_value
+2025-08-01,INV00022,HMO,Analgesic,Paracetamol,3,800,0,2400,1200,1200,Cash,1200,1200,50.0,total_value
+2025-03-26,INV00023,HMO,Vitamin,Vitamin C,2,1500,0,3000,1800,1200,Transfer,1800,1200,40.0,total_value
+2025-07-12,INV00024,Repeat,Antihypertensive,Amlodipine,1,2500,200,2300,1600,700,POS,1600,700,30.43,total_value
+2025-02-14,INV00025,HMO,Antimalarial,Coartem,1,4200,200,4000,2800,1200,Cash,2800,1200,30.0,total_value
+2025-05-09,INV00026,Walk-in,GI,Omeprazole,3,2200,0,6600,4200,2400,POS,4200,2400,36.36,total_value
+2025-07-17,INV00027,HMO,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,POS,4500,3000,40.0,total_value
+2025-12-25,INV00028,Walk-in,Antimalarial,Coartem,4,4200,0,16800,11200,5600,POS,11200,5600,33.33,total_value
+2025-09-11,INV00029,Walk-in,Antibiotic,Augmentin 625mg,1,8500,100,8400,6200,2200,Cash,6200,2200,26.19,total_value
+2025-05-31,INV00030,Repeat,Vitamin,Vitamin C,2,1500,500,2500,1800,700,Transfer,1800,700,28.0,total_value
+2025-05-18,INV00031,HMO,Vitamin,Vitamin C,3,1500,0,4500,2700,1800,Transfer,2700,1800,40.0,total_value
+2025-07-08,INV00032,Walk-in,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Transfer,4500,3000,40.0,total_value
+2025-02-26,INV00033,HMO,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,Cash,6200,2300,27.06,total_value
+2025-04-21,INV00034,Walk-in,Vitamin,Vitamin C,5,1500,200,7300,4500,2800,POS,4500,2800,38.36,total_value
+2025-07-03,INV00035,Walk-in,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Transfer,4500,3000,40.0,total_value
+2025-05-18,INV00036,HMO,GI,Omeprazole,3,2200,100,6500,4200,2300,Cash,4200,2300,35.38,total_value
+2025-07-15,INV00037,Repeat,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Cash,11200,5600,33.33,total_value
+2025-05-09,INV00038,HMO,Vitamin,Vitamin C,4,1500,200,5800,3600,2200,Transfer,3600,2200,37.93,total_value
+2025-02-21,INV00039,HMO,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,POS,6200,2300,27.06,total_value
+2025-02-24,INV00040,Walk-in,Antimalarial,Coartem,2,4200,0,8400,5600,2800,Cash,5600,2800,33.33,total_value
+2025-02-27,INV00041,Walk-in,Antimalarial,Coartem,4,4200,0,16800,11200,5600,POS,11200,5600,33.33,total_value
+2025-05-02,INV00042,HMO,Antihypertensive,Amlodipine,2,2500,0,5000,3200,1800,POS,3200,1800,36.0,total_value
+2025-01-16,INV00043,Repeat,Antihypertensive,Amlodipine,5,2500,0,12500,8000,4500,Transfer,8000,4500,36.0,total_value
+2025-03-11,INV00044,Walk-in,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Cash,11200,5600,33.33,total_value
+2025-03-13,INV00045,Repeat,Antimalarial,Coartem,1,4200,0,4200,2800,1400,POS,2800,1400,33.33,total_value
+2025-11-10,INV00046,Repeat,Vitamin,Vitamin C,4,1500,200,5800,3600,2200,POS,3600,2200,37.93,total_value
+2025-11-30,INV00047,Repeat,GI,Omeprazole,2,2200,0,4400,2800,1600,Transfer,2800,1600,36.36,total_value
+2025-06-17,INV00048,Repeat,GI,Omeprazole,4,2200,500,8300,5600,2700,Transfer,5600,2700,32.53,total_value
+2025-11-14,INV00049,HMO,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Cash,4500,3000,40.0,total_value
+2025-07-03,INV00050,HMO,GI,Omeprazole,3,2200,500,6100,4200,1900,POS,4200,1900,31.15,total_value
+2025-01-22,INV00051,Repeat,Antibiotic,Augmentin 625mg,5,8500,0,42500,31000,11500,POS,31000,11500,27.06,total_value
+2025-04-08,INV00052,HMO,Vitamin,Vitamin C,2,1500,200,2800,1800,1000,Transfer,1800,1000,35.71,total_value
+2025-07-02,INV00053,Walk-in,Antihypertensive,Amlodipine,4,2500,0,10000,6400,3600,Cash,6400,3600,36.0,total_value
+2025-05-06,INV00054,HMO,Antimalarial,Coartem,4,4200,0,16800,11200,5600,POS,11200,5600,33.33,total_value
+2025-01-31,INV00055,Walk-in,Antibiotic,Augmentin 625mg,2,8500,0,17000,12400,4600,Cash,12400,4600,27.06,total_value
+2025-10-31,INV00056,Walk-in,Antimalarial,Coartem,4,4200,0,16800,11200,5600,POS,11200,5600,33.33,total_value
+2025-08-09,INV00057,Walk-in,GI,Omeprazole,3,2200,0,6600,4200,2400,POS,4200,2400,36.36,total_value
+2025-02-24,INV00058,Walk-in,Antihypertensive,Amlodipine,3,2500,0,7500,4800,2700,Cash,4800,2700,36.0,total_value
+2025-06-20,INV00059,HMO,Antihypertensive,Amlodipine,1,2500,100,2400,1600,800,POS,1600,800,33.33,total_value
+2025-06-03,INV00060,Repeat,Analgesic,Paracetamol,5,800,500,3500,2000,1500,Transfer,2000,1500,42.86,total_value
+2025-05-15,INV00061,HMO,GI,Omeprazole,5,2200,0,11000,7000,4000,POS,7000,4000,36.36,total_value
+2025-02-24,INV00062,Repeat,Analgesic,Paracetamol,1,800,100,700,400,300,Cash,400,300,42.86,total_value
+2025-05-13,INV00063,Repeat,Antibiotic,Augmentin 625mg,4,8500,0,34000,24800,9200,Cash,24800,9200,27.06,total_value
+2025-10-08,INV00064,HMO,Antihypertensive,Amlodipine,5,2500,100,12400,8000,4400,Cash,8000,4400,35.48,total_value
+2025-05-29,INV00065,HMO,Antimalarial,Coartem,2,4200,0,8400,5600,2800,POS,5600,2800,33.33,total_value
+2025-04-30,INV00066,HMO,Antihypertensive,Amlodipine,5,2500,0,12500,8000,4500,Transfer,8000,4500,36.0,total_value
+2025-05-01,INV00067,Walk-in,Vitamin,Vitamin C,5,1500,200,7300,4500,2800,POS,4500,2800,38.36,total_value
+2025-11-02,INV00068,HMO,Antibiotic,Augmentin 625mg,5,8500,500,42000,31000,11000,Transfer,31000,11000,26.19,total_value
+2025-11-18,INV00069,HMO,Antibiotic,Augmentin 625mg,2,8500,100,16900,12400,4500,POS,12400,4500,26.63,total_value
+2025-02-20,INV00070,Repeat,Analgesic,Paracetamol,2,800,500,1100,800,300,Transfer,800,300,27.27,total_value
+2025-04-26,INV00071,Repeat,Antihypertensive,Amlodipine,5,2500,0,12500,8000,4500,POS,8000,4500,36.0,total_value
+2025-10-21,INV00072,Walk-in,Antimalarial,Coartem,1,4200,0,4200,2800,1400,POS,2800,1400,33.33,total_value
+2025-02-16,INV00073,Repeat,GI,Omeprazole,2,2200,0,4400,2800,1600,Transfer,2800,1600,36.36,total_value
+2025-07-30,INV00074,Repeat,Antimalarial,Coartem,1,4200,0,4200,2800,1400,POS,2800,1400,33.33,total_value
+2025-04-15,INV00075,Repeat,Antimalarial,Coartem,1,4200,100,4100,2800,1300,Transfer,2800,1300,31.71,total_value
+2025-02-20,INV00076,Walk-in,Antibiotic,Augmentin 625mg,3,8500,0,25500,18600,6900,POS,18600,6900,27.06,total_value
+2025-05-30,INV00077,Walk-in,Vitamin,Vitamin C,1,1500,0,1500,900,600,Cash,900,600,40.0,total_value
+2025-01-20,INV00078,Walk-in,Analgesic,Paracetamol,4,800,500,2700,1600,1100,Cash,1600,1100,40.74,total_value
+2025-07-09,INV00079,Repeat,GI,Omeprazole,3,2200,0,6600,4200,2400,Cash,4200,2400,36.36,total_value
+2025-03-01,INV00080,Repeat,Analgesic,Paracetamol,1,800,500,300,400,-100,POS,400,-100,-33.33,total_value
+2025-05-07,INV00081,HMO,Antibiotic,Augmentin 625mg,1,8500,500,8000,6200,1800,Transfer,6200,1800,22.5,total_value
+2025-06-14,INV00082,HMO,Antibiotic,Augmentin 625mg,5,8500,500,42000,31000,11000,Transfer,31000,11000,26.19,total_value
+2025-10-04,INV00083,HMO,GI,Omeprazole,2,2200,0,4400,2800,1600,Cash,2800,1600,36.36,total_value
+2025-03-15,INV00084,HMO,Antimalarial,Coartem,2,4200,200,8200,5600,2600,Transfer,5600,2600,31.71,total_value
+2025-09-21,INV00085,HMO,Antimalarial,Coartem,4,4200,200,16600,11200,5400,Transfer,11200,5400,32.53,total_value
+2025-01-22,INV00086,HMO,GI,Omeprazole,5,2200,0,11000,7000,4000,Cash,7000,4000,36.36,total_value
+2025-01-01,INV00087,Repeat,Antimalarial,Coartem,5,4200,500,20500,14000,6500,Cash,14000,6500,31.71,total_value
+2025-07-19,INV00088,Repeat,Antimalarial,Coartem,2,4200,0,8400,5600,2800,POS,5600,2800,33.33,total_value
+2025-08-25,INV00089,Repeat,Vitamin,Vitamin C,1,1500,500,1000,900,100,Cash,900,100,10.0,total_value
+2025-11-14,INV00090,Repeat,GI,Omeprazole,5,2200,0,11000,7000,4000,POS,7000,4000,36.36,total_value
+2025-11-25,INV00091,HMO,Antimalarial,Coartem,1,4200,0,4200,2800,1400,POS,2800,1400,33.33,total_value
+2025-02-18,INV00092,Repeat,Analgesic,Paracetamol,3,800,0,2400,1200,1200,Cash,1200,1200,50.0,total_value
+2025-06-22,INV00093,Walk-in,Antihypertensive,Amlodipine,3,2500,100,7400,4800,2600,Transfer,4800,2600,35.14,total_value
+2025-03-03,INV00094,Walk-in,Antihypertensive,Amlodipine,2,2500,0,5000,3200,1800,Transfer,3200,1800,36.0,total_value
+2025-11-25,INV00095,Repeat,Analgesic,Paracetamol,4,800,100,3100,1600,1500,POS,1600,1500,48.39,total_value
+2025-06-29,INV00096,HMO,Antimalarial,Coartem,3,4200,500,12100,8400,3700,POS,8400,3700,30.58,total_value
+2025-06-21,INV00097,Walk-in,GI,Omeprazole,1,2200,500,1700,1400,300,POS,1400,300,17.65,total_value
+2025-06-11,INV00098,HMO,Antihypertensive,Amlodipine,4,2500,100,9900,6400,3500,Cash,6400,3500,35.35,total_value
+2025-06-03,INV00099,Repeat,Antibiotic,Augmentin 625mg,3,8500,100,25400,18600,6800,Transfer,18600,6800,26.77,total_value
+2025-12-12,INV00100,Walk-in,GI,Omeprazole,2,2200,100,4300,2800,1500,Transfer,2800,1500,34.88,total_value
+2025-04-05,INV00101,HMO,Antibiotic,Augmentin 625mg,5,8500,0,42500,31000,11500,Transfer,31000,11500,27.06,total_value
+2025-01-08,INV00102,Repeat,Analgesic,Paracetamol,1,800,200,600,400,200,Cash,400,200,33.33,total_value
+2025-10-27,INV00103,HMO,Analgesic,Paracetamol,5,800,100,3900,2000,1900,POS,2000,1900,48.72,total_value
+2025-10-23,INV00104,Walk-in,GI,Omeprazole,1,2200,500,1700,1400,300,Transfer,1400,300,17.65,total_value
+2025-03-02,INV00105,Repeat,Antihypertensive,Amlodipine,5,2500,0,12500,8000,4500,Transfer,8000,4500,36.0,total_value
+2025-04-11,INV00106,Repeat,Vitamin,Vitamin C,2,1500,0,3000,1800,1200,Transfer,1800,1200,40.0,total_value
+2025-01-13,INV00107,HMO,Antihypertensive,Amlodipine,2,2500,200,4800,3200,1600,Cash,3200,1600,33.33,total_value
+2025-04-20,INV00108,Walk-in,Antihypertensive,Amlodipine,1,2500,0,2500,1600,900,Transfer,1600,900,36.0,total_value
+2025-05-18,INV00109,HMO,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Cash,11200,5600,33.33,total_value
+2025-03-02,INV00110,Walk-in,Antimalarial,Coartem,3,4200,100,12500,8400,4100,Transfer,8400,4100,32.8,total_value
+2025-11-14,INV00111,Repeat,Antihypertensive,Amlodipine,2,2500,0,5000,3200,1800,POS,3200,1800,36.0,total_value
+2025-05-09,INV00112,Repeat,Antimalarial,Coartem,3,4200,500,12100,8400,3700,Transfer,8400,3700,30.58,total_value
+2025-10-06,INV00113,Walk-in,Antihypertensive,Amlodipine,2,2500,100,4900,3200,1700,Transfer,3200,1700,34.69,total_value
+2025-11-16,INV00114,Repeat,Vitamin,Vitamin C,1,1500,0,1500,900,600,POS,900,600,40.0,total_value
+2025-12-29,INV00115,HMO,Analgesic,Paracetamol,3,800,100,2300,1200,1100,Cash,1200,1100,47.83,total_value
+2025-11-02,INV00116,HMO,Antihypertensive,Amlodipine,1,2500,500,2000,1600,400,POS,1600,400,20.0,total_value
+2025-02-12,INV00117,Repeat,Vitamin,Vitamin C,2,1500,500,2500,1800,700,Cash,1800,700,28.0,total_value
+2025-08-11,INV00118,HMO,Antibiotic,Augmentin 625mg,4,8500,200,33800,24800,9000,Cash,24800,9000,26.63,total_value
+2025-10-18,INV00119,Repeat,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,Cash,6200,2300,27.06,total_value
+2025-01-07,INV00120,Repeat,Antihypertensive,Amlodipine,5,2500,0,12500,8000,4500,Transfer,8000,4500,36.0,total_value
+2025-03-03,INV00121,HMO,Analgesic,Paracetamol,3,800,500,1900,1200,700,POS,1200,700,36.84,total_value
+2025-02-15,INV00122,Repeat,Antimalarial,Coartem,2,4200,200,8200,5600,2600,Transfer,5600,2600,31.71,total_value
+2025-10-19,INV00123,HMO,Antibiotic,Augmentin 625mg,5,8500,0,42500,31000,11500,Transfer,31000,11500,27.06,total_value
+2025-04-22,INV00124,Walk-in,Antihypertensive,Amlodipine,4,2500,0,10000,6400,3600,POS,6400,3600,36.0,total_value
+2025-10-27,INV00125,Repeat,GI,Omeprazole,2,2200,100,4300,2800,1500,POS,2800,1500,34.88,total_value
+2025-07-03,INV00126,Walk-in,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,POS,4500,3000,40.0,total_value
+2025-11-03,INV00127,Repeat,Analgesic,Paracetamol,2,800,0,1600,800,800,Transfer,800,800,50.0,total_value
+2025-03-27,INV00128,Walk-in,GI,Omeprazole,2,2200,0,4400,2800,1600,Cash,2800,1600,36.36,total_value
+2025-05-20,INV00129,Repeat,Antihypertensive,Amlodipine,3,2500,200,7300,4800,2500,Cash,4800,2500,34.25,total_value
+2025-02-09,INV00130,HMO,Antibiotic,Augmentin 625mg,1,8500,200,8300,6200,2100,Transfer,6200,2100,25.3,total_value
+2025-01-27,INV00131,Walk-in,Vitamin,Vitamin C,1,1500,100,1400,900,500,Cash,900,500,35.71,total_value
+2025-12-05,INV00132,Repeat,GI,Omeprazole,2,2200,100,4300,2800,1500,Cash,2800,1500,34.88,total_value
+2025-09-11,INV00133,Repeat,GI,Omeprazole,5,2200,0,11000,7000,4000,Transfer,7000,4000,36.36,total_value
+2025-10-09,INV00134,HMO,Antimalarial,Coartem,3,4200,0,12600,8400,4200,POS,8400,4200,33.33,total_value
+2025-06-10,INV00135,Walk-in,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Transfer,11200,5600,33.33,total_value
+2025-06-16,INV00136,Repeat,Antimalarial,Coartem,5,4200,500,20500,14000,6500,POS,14000,6500,31.71,total_value
+2025-06-14,INV00137,Walk-in,Analgesic,Paracetamol,5,800,0,4000,2000,2000,Cash,2000,2000,50.0,total_value
+2025-09-29,INV00138,HMO,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Cash,4500,3000,40.0,total_value
+2025-06-14,INV00139,HMO,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Transfer,4500,3000,40.0,total_value
+2025-03-15,INV00140,Walk-in,Antibiotic,Augmentin 625mg,2,8500,100,16900,12400,4500,Transfer,12400,4500,26.63,total_value
+2025-06-16,INV00141,Walk-in,GI,Omeprazole,1,2200,0,2200,1400,800,Transfer,1400,800,36.36,total_value
+2025-09-05,INV00142,Walk-in,Analgesic,Paracetamol,4,800,0,3200,1600,1600,Transfer,1600,1600,50.0,total_value
+2025-10-21,INV00143,Repeat,Vitamin,Vitamin C,4,1500,100,5900,3600,2300,Cash,3600,2300,38.98,total_value
+2025-09-11,INV00144,Walk-in,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Transfer,4500,3000,40.0,total_value
+2025-07-11,INV00145,Walk-in,Antihypertensive,Amlodipine,3,2500,200,7300,4800,2500,Transfer,4800,2500,34.25,total_value
+2025-03-17,INV00146,Repeat,GI,Omeprazole,1,2200,0,2200,1400,800,POS,1400,800,36.36,total_value
+2025-05-11,INV00147,HMO,Antimalarial,Coartem,5,4200,500,20500,14000,6500,Cash,14000,6500,31.71,total_value
+2025-01-13,INV00148,Walk-in,Antimalarial,Coartem,3,4200,200,12400,8400,4000,Transfer,8400,4000,32.26,total_value
+2025-03-30,INV00149,HMO,Antibiotic,Augmentin 625mg,2,8500,0,17000,12400,4600,Transfer,12400,4600,27.06,total_value
+2025-11-03,INV00150,HMO,Analgesic,Paracetamol,5,800,0,4000,2000,2000,Transfer,2000,2000,50.0,total_value
+2025-11-20,INV00151,Walk-in,GI,Omeprazole,2,2200,0,4400,2800,1600,Cash,2800,1600,36.36,total_value
+2025-12-25,INV00152,Walk-in,Antihypertensive,Amlodipine,4,2500,0,10000,6400,3600,POS,6400,3600,36.0,total_value
+2025-11-26,INV00153,Walk-in,Antihypertensive,Amlodipine,2,2500,0,5000,3200,1800,Cash,3200,1800,36.0,total_value
+2025-07-14,INV00154,HMO,Antibiotic,Augmentin 625mg,1,8500,500,8000,6200,1800,Transfer,6200,1800,22.5,total_value
+2025-11-15,INV00155,Repeat,Vitamin,Vitamin C,2,1500,0,3000,1800,1200,Cash,1800,1200,40.0,total_value
+2025-03-16,INV00156,HMO,Antihypertensive,Amlodipine,2,2500,200,4800,3200,1600,Transfer,3200,1600,33.33,total_value
+2025-09-05,INV00157,Repeat,Analgesic,Paracetamol,3,800,0,2400,1200,1200,POS,1200,1200,50.0,total_value
+2025-09-20,INV00158,Repeat,Analgesic,Paracetamol,1,800,0,800,400,400,POS,400,400,50.0,total_value
+2025-12-12,INV00159,Walk-in,Vitamin,Vitamin C,2,1500,100,2900,1800,1100,POS,1800,1100,37.93,total_value
+2025-10-26,INV00160,Walk-in,Antihypertensive,Amlodipine,5,2500,200,12300,8000,4300,Cash,8000,4300,34.96,total_value
+2025-01-10,INV00161,Repeat,Antibiotic,Augmentin 625mg,4,8500,200,33800,24800,9000,POS,24800,9000,26.63,total_value
+2025-02-06,INV00162,HMO,GI,Omeprazole,4,2200,500,8300,5600,2700,Transfer,5600,2700,32.53,total_value
+2025-08-20,INV00163,HMO,Antihypertensive,Amlodipine,2,2500,500,4500,3200,1300,Transfer,3200,1300,28.89,total_value
+2025-05-08,INV00164,HMO,GI,Omeprazole,1,2200,200,2000,1400,600,Transfer,1400,600,30.0,total_value
+2025-02-14,INV00165,Walk-in,Antihypertensive,Amlodipine,5,2500,0,12500,8000,4500,POS,8000,4500,36.0,total_value
+2025-01-27,INV00166,HMO,Antimalarial,Coartem,5,4200,200,20800,14000,6800,POS,14000,6800,32.69,total_value
+2025-04-22,INV00167,Repeat,GI,Omeprazole,2,2200,200,4200,2800,1400,POS,2800,1400,33.33,total_value
+2025-05-14,INV00168,Repeat,Vitamin,Vitamin C,1,1500,0,1500,900,600,POS,900,600,40.0,total_value
+2025-06-01,INV00169,HMO,Antibiotic,Augmentin 625mg,5,8500,200,42300,31000,11300,Cash,31000,11300,26.71,total_value
+2025-06-26,INV00170,Repeat,Analgesic,Paracetamol,3,800,200,2200,1200,1000,Cash,1200,1000,45.45,total_value
+2025-12-29,INV00171,Walk-in,Vitamin,Vitamin C,5,1500,500,7000,4500,2500,Cash,4500,2500,35.71,total_value
+2025-03-19,INV00172,Walk-in,Antimalarial,Coartem,2,4200,500,7900,5600,2300,POS,5600,2300,29.11,total_value
+2025-11-09,INV00173,HMO,Analgesic,Paracetamol,3,800,200,2200,1200,1000,Transfer,1200,1000,45.45,total_value
+2025-04-22,INV00174,Repeat,Vitamin,Vitamin C,5,1500,100,7400,4500,2900,Transfer,4500,2900,39.19,total_value
+2025-08-02,INV00175,Repeat,Antibiotic,Augmentin 625mg,5,8500,0,42500,31000,11500,Transfer,31000,11500,27.06,total_value
+2025-01-15,INV00176,Walk-in,Antibiotic,Augmentin 625mg,5,8500,200,42300,31000,11300,Cash,31000,11300,26.71,total_value
+2025-11-24,INV00177,Repeat,Antibiotic,Augmentin 625mg,2,8500,0,17000,12400,4600,Transfer,12400,4600,27.06,total_value
+2025-07-07,INV00178,Walk-in,Vitamin,Vitamin C,1,1500,0,1500,900,600,Cash,900,600,40.0,total_value
+2025-07-09,INV00179,Walk-in,GI,Omeprazole,5,2200,500,10500,7000,3500,POS,7000,3500,33.33,total_value
+2025-04-23,INV00180,Walk-in,Antibiotic,Augmentin 625mg,3,8500,500,25000,18600,6400,Transfer,18600,6400,25.6,total_value
+2025-08-10,INV00181,Walk-in,Vitamin,Vitamin C,3,1500,500,4000,2700,1300,Transfer,2700,1300,32.5,total_value
+2025-05-08,INV00182,HMO,Antibiotic,Augmentin 625mg,1,8500,200,8300,6200,2100,Transfer,6200,2100,25.3,total_value
+2025-10-10,INV00183,Walk-in,Antibiotic,Augmentin 625mg,2,8500,0,17000,12400,4600,Cash,12400,4600,27.06,total_value
+2025-01-20,INV00184,Walk-in,Vitamin,Vitamin C,3,1500,0,4500,2700,1800,Cash,2700,1800,40.0,total_value
+2025-05-03,INV00185,Repeat,Antibiotic,Augmentin 625mg,2,8500,0,17000,12400,4600,Cash,12400,4600,27.06,total_value
+2025-07-22,INV00186,Walk-in,GI,Omeprazole,3,2200,0,6600,4200,2400,POS,4200,2400,36.36,total_value
+2025-10-10,INV00187,Walk-in,Analgesic,Paracetamol,2,800,0,1600,800,800,Cash,800,800,50.0,total_value
+2025-10-08,INV00188,Repeat,GI,Omeprazole,1,2200,500,1700,1400,300,POS,1400,300,17.65,total_value
+2025-09-15,INV00189,Walk-in,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Transfer,11200,5600,33.33,total_value
+2025-07-24,INV00190,HMO,Antimalarial,Coartem,1,4200,500,3700,2800,900,Transfer,2800,900,24.32,total_value
+2025-12-01,INV00191,Repeat,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Cash,4500,3000,40.0,total_value
+2025-05-01,INV00192,Walk-in,Antihypertensive,Amlodipine,1,2500,0,2500,1600,900,Cash,1600,900,36.0,total_value
+2025-11-04,INV00193,HMO,GI,Omeprazole,4,2200,100,8700,5600,3100,Transfer,5600,3100,35.63,total_value
+2025-09-10,INV00194,Walk-in,Analgesic,Paracetamol,2,800,0,1600,800,800,Transfer,800,800,50.0,total_value
+2025-08-21,INV00195,HMO,Analgesic,Paracetamol,3,800,0,2400,1200,1200,Transfer,1200,1200,50.0,total_value
+2025-04-09,INV00196,Walk-in,Analgesic,Paracetamol,1,800,100,700,400,300,Transfer,400,300,42.86,total_value
+2025-04-01,INV00197,HMO,Analgesic,Paracetamol,2,800,200,1400,800,600,Transfer,800,600,42.86,total_value
+2025-06-25,INV00198,Repeat,Vitamin,Vitamin C,2,1500,500,2500,1800,700,POS,1800,700,28.0,total_value
+2025-02-26,INV00199,HMO,Analgesic,Paracetamol,3,800,0,2400,1200,1200,Cash,1200,1200,50.0,total_value
+2025-06-07,INV00200,HMO,Antimalarial,Coartem,5,4200,500,20500,14000,6500,Cash,14000,6500,31.71,total_value
+2025-05-01,INV00201,Walk-in,Antimalarial,Coartem,5,4200,500,20500,14000,6500,Transfer,14000,6500,31.71,total_value
+2025-01-21,INV00202,Repeat,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Transfer,11200,5600,33.33,total_value
+2025-01-31,INV00203,Repeat,Antihypertensive,Amlodipine,3,2500,0,7500,4800,2700,POS,4800,2700,36.0,total_value
+2025-07-24,INV00204,HMO,Vitamin,Vitamin C,5,1500,500,7000,4500,2500,Transfer,4500,2500,35.71,total_value
+2025-11-22,INV00205,Repeat,Antihypertensive,Amlodipine,5,2500,100,12400,8000,4400,Cash,8000,4400,35.48,total_value
+2025-07-30,INV00206,Repeat,Antihypertensive,Amlodipine,2,2500,0,5000,3200,1800,Cash,3200,1800,36.0,total_value
+2025-07-30,INV00207,Walk-in,Antimalarial,Coartem,4,4200,500,16300,11200,5100,POS,11200,5100,31.29,total_value
+2025-12-20,INV00208,Walk-in,Analgesic,Paracetamol,1,800,200,600,400,200,Cash,400,200,33.33,total_value
+2025-07-12,INV00209,Walk-in,Vitamin,Vitamin C,4,1500,200,5800,3600,2200,Transfer,3600,2200,37.93,total_value
+2025-02-05,INV00210,Repeat,Antibiotic,Augmentin 625mg,3,8500,0,25500,18600,6900,Cash,18600,6900,27.06,total_value
+2025-04-29,INV00211,Repeat,Antimalarial,Coartem,5,4200,0,21000,14000,7000,Transfer,14000,7000,33.33,total_value
+2025-12-22,INV00212,HMO,GI,Omeprazole,4,2200,0,8800,5600,3200,Cash,5600,3200,36.36,total_value
+2025-02-01,INV00213,HMO,Antihypertensive,Amlodipine,3,2500,200,7300,4800,2500,Transfer,4800,2500,34.25,total_value
+2025-09-12,INV00214,Walk-in,Antimalarial,Coartem,3,4200,0,12600,8400,4200,Cash,8400,4200,33.33,total_value
+2025-09-10,INV00215,HMO,Analgesic,Paracetamol,1,800,100,700,400,300,Transfer,400,300,42.86,total_value
+2025-03-15,INV00216,Walk-in,Vitamin,Vitamin C,3,1500,200,4300,2700,1600,POS,2700,1600,37.21,total_value
+2025-01-23,INV00217,Walk-in,Antibiotic,Augmentin 625mg,3,8500,200,25300,18600,6700,Cash,18600,6700,26.48,total_value
+2025-03-21,INV00218,HMO,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Cash,11200,5600,33.33,total_value
+2025-03-26,INV00219,HMO,Analgesic,Paracetamol,5,800,0,4000,2000,2000,Cash,2000,2000,50.0,total_value
+2025-01-24,INV00220,HMO,Antibiotic,Augmentin 625mg,1,8500,100,8400,6200,2200,Transfer,6200,2200,26.19,total_value
+2025-03-08,INV00221,HMO,Vitamin,Vitamin C,5,1500,200,7300,4500,2800,Cash,4500,2800,38.36,total_value
+2025-03-07,INV00222,Walk-in,Antibiotic,Augmentin 625mg,5,8500,100,42400,31000,11400,Cash,31000,11400,26.89,total_value
+2025-05-05,INV00223,Repeat,GI,Omeprazole,2,2200,0,4400,2800,1600,Cash,2800,1600,36.36,total_value
+2025-11-13,INV00224,Walk-in,Antimalarial,Coartem,3,4200,0,12600,8400,4200,Cash,8400,4200,33.33,total_value
+2025-11-11,INV00225,Repeat,GI,Omeprazole,5,2200,0,11000,7000,4000,Cash,7000,4000,36.36,total_value
+2025-07-23,INV00226,Repeat,Antibiotic,Augmentin 625mg,4,8500,0,34000,24800,9200,POS,24800,9200,27.06,total_value
+2025-10-14,INV00227,HMO,GI,Omeprazole,3,2200,0,6600,4200,2400,POS,4200,2400,36.36,total_value
+2025-03-01,INV00228,Walk-in,GI,Omeprazole,2,2200,500,3900,2800,1100,POS,2800,1100,28.21,total_value
+2025-11-14,INV00229,Repeat,Antihypertensive,Amlodipine,3,2500,0,7500,4800,2700,Cash,4800,2700,36.0,total_value
+2025-04-29,INV00230,HMO,Antimalarial,Coartem,1,4200,100,4100,2800,1300,POS,2800,1300,31.71,total_value
+2025-11-26,INV00231,Walk-in,Antibiotic,Augmentin 625mg,4,8500,0,34000,24800,9200,Cash,24800,9200,27.06,total_value
+2025-02-16,INV00232,Repeat,Antimalarial,Coartem,2,4200,200,8200,5600,2600,Transfer,5600,2600,31.71,total_value
+2025-08-28,INV00233,Repeat,GI,Omeprazole,4,2200,500,8300,5600,2700,POS,5600,2700,32.53,total_value
+2025-09-11,INV00234,Repeat,Vitamin,Vitamin C,3,1500,500,4000,2700,1300,POS,2700,1300,32.5,total_value
+2025-03-23,INV00235,HMO,GI,Omeprazole,1,2200,200,2000,1400,600,POS,1400,600,30.0,total_value
+2025-10-11,INV00236,HMO,Analgesic,Paracetamol,1,800,0,800,400,400,POS,400,400,50.0,total_value
+2025-07-01,INV00237,HMO,Vitamin,Vitamin C,1,1500,500,1000,900,100,Transfer,900,100,10.0,total_value
+2025-12-09,INV00238,Repeat,GI,Omeprazole,3,2200,100,6500,4200,2300,Transfer,4200,2300,35.38,total_value
+2025-09-16,INV00239,HMO,GI,Omeprazole,4,2200,0,8800,5600,3200,Cash,5600,3200,36.36,total_value
+2025-11-07,INV00240,Repeat,GI,Omeprazole,1,2200,0,2200,1400,800,Transfer,1400,800,36.36,total_value
+2025-01-21,INV00241,Walk-in,Vitamin,Vitamin C,1,1500,0,1500,900,600,Cash,900,600,40.0,total_value
+2025-04-02,INV00242,Repeat,Antibiotic,Augmentin 625mg,3,8500,0,25500,18600,6900,Transfer,18600,6900,27.06,total_value
+2025-11-01,INV00243,Repeat,Analgesic,Paracetamol,4,800,0,3200,1600,1600,Transfer,1600,1600,50.0,total_value
+2025-02-15,INV00244,HMO,Vitamin,Vitamin C,1,1500,0,1500,900,600,POS,900,600,40.0,total_value
+2025-12-25,INV00245,HMO,GI,Omeprazole,1,2200,500,1700,1400,300,Cash,1400,300,17.65,total_value
+2025-06-25,INV00246,HMO,Analgesic,Paracetamol,1,800,0,800,400,400,Cash,400,400,50.0,total_value
+2025-10-30,INV00247,Walk-in,Vitamin,Vitamin C,1,1500,100,1400,900,500,Transfer,900,500,35.71,total_value
+2025-06-22,INV00248,HMO,GI,Omeprazole,4,2200,200,8600,5600,3000,Cash,5600,3000,34.88,total_value
+2025-08-12,INV00249,Walk-in,Vitamin,Vitamin C,5,1500,200,7300,4500,2800,Transfer,4500,2800,38.36,total_value
+2025-06-12,INV00250,Repeat,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,Cash,6200,2300,27.06,total_value
+2025-08-25,INV00251,Walk-in,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,POS,6200,2300,27.06,total_value
+2025-01-15,INV00252,Walk-in,Vitamin,Vitamin C,3,1500,100,4400,2700,1700,POS,2700,1700,38.64,total_value
+2025-08-26,INV00253,Walk-in,Antihypertensive,Amlodipine,5,2500,500,12000,8000,4000,Transfer,8000,4000,33.33,total_value
+2025-02-16,INV00254,HMO,GI,Omeprazole,5,2200,0,11000,7000,4000,Transfer,7000,4000,36.36,total_value
+2025-04-21,INV00255,Repeat,Antimalarial,Coartem,3,4200,0,12600,8400,4200,Transfer,8400,4200,33.33,total_value
+2025-06-27,INV00256,Repeat,GI,Omeprazole,2,2200,200,4200,2800,1400,POS,2800,1400,33.33,total_value
+2025-12-21,INV00257,Walk-in,Antimalarial,Coartem,4,4200,0,16800,11200,5600,POS,11200,5600,33.33,total_value
+2025-06-14,INV00258,Walk-in,Analgesic,Paracetamol,3,800,100,2300,1200,1100,Transfer,1200,1100,47.83,total_value
+2025-10-09,INV00259,HMO,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Cash,11200,5600,33.33,total_value
+2025-04-20,INV00260,Repeat,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Cash,11200,5600,33.33,total_value
+2025-07-09,INV00261,Repeat,Analgesic,Paracetamol,5,800,0,4000,2000,2000,POS,2000,2000,50.0,total_value
+2025-01-30,INV00262,HMO,GI,Omeprazole,2,2200,0,4400,2800,1600,Cash,2800,1600,36.36,total_value
+2025-05-06,INV00263,Walk-in,Antihypertensive,Amlodipine,5,2500,200,12300,8000,4300,Cash,8000,4300,34.96,total_value
+2025-05-19,INV00264,HMO,Vitamin,Vitamin C,5,1500,200,7300,4500,2800,Transfer,4500,2800,38.36,total_value
+2025-11-24,INV00265,Repeat,GI,Omeprazole,3,2200,0,6600,4200,2400,Cash,4200,2400,36.36,total_value
+2025-03-30,INV00266,HMO,Antihypertensive,Amlodipine,5,2500,100,12400,8000,4400,POS,8000,4400,35.48,total_value
+2025-09-09,INV00267,Walk-in,Vitamin,Vitamin C,2,1500,0,3000,1800,1200,Cash,1800,1200,40.0,total_value
+2025-01-01,INV00268,HMO,GI,Omeprazole,5,2200,500,10500,7000,3500,Transfer,7000,3500,33.33,total_value
+2025-11-11,INV00269,Repeat,GI,Omeprazole,2,2200,100,4300,2800,1500,POS,2800,1500,34.88,total_value
+2025-03-29,INV00270,HMO,GI,Omeprazole,1,2200,200,2000,1400,600,Cash,1400,600,30.0,total_value
+2025-01-03,INV00271,Walk-in,Antimalarial,Coartem,1,4200,0,4200,2800,1400,Cash,2800,1400,33.33,total_value
+2025-03-17,INV00272,HMO,Analgesic,Paracetamol,3,800,0,2400,1200,1200,Cash,1200,1200,50.0,total_value
+2025-04-13,INV00273,Repeat,Antihypertensive,Amlodipine,4,2500,500,9500,6400,3100,POS,6400,3100,32.63,total_value
+2025-10-31,INV00274,Repeat,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Cash,11200,5600,33.33,total_value
+2025-06-30,INV00275,HMO,Antihypertensive,Amlodipine,5,2500,0,12500,8000,4500,Cash,8000,4500,36.0,total_value
+2025-02-11,INV00276,HMO,GI,Omeprazole,1,2200,100,2100,1400,700,Cash,1400,700,33.33,total_value
+2025-08-16,INV00277,HMO,Antimalarial,Coartem,5,4200,200,20800,14000,6800,POS,14000,6800,32.69,total_value
+2025-01-23,INV00278,HMO,Analgesic,Paracetamol,5,800,200,3800,2000,1800,Cash,2000,1800,47.37,total_value
+2025-10-05,INV00279,Walk-in,Vitamin,Vitamin C,4,1500,0,6000,3600,2400,POS,3600,2400,40.0,total_value
+2025-09-20,INV00280,Walk-in,Analgesic,Paracetamol,2,800,200,1400,800,600,POS,800,600,42.86,total_value
+2025-02-10,INV00281,HMO,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,Transfer,6200,2300,27.06,total_value
+2025-07-14,INV00282,Walk-in,Analgesic,Paracetamol,1,800,0,800,400,400,Cash,400,400,50.0,total_value
+2025-08-30,INV00283,HMO,Analgesic,Paracetamol,2,800,0,1600,800,800,POS,800,800,50.0,total_value
+2025-12-12,INV00284,Repeat,Antihypertensive,Amlodipine,4,2500,0,10000,6400,3600,POS,6400,3600,36.0,total_value
+2025-05-17,INV00285,HMO,Analgesic,Paracetamol,2,800,0,1600,800,800,Transfer,800,800,50.0,total_value
+2025-02-12,INV00286,Walk-in,Antibiotic,Augmentin 625mg,2,8500,200,16800,12400,4400,Transfer,12400,4400,26.19,total_value
+2025-12-14,INV00287,HMO,Antibiotic,Augmentin 625mg,3,8500,0,25500,18600,6900,POS,18600,6900,27.06,total_value
+2025-09-14,INV00288,Repeat,Analgesic,Paracetamol,5,800,0,4000,2000,2000,Transfer,2000,2000,50.0,total_value
+2025-05-29,INV00289,Walk-in,Antihypertensive,Amlodipine,2,2500,0,5000,3200,1800,POS,3200,1800,36.0,total_value
+2025-08-13,INV00290,Walk-in,Antimalarial,Coartem,5,4200,0,21000,14000,7000,Transfer,14000,7000,33.33,total_value
+2025-09-18,INV00291,Walk-in,Vitamin,Vitamin C,3,1500,0,4500,2700,1800,Cash,2700,1800,40.0,total_value
+2025-06-17,INV00292,Repeat,Antihypertensive,Amlodipine,3,2500,200,7300,4800,2500,POS,4800,2500,34.25,total_value
+2025-01-29,INV00293,HMO,Antibiotic,Augmentin 625mg,3,8500,0,25500,18600,6900,Cash,18600,6900,27.06,total_value
+2025-11-04,INV00294,Repeat,Antimalarial,Coartem,1,4200,0,4200,2800,1400,Cash,2800,1400,33.33,total_value
+2025-04-06,INV00295,Repeat,GI,Omeprazole,2,2200,0,4400,2800,1600,POS,2800,1600,36.36,total_value
+2025-12-10,INV00296,HMO,GI,Omeprazole,4,2200,200,8600,5600,3000,Cash,5600,3000,34.88,total_value
+2025-01-30,INV00297,HMO,Analgesic,Paracetamol,2,800,0,1600,800,800,Transfer,800,800,50.0,total_value
+2025-03-26,INV00298,HMO,Antibiotic,Augmentin 625mg,4,8500,100,33900,24800,9100,Transfer,24800,9100,26.84,total_value
+2025-02-24,INV00299,HMO,Antihypertensive,Amlodipine,3,2500,100,7400,4800,2600,Transfer,4800,2600,35.14,total_value
+2025-11-27,INV00300,HMO,Vitamin,Vitamin C,2,1500,100,2900,1800,1100,POS,1800,1100,37.93,total_value
+2025-09-10,INV00301,HMO,GI,Omeprazole,3,2200,0,6600,4200,2400,Cash,4200,2400,36.36,total_value
+2025-12-13,INV00302,Repeat,Analgesic,Paracetamol,5,800,100,3900,2000,1900,Transfer,2000,1900,48.72,total_value
+2025-12-24,INV00303,Walk-in,Antibiotic,Augmentin 625mg,4,8500,200,33800,24800,9000,Transfer,24800,9000,26.63,total_value
+2025-07-01,INV00304,Repeat,Antihypertensive,Amlodipine,1,2500,100,2400,1600,800,Cash,1600,800,33.33,total_value
+2025-01-30,INV00305,Walk-in,Vitamin,Vitamin C,4,1500,100,5900,3600,2300,Transfer,3600,2300,38.98,total_value
+2025-04-25,INV00306,Repeat,Analgesic,Paracetamol,5,800,100,3900,2000,1900,Transfer,2000,1900,48.72,total_value
+2025-09-04,INV00307,HMO,Antihypertensive,Amlodipine,1,2500,0,2500,1600,900,Transfer,1600,900,36.0,total_value
+2025-10-06,INV00308,HMO,GI,Omeprazole,5,2200,200,10800,7000,3800,Cash,7000,3800,35.19,total_value
+2025-03-09,INV00309,Repeat,GI,Omeprazole,3,2200,0,6600,4200,2400,Cash,4200,2400,36.36,total_value
+2025-12-06,INV00310,HMO,Antihypertensive,Amlodipine,1,2500,200,2300,1600,700,Transfer,1600,700,30.43,total_value
+2025-08-12,INV00311,HMO,Vitamin,Vitamin C,3,1500,200,4300,2700,1600,Cash,2700,1600,37.21,total_value
+2025-05-30,INV00312,HMO,Analgesic,Paracetamol,2,800,0,1600,800,800,POS,800,800,50.0,total_value
+2025-11-08,INV00313,Walk-in,Analgesic,Paracetamol,5,800,500,3500,2000,1500,POS,2000,1500,42.86,total_value
+2025-06-16,INV00314,Repeat,Analgesic,Paracetamol,4,800,100,3100,1600,1500,Transfer,1600,1500,48.39,total_value
+2025-11-24,INV00315,Repeat,Antimalarial,Coartem,4,4200,500,16300,11200,5100,Transfer,11200,5100,31.29,total_value
+2025-07-15,INV00316,Walk-in,Antibiotic,Augmentin 625mg,5,8500,0,42500,31000,11500,Cash,31000,11500,27.06,total_value
+2025-08-22,INV00317,Repeat,Antibiotic,Augmentin 625mg,5,8500,500,42000,31000,11000,POS,31000,11000,26.19,total_value
+2025-09-05,INV00318,Repeat,Analgesic,Paracetamol,5,800,500,3500,2000,1500,Transfer,2000,1500,42.86,total_value
+2025-11-17,INV00319,HMO,Analgesic,Paracetamol,5,800,0,4000,2000,2000,Transfer,2000,2000,50.0,total_value
+2025-10-11,INV00320,HMO,Antihypertensive,Amlodipine,3,2500,500,7000,4800,2200,Transfer,4800,2200,31.43,total_value
+2025-10-02,INV00321,Repeat,Antibiotic,Augmentin 625mg,5,8500,0,42500,31000,11500,Transfer,31000,11500,27.06,total_value
+2025-10-07,INV00322,Walk-in,GI,Omeprazole,2,2200,0,4400,2800,1600,POS,2800,1600,36.36,total_value
+2025-05-06,INV00323,HMO,Analgesic,Paracetamol,3,800,0,2400,1200,1200,Cash,1200,1200,50.0,total_value
+2025-01-25,INV00324,Walk-in,Analgesic,Paracetamol,1,800,0,800,400,400,Cash,400,400,50.0,total_value
+2025-12-21,INV00325,Walk-in,Analgesic,Paracetamol,2,800,0,1600,800,800,Transfer,800,800,50.0,total_value
+2025-01-06,INV00326,Walk-in,Antimalarial,Coartem,3,4200,100,12500,8400,4100,Transfer,8400,4100,32.8,total_value
+2025-03-10,INV00327,HMO,Antimalarial,Coartem,3,4200,0,12600,8400,4200,Transfer,8400,4200,33.33,total_value
+2025-01-13,INV00328,Repeat,Vitamin,Vitamin C,5,1500,500,7000,4500,2500,POS,4500,2500,35.71,total_value
+2025-12-05,INV00329,HMO,Antihypertensive,Amlodipine,3,2500,500,7000,4800,2200,POS,4800,2200,31.43,total_value
+2025-05-06,INV00330,HMO,GI,Omeprazole,5,2200,0,11000,7000,4000,Transfer,7000,4000,36.36,total_value
+2025-11-24,INV00331,HMO,Antibiotic,Augmentin 625mg,1,8500,500,8000,6200,1800,Transfer,6200,1800,22.5,total_value
+2025-10-25,INV00332,HMO,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,POS,6200,2300,27.06,total_value
+2025-07-11,INV00333,Walk-in,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Transfer,4500,3000,40.0,total_value
+2025-02-26,INV00334,Repeat,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,Transfer,6200,2300,27.06,total_value
+2025-11-25,INV00335,HMO,Antimalarial,Coartem,3,4200,0,12600,8400,4200,Transfer,8400,4200,33.33,total_value
+2025-03-15,INV00336,Walk-in,Vitamin,Vitamin C,4,1500,0,6000,3600,2400,Cash,3600,2400,40.0,total_value
+2025-04-17,INV00337,Walk-in,Analgesic,Paracetamol,5,800,200,3800,2000,1800,Cash,2000,1800,47.37,total_value
+2025-11-05,INV00338,Walk-in,Analgesic,Paracetamol,2,800,0,1600,800,800,POS,800,800,50.0,total_value
+2025-12-25,INV00339,Walk-in,Analgesic,Paracetamol,1,800,0,800,400,400,Cash,400,400,50.0,total_value
+2025-03-25,INV00340,Repeat,Antibiotic,Augmentin 625mg,2,8500,0,17000,12400,4600,Cash,12400,4600,27.06,total_value
+2025-08-11,INV00341,Repeat,Analgesic,Paracetamol,1,800,100,700,400,300,POS,400,300,42.86,total_value
+2025-09-11,INV00342,Walk-in,GI,Omeprazole,1,2200,0,2200,1400,800,Transfer,1400,800,36.36,total_value
+2025-12-09,INV00343,Repeat,Vitamin,Vitamin C,2,1500,0,3000,1800,1200,Cash,1800,1200,40.0,total_value
+2025-07-03,INV00344,Repeat,GI,Omeprazole,2,2200,0,4400,2800,1600,POS,2800,1600,36.36,total_value
+2025-12-04,INV00345,HMO,Antihypertensive,Amlodipine,3,2500,200,7300,4800,2500,Cash,4800,2500,34.25,total_value
+2025-03-12,INV00346,Walk-in,Antibiotic,Augmentin 625mg,4,8500,100,33900,24800,9100,POS,24800,9100,26.84,total_value
+2025-01-03,INV00347,HMO,Antihypertensive,Amlodipine,3,2500,0,7500,4800,2700,POS,4800,2700,36.0,total_value
+2025-04-25,INV00348,Repeat,Antibiotic,Augmentin 625mg,2,8500,0,17000,12400,4600,Transfer,12400,4600,27.06,total_value
+2025-07-13,INV00349,HMO,Antimalarial,Coartem,1,4200,0,4200,2800,1400,Cash,2800,1400,33.33,total_value
+2025-09-16,INV00350,Walk-in,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Cash,4500,3000,40.0,total_value
+2025-01-02,INV00351,Repeat,GI,Omeprazole,2,2200,200,4200,2800,1400,Cash,2800,1400,33.33,total_value
+2025-08-09,INV00352,HMO,Analgesic,Paracetamol,3,800,500,1900,1200,700,POS,1200,700,36.84,total_value
+2025-05-18,INV00353,Repeat,Antihypertensive,Amlodipine,2,2500,200,4800,3200,1600,Transfer,3200,1600,33.33,total_value
+2025-04-07,INV00354,HMO,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Transfer,4500,3000,40.0,total_value
+2025-05-27,INV00355,HMO,Antimalarial,Coartem,5,4200,200,20800,14000,6800,POS,14000,6800,32.69,total_value
+2025-08-19,INV00356,Repeat,GI,Omeprazole,3,2200,500,6100,4200,1900,POS,4200,1900,31.15,total_value
+2025-05-04,INV00357,Walk-in,GI,Omeprazole,5,2200,0,11000,7000,4000,Transfer,7000,4000,36.36,total_value
+2025-08-16,INV00358,Repeat,Antibiotic,Augmentin 625mg,4,8500,100,33900,24800,9100,POS,24800,9100,26.84,total_value
+2025-03-23,INV00359,Walk-in,Vitamin,Vitamin C,2,1500,100,2900,1800,1100,Transfer,1800,1100,37.93,total_value
+2025-04-27,INV00360,Repeat,Antihypertensive,Amlodipine,1,2500,200,2300,1600,700,Transfer,1600,700,30.43,total_value
+2025-09-23,INV00361,Repeat,GI,Omeprazole,2,2200,0,4400,2800,1600,POS,2800,1600,36.36,total_value
+2025-12-02,INV00362,Walk-in,Analgesic,Paracetamol,5,800,0,4000,2000,2000,Transfer,2000,2000,50.0,total_value
+2025-10-19,INV00363,HMO,Antihypertensive,Amlodipine,5,2500,0,12500,8000,4500,Transfer,8000,4500,36.0,total_value
+2025-09-09,INV00364,HMO,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,Cash,6200,2300,27.06,total_value
+2025-03-16,INV00365,Walk-in,Antibiotic,Augmentin 625mg,2,8500,100,16900,12400,4500,POS,12400,4500,26.63,total_value
+2025-04-03,INV00366,HMO,Antihypertensive,Amlodipine,2,2500,0,5000,3200,1800,POS,3200,1800,36.0,total_value
+2025-08-08,INV00367,Walk-in,Vitamin,Vitamin C,1,1500,100,1400,900,500,POS,900,500,35.71,total_value
+2025-08-18,INV00368,Walk-in,Vitamin,Vitamin C,1,1500,0,1500,900,600,Transfer,900,600,40.0,total_value
+2025-04-08,INV00369,Repeat,GI,Omeprazole,1,2200,0,2200,1400,800,Transfer,1400,800,36.36,total_value
+2025-04-28,INV00370,Repeat,GI,Omeprazole,3,2200,100,6500,4200,2300,Transfer,4200,2300,35.38,total_value
+2025-09-16,INV00371,Walk-in,Antihypertensive,Amlodipine,4,2500,0,10000,6400,3600,POS,6400,3600,36.0,total_value
+2025-12-13,INV00372,Walk-in,Antihypertensive,Amlodipine,3,2500,0,7500,4800,2700,Cash,4800,2700,36.0,total_value
+2025-08-06,INV00373,Repeat,Vitamin,Vitamin C,4,1500,100,5900,3600,2300,POS,3600,2300,38.98,total_value
+2025-01-06,INV00374,Repeat,GI,Omeprazole,3,2200,100,6500,4200,2300,POS,4200,2300,35.38,total_value
+2025-09-02,INV00375,Repeat,Antibiotic,Augmentin 625mg,5,8500,200,42300,31000,11300,Cash,31000,11300,26.71,total_value
+2025-03-12,INV00376,HMO,Antihypertensive,Amlodipine,3,2500,0,7500,4800,2700,POS,4800,2700,36.0,total_value
+2025-04-01,INV00377,Repeat,Antibiotic,Augmentin 625mg,4,8500,200,33800,24800,9000,Cash,24800,9000,26.63,total_value
+2025-05-09,INV00378,Walk-in,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,Cash,6200,2300,27.06,total_value
+2025-02-25,INV00379,Walk-in,Analgesic,Paracetamol,1,800,200,600,400,200,POS,400,200,33.33,total_value
+2025-04-23,INV00380,HMO,Antibiotic,Augmentin 625mg,3,8500,100,25400,18600,6800,Transfer,18600,6800,26.77,total_value
+2025-12-14,INV00381,Walk-in,Antimalarial,Coartem,1,4200,0,4200,2800,1400,POS,2800,1400,33.33,total_value
+2025-02-25,INV00382,HMO,Vitamin,Vitamin C,1,1500,100,1400,900,500,Transfer,900,500,35.71,total_value
+2025-04-17,INV00383,Walk-in,Vitamin,Vitamin C,5,1500,500,7000,4500,2500,POS,4500,2500,35.71,total_value
+2025-04-10,INV00384,HMO,Antihypertensive,Amlodipine,4,2500,0,10000,6400,3600,Cash,6400,3600,36.0,total_value
+2025-03-30,INV00385,Repeat,Antihypertensive,Amlodipine,2,2500,0,5000,3200,1800,Cash,3200,1800,36.0,total_value
+2025-05-08,INV00386,Walk-in,Analgesic,Paracetamol,5,800,200,3800,2000,1800,Transfer,2000,1800,47.37,total_value
+2025-10-03,INV00387,HMO,Analgesic,Paracetamol,3,800,0,2400,1200,1200,Transfer,1200,1200,50.0,total_value
+2025-06-18,INV00388,Repeat,Antibiotic,Augmentin 625mg,2,8500,200,16800,12400,4400,Transfer,12400,4400,26.19,total_value
+2025-11-15,INV00389,Repeat,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Cash,4500,3000,40.0,total_value
+2025-09-09,INV00390,Repeat,Antihypertensive,Amlodipine,1,2500,0,2500,1600,900,POS,1600,900,36.0,total_value
+2025-04-20,INV00391,HMO,Antimalarial,Coartem,3,4200,0,12600,8400,4200,POS,8400,4200,33.33,total_value
+2025-07-10,INV00392,HMO,Antihypertensive,Amlodipine,1,2500,200,2300,1600,700,Cash,1600,700,30.43,total_value
+2025-07-12,INV00393,Walk-in,Antihypertensive,Amlodipine,2,2500,0,5000,3200,1800,Transfer,3200,1800,36.0,total_value
+2025-08-20,INV00394,Walk-in,Analgesic,Paracetamol,4,800,0,3200,1600,1600,Cash,1600,1600,50.0,total_value
+2025-02-09,INV00395,Repeat,GI,Omeprazole,1,2200,0,2200,1400,800,Cash,1400,800,36.36,total_value
+2025-01-08,INV00396,HMO,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Cash,4500,3000,40.0,total_value
+2025-04-28,INV00397,HMO,Analgesic,Paracetamol,2,800,100,1500,800,700,POS,800,700,46.67,total_value
+2025-02-20,INV00398,Repeat,Analgesic,Paracetamol,5,800,200,3800,2000,1800,Cash,2000,1800,47.37,total_value
+2025-08-21,INV00399,Repeat,Analgesic,Paracetamol,3,800,0,2400,1200,1200,POS,1200,1200,50.0,total_value
+2025-07-07,INV00400,Walk-in,Vitamin,Vitamin C,2,1500,0,3000,1800,1200,Cash,1800,1200,40.0,total_value
+2025-03-05,INV00401,Repeat,GI,Omeprazole,5,2200,100,10900,7000,3900,Transfer,7000,3900,35.78,total_value
+2025-05-02,INV00402,Repeat,Vitamin,Vitamin C,1,1500,0,1500,900,600,Cash,900,600,40.0,total_value
+2025-10-10,INV00403,Walk-in,Antihypertensive,Amlodipine,1,2500,200,2300,1600,700,Cash,1600,700,30.43,total_value
+2025-09-27,INV00404,Walk-in,Analgesic,Paracetamol,1,800,200,600,400,200,Cash,400,200,33.33,total_value
+2025-04-29,INV00405,Repeat,Antimalarial,Coartem,3,4200,0,12600,8400,4200,Cash,8400,4200,33.33,total_value
+2025-06-27,INV00406,Walk-in,Antimalarial,Coartem,3,4200,500,12100,8400,3700,POS,8400,3700,30.58,total_value
+2025-08-01,INV00407,Repeat,Antimalarial,Coartem,2,4200,100,8300,5600,2700,POS,5600,2700,32.53,total_value
+2025-11-03,INV00408,Walk-in,Analgesic,Paracetamol,1,800,200,600,400,200,POS,400,200,33.33,total_value
+2025-08-20,INV00409,Repeat,GI,Omeprazole,1,2200,100,2100,1400,700,Transfer,1400,700,33.33,total_value
+2025-09-13,INV00410,Walk-in,Antibiotic,Augmentin 625mg,2,8500,0,17000,12400,4600,Transfer,12400,4600,27.06,total_value
+2025-12-05,INV00411,Repeat,Antimalarial,Coartem,2,4200,200,8200,5600,2600,Transfer,5600,2600,31.71,total_value
+2025-05-24,INV00412,Repeat,GI,Omeprazole,1,2200,200,2000,1400,600,POS,1400,600,30.0,total_value
+2025-12-17,INV00413,Repeat,Antibiotic,Augmentin 625mg,4,8500,100,33900,24800,9100,POS,24800,9100,26.84,total_value
+2025-10-19,INV00414,HMO,Analgesic,Paracetamol,2,800,500,1100,800,300,Cash,800,300,27.27,total_value
+2025-06-15,INV00415,HMO,Analgesic,Paracetamol,2,800,0,1600,800,800,Cash,800,800,50.0,total_value
+2025-12-03,INV00416,Repeat,Vitamin,Vitamin C,3,1500,500,4000,2700,1300,Cash,2700,1300,32.5,total_value
+2025-03-27,INV00417,Repeat,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Cash,4500,3000,40.0,total_value
+2025-11-12,INV00418,HMO,Antibiotic,Augmentin 625mg,3,8500,100,25400,18600,6800,Cash,18600,6800,26.77,total_value
+2025-09-02,INV00419,Repeat,Antihypertensive,Amlodipine,4,2500,0,10000,6400,3600,Cash,6400,3600,36.0,total_value
+2025-09-27,INV00420,Walk-in,Vitamin,Vitamin C,3,1500,0,4500,2700,1800,POS,2700,1800,40.0,total_value
+2025-05-09,INV00421,HMO,Antimalarial,Coartem,4,4200,100,16700,11200,5500,Cash,11200,5500,32.93,total_value
+2025-05-31,INV00422,HMO,Antibiotic,Augmentin 625mg,4,8500,100,33900,24800,9100,POS,24800,9100,26.84,total_value
+2025-06-27,INV00423,Repeat,GI,Omeprazole,1,2200,0,2200,1400,800,POS,1400,800,36.36,total_value
+2025-07-27,INV00424,Repeat,Antimalarial,Coartem,4,4200,500,16300,11200,5100,POS,11200,5100,31.29,total_value
+2025-03-30,INV00425,Walk-in,Antihypertensive,Amlodipine,1,2500,200,2300,1600,700,Transfer,1600,700,30.43,total_value
+2025-12-09,INV00426,HMO,Analgesic,Paracetamol,1,800,100,700,400,300,Cash,400,300,42.86,total_value
+2025-12-11,INV00427,Walk-in,Antihypertensive,Amlodipine,2,2500,0,5000,3200,1800,Cash,3200,1800,36.0,total_value
+2025-06-06,INV00428,HMO,Antihypertensive,Amlodipine,2,2500,100,4900,3200,1700,POS,3200,1700,34.69,total_value
+2025-08-04,INV00429,HMO,GI,Omeprazole,5,2200,0,11000,7000,4000,POS,7000,4000,36.36,total_value
+2025-04-02,INV00430,Repeat,Antibiotic,Augmentin 625mg,2,8500,500,16500,12400,4100,Transfer,12400,4100,24.85,total_value
+2025-12-02,INV00431,Repeat,Antimalarial,Coartem,1,4200,200,4000,2800,1200,Transfer,2800,1200,30.0,total_value
+2025-07-14,INV00432,Repeat,Antimalarial,Coartem,2,4200,0,8400,5600,2800,Transfer,5600,2800,33.33,total_value
+2025-12-28,INV00433,Repeat,Antibiotic,Augmentin 625mg,3,8500,500,25000,18600,6400,Transfer,18600,6400,25.6,total_value
+2025-05-06,INV00434,Walk-in,Analgesic,Paracetamol,4,800,200,3000,1600,1400,Cash,1600,1400,46.67,total_value
+2025-04-19,INV00435,Walk-in,Antibiotic,Augmentin 625mg,3,8500,0,25500,18600,6900,Transfer,18600,6900,27.06,total_value
+2025-10-23,INV00436,HMO,Antimalarial,Coartem,5,4200,0,21000,14000,7000,Cash,14000,7000,33.33,total_value
+2025-09-25,INV00437,Repeat,GI,Omeprazole,2,2200,0,4400,2800,1600,Transfer,2800,1600,36.36,total_value
+2025-04-16,INV00438,HMO,Antimalarial,Coartem,3,4200,200,12400,8400,4000,Cash,8400,4000,32.26,total_value
+2025-03-25,INV00439,Repeat,Analgesic,Paracetamol,4,800,200,3000,1600,1400,Cash,1600,1400,46.67,total_value
+2025-04-25,INV00440,Repeat,Antibiotic,Augmentin 625mg,3,8500,0,25500,18600,6900,POS,18600,6900,27.06,total_value
+2025-11-05,INV00441,Walk-in,Antimalarial,Coartem,3,4200,0,12600,8400,4200,Cash,8400,4200,33.33,total_value
+2025-06-30,INV00442,HMO,Antibiotic,Augmentin 625mg,4,8500,500,33500,24800,8700,Transfer,24800,8700,25.97,total_value
+2025-06-24,INV00443,Walk-in,Analgesic,Paracetamol,3,800,500,1900,1200,700,Cash,1200,700,36.84,total_value
+2025-06-12,INV00444,Repeat,GI,Omeprazole,4,2200,500,8300,5600,2700,Cash,5600,2700,32.53,total_value
+2025-04-27,INV00445,Repeat,GI,Omeprazole,3,2200,500,6100,4200,1900,POS,4200,1900,31.15,total_value
+2025-06-30,INV00446,Walk-in,Antimalarial,Coartem,4,4200,500,16300,11200,5100,Cash,11200,5100,31.29,total_value
+2025-05-13,INV00447,HMO,Analgesic,Paracetamol,5,800,200,3800,2000,1800,Cash,2000,1800,47.37,total_value
+2025-07-10,INV00448,Repeat,GI,Omeprazole,4,2200,500,8300,5600,2700,POS,5600,2700,32.53,total_value
+2025-03-03,INV00449,HMO,Analgesic,Paracetamol,1,800,200,600,400,200,POS,400,200,33.33,total_value
+2025-08-19,INV00450,Walk-in,Antihypertensive,Amlodipine,3,2500,0,7500,4800,2700,Transfer,4800,2700,36.0,total_value
+2025-06-19,INV00451,Walk-in,Antibiotic,Augmentin 625mg,5,8500,100,42400,31000,11400,Transfer,31000,11400,26.89,total_value
+2025-04-25,INV00452,Walk-in,Antihypertensive,Amlodipine,3,2500,200,7300,4800,2500,Cash,4800,2500,34.25,total_value
+2025-08-31,INV00453,Repeat,Antimalarial,Coartem,1,4200,200,4000,2800,1200,Transfer,2800,1200,30.0,total_value
+2025-08-18,INV00454,Walk-in,Antihypertensive,Amlodipine,5,2500,0,12500,8000,4500,POS,8000,4500,36.0,total_value
+2025-09-13,INV00455,Walk-in,Analgesic,Paracetamol,4,800,100,3100,1600,1500,POS,1600,1500,48.39,total_value
+2025-01-02,INV00456,Walk-in,Antibiotic,Augmentin 625mg,3,8500,500,25000,18600,6400,Cash,18600,6400,25.6,total_value
+2025-08-01,INV00457,Repeat,Antibiotic,Augmentin 625mg,4,8500,500,33500,24800,8700,Cash,24800,8700,25.97,total_value
+2025-05-29,INV00458,Repeat,Analgesic,Paracetamol,2,800,200,1400,800,600,POS,800,600,42.86,total_value
+2025-12-22,INV00459,Walk-in,Antibiotic,Augmentin 625mg,4,8500,500,33500,24800,8700,Transfer,24800,8700,25.97,total_value
+2025-04-24,INV00460,Walk-in,Analgesic,Paracetamol,5,800,0,4000,2000,2000,Transfer,2000,2000,50.0,total_value
+2025-08-30,INV00461,Walk-in,Analgesic,Paracetamol,5,800,0,4000,2000,2000,POS,2000,2000,50.0,total_value
+2025-02-11,INV00462,Walk-in,Antimalarial,Coartem,4,4200,0,16800,11200,5600,Transfer,11200,5600,33.33,total_value
+2025-06-01,INV00463,Repeat,Analgesic,Paracetamol,5,800,0,4000,2000,2000,Cash,2000,2000,50.0,total_value
+2025-10-03,INV00464,HMO,Vitamin,Vitamin C,5,1500,500,7000,4500,2500,POS,4500,2500,35.71,total_value
+2025-09-18,INV00465,Walk-in,Analgesic,Paracetamol,2,800,100,1500,800,700,Cash,800,700,46.67,total_value
+2025-07-11,INV00466,Repeat,Analgesic,Paracetamol,2,800,500,1100,800,300,Cash,800,300,27.27,total_value
+2025-06-15,INV00467,HMO,GI,Omeprazole,2,2200,200,4200,2800,1400,POS,2800,1400,33.33,total_value
+2025-07-24,INV00468,HMO,Antibiotic,Augmentin 625mg,1,8500,0,8500,6200,2300,POS,6200,2300,27.06,total_value
+2025-01-26,INV00469,HMO,GI,Omeprazole,2,2200,0,4400,2800,1600,POS,2800,1600,36.36,total_value
+2025-05-14,INV00470,Walk-in,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Cash,4500,3000,40.0,total_value
+2025-05-05,INV00471,Walk-in,Antihypertensive,Amlodipine,5,2500,100,12400,8000,4400,Cash,8000,4400,35.48,total_value
+2025-01-25,INV00472,Walk-in,Vitamin,Vitamin C,2,1500,0,3000,1800,1200,Transfer,1800,1200,40.0,total_value
+2025-07-02,INV00473,Repeat,GI,Omeprazole,4,2200,0,8800,5600,3200,Transfer,5600,3200,36.36,total_value
+2025-07-14,INV00474,HMO,Vitamin,Vitamin C,1,1500,0,1500,900,600,Transfer,900,600,40.0,total_value
+2025-10-31,INV00475,Walk-in,GI,Omeprazole,1,2200,500,1700,1400,300,Transfer,1400,300,17.65,total_value
+2025-03-07,INV00476,Repeat,Antimalarial,Coartem,3,4200,0,12600,8400,4200,Transfer,8400,4200,33.33,total_value
+2025-02-10,INV00477,Repeat,Antimalarial,Coartem,5,4200,200,20800,14000,6800,POS,14000,6800,32.69,total_value
+2025-05-16,INV00478,HMO,GI,Omeprazole,3,2200,200,6400,4200,2200,Cash,4200,2200,34.38,total_value
+2025-01-08,INV00479,HMO,Antihypertensive,Amlodipine,5,2500,0,12500,8000,4500,Cash,8000,4500,36.0,total_value
+2025-10-30,INV00480,Walk-in,Analgesic,Paracetamol,3,800,200,2200,1200,1000,Transfer,1200,1000,45.45,total_value
+2025-11-20,INV00481,Repeat,Antihypertensive,Amlodipine,1,2500,500,2000,1600,400,Cash,1600,400,20.0,total_value
+2025-10-02,INV00482,Repeat,Antihypertensive,Amlodipine,1,2500,500,2000,1600,400,Transfer,1600,400,20.0,total_value
+2025-05-20,INV00483,HMO,Vitamin,Vitamin C,4,1500,0,6000,3600,2400,POS,3600,2400,40.0,total_value
+2025-12-09,INV00484,HMO,Vitamin,Vitamin C,5,1500,0,7500,4500,3000,Transfer,4500,3000,40.0,total_value
+2025-11-06,INV00485,Repeat,Analgesic,Paracetamol,2,800,0,1600,800,800,Cash,800,800,50.0,total_value
+2025-06-14,INV00486,Repeat,Vitamin,Vitamin C,1,1500,0,1500,900,600,Cash,900,600,40.0,total_value
+2025-12-27,INV00487,Walk-in,Analgesic,Paracetamol,2,800,100,1500,800,700,Transfer,800,700,46.67,total_value
+2025-07-23,INV00488,Walk-in,Antimalarial,Coartem,5,4200,0,21000,14000,7000,Transfer,14000,7000,33.33,total_value
+2025-04-16,INV00489,Repeat,Antihypertensive,Amlodipine,1,2500,100,2400,1600,800,Transfer,1600,800,33.33,total_value
+2025-08-07,INV00490,HMO,GI,Omeprazole,1,2200,0,2200,1400,800,Transfer,1400,800,36.36,total_value
+2025-02-23,INV00491,HMO,Vitamin,Vitamin C,1,1500,500,1000,900,100,Cash,900,100,10.0,total_value
+2025-11-23,INV00492,Repeat,Antihypertensive,Amlodipine,4,2500,500,9500,6400,3100,POS,6400,3100,32.63,total_value
+2025-02-09,INV00493,Walk-in,Antibiotic,Augmentin 625mg,2,8500,100,16900,12400,4500,POS,12400,4500,26.63,total_value
+2025-12-02,INV00494,Walk-in,Vitamin,Vitamin C,1,1500,0,1500,900,600,Cash,900,600,40.0,total_value
+2025-04-08,INV00495,Repeat,Antihypertensive,Amlodipine,3,2500,200,7300,4800,2500,POS,4800,2500,34.25,total_value
+2025-04-04,INV00496,Walk-in,Antibiotic,Augmentin 625mg,2,8500,0,17000,12400,4600,Transfer,12400,4600,27.06,total_value
+2025-10-19,INV00497,Repeat,Analgesic,Paracetamol,1,800,200,600,400,200,POS,400,200,33.33,total_value
+2025-07-24,INV00498,HMO,Antimalarial,Coartem,2,4200,200,8200,5600,2600,Transfer,5600,2600,31.71,total_value
+2025-09-18,INV00499,Repeat,GI,Omeprazole,5,2200,100,10900,7000,3900,Transfer,7000,3900,35.78,total_value
+2025-12-27,INV00500,Repeat,Analgesic,Paracetamol,1,800,200,600,400,200,POS,400,200,33.33,total_value
+TOTAL (500 rows),,,,,1482,,67000,4657600,3180200,1477400,,3180200,1477400,31.72,

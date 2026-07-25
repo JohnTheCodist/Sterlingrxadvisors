@@ -1,0 +1,14 @@
+{
+  "pharmacyId": "default",
+  "fingerprint": "date|item_category|item_rating|product|product_brand|selling_price|subcategory_1|subcategory_2",
+  "mapping": {
+    "Product": "product_name",
+    "Product_Brand": "brand",
+    "Item_Category": "category",
+    "Subcategory_1": "subcategory",
+    "Item_Rating": "quantity",
+    "Date": "date",
+    "Selling_Price": "selling_price"
+  },
+  "savedAt": "2026-07-18T12:08:20.357Z"
+}

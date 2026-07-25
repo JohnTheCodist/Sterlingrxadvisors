@@ -1,0 +1,10 @@
+{
+  "pharmacyId": "default",
+  "fingerprint": "datum|m01ab|m01ae|n02ba|n02be|n05b|n05c|r03|r06",
+  "mapping": {
+    "datum": "date",
+    "M01AB": "revenue",
+    "N05C": "quantity"
+  },
+  "savedAt": "2026-07-18T12:57:19.554Z"
+}

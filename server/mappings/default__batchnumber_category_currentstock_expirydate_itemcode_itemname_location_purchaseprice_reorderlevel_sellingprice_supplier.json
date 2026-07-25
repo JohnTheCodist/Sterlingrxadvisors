@@ -1,0 +1,17 @@
+{
+  "pharmacyId": "default",
+  "fingerprint": "batchnumber|category|currentstock|expirydate|itemcode|itemname|location|purchaseprice|reorderlevel|sellingprice|supplier",
+  "mapping": {
+    "ReorderLevel": "quantity",
+    "ItemCode": "date",
+    "ItemName": "product_name",
+    "Category": "category",
+    "Supplier": "supplier",
+    "PurchasePrice": "cost_price",
+    "SellingPrice": "selling_price",
+    "CurrentStock": "current_stock",
+    "ExpiryDate": "expiry_date",
+    "BatchNumber": "batch_number"
+  },
+  "savedAt": "2026-07-23T17:35:01.212Z"
+}

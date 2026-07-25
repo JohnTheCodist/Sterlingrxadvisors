@@ -1,0 +1,13 @@
+{
+  "pharmacyId": "pipeline-test",
+  "fingerprint": "amount|date|drug|qty|selling price|unit cost",
+  "mapping": {
+    "Drug": "product_name",
+    "Qty": "quantity",
+    "Unit Cost": "cost_price",
+    "Date": "date",
+    "Amount": "revenue",
+    "Selling Price": "selling_price"
+  },
+  "savedAt": "2026-07-16T16:24:07.196Z"
+}
