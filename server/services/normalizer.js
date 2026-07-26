@@ -85,6 +85,9 @@ function normalizeRow(row, mapping, costMode, tiers) {
     therapeutic_group: null,
     therapeutic_subgroup: null,
     identity_confidence: null,
+    // Columns from the uploaded file that didn't match any known category —
+    // preserved rather than discarded (see collection logic below).
+    extra_fields: null,
     // Cost-price attribution flag (per-file, set during cost-mode detection)
     _cost_is_total: costMode?.costIsTotal ?? null,
   };
@@ -241,6 +244,38 @@ function normalizeRow(row, mapping, costMode, tiers) {
       case 'opening_stock':
         record.opening_stock = parseQuantity(rawVal);
         break;
+    }
+  }
+
+  // ---- Preserve unmapped columns — never silently discard uploaded data ----
+  // Any raw column that didn't match a known category (novel field the
+  // taxonomy doesn't cover yet, or a header phrasing the detector didn't
+  // recognize) is kept here instead of being dropped, so nothing is lost
+  // even before the taxonomy/synonyms catch up. Also gives the dedup step
+  // above real signal to distinguish legitimate repeat sales from true
+  // duplicate rows.
+  {
+    const mappedRawHeaders = new Set(
+      Object.values(mapping).filter((info) => info && info.rawHeader).map((info) => info.rawHeader)
+    );
+    // Pipeline-internal keys added earlier (product identity resolution etc.)
+    // that aren't "_"-prefixed but are already captured on the record via
+    // the enrichment step in normalize() — exclude to avoid duplicating them.
+    const INTERNAL_NON_UNDERSCORED = new Set([
+      'source_product_name', 'canonical_product', 'display_product',
+      'resolution_tier', 'resolution_confidence', 'resolution_source',
+      'resolution_status', 'resolution_method', 'parser_confidence', 'lookup_confidence',
+    ]);
+    const extraFields = {};
+    for (const [key, val] of Object.entries(row)) {
+      if (key.startsWith('_')) continue; // internal enrichment metadata, not a source column
+      if (INTERNAL_NON_UNDERSCORED.has(key)) continue;
+      if (mappedRawHeaders.has(key)) continue; // already captured above
+      if (val == null || val === '') continue; // skip genuinely empty cells
+      extraFields[key] = val;
+    }
+    if (Object.keys(extraFields).length > 0) {
+      record.extra_fields = extraFields;
     }
   }
 
@@ -706,9 +741,12 @@ function normalize(rows, options = {}) {
     if (src._therapeutic_group) rec.therapeutic_group = src._therapeutic_group;
     if (src._therapeutic_subgroup) rec.therapeutic_subgroup = src._therapeutic_subgroup;
     // Category fallback: when the source file has no category column (or empty values),
-    // use the NAFDAC therapeutic group so analytics like "Top Revenue by Category"
-    // don't show everything as "Uncategorised".
-    if (!rec.category && src._therapeutic_group) rec.category = src._therapeutic_group;
+    // use the NAFDAC therapeutic subgroup (more specific than the broad group, e.g.
+    // "Hypertension" instead of "Cardiovascular") so analytics like "Top Revenue by
+    // Category" don't show everything as "Uncategorised". Falls back to the broader
+    // therapeutic group only if no subgroup was resolved.
+    if (!rec.category && src._therapeutic_subgroup) rec.category = src._therapeutic_subgroup;
+    else if (!rec.category && src._therapeutic_group) rec.category = src._therapeutic_group;
     if (src._identity_confidence) rec.identity_confidence = src._identity_confidence;
     if (src.resolution_confidence != null) rec.resolution_confidence = src.resolution_confidence;
     // Resolved identity (manufacturer, generic — enrichment only, never source)
@@ -742,9 +780,26 @@ function normalize(rows, options = {}) {
   // Step 7.5: Fill missing values (respects hasTransactionCapability for quantity default)
   normalized = fillMissingValuesV2(normalized, mapping, tiers);
 
-  // Step 7.6: Deduplicate
-  const { records: dedupedRecords, duplicatesRemoved } = deduplicateTransactionsV2(normalized);
-  normalized = dedupedRecords;
+  // Step 7.6: Deduplicate — hash the full original row (every uploaded
+  // column, not just the handful mapped to known categories) so that
+  // legitimate repeat sales sharing product/qty/price/date but differing
+  // in some other column (branch, cashier, receipt no., row number, time)
+  // aren't collapsed into one. If the file has no columns beyond the core
+  // business fields already in the key, there is no reliable way to tell
+  // a repeat sale from an accidental duplicate row — skip deduplication
+  // rather than risk silently dropping real revenue.
+  const CORE_DEDUPE_CATEGORIES = ['product_name', 'quantity', 'selling_price', 'revenue', 'cost_price', 'transaction_date', 'invoice_number', 'customer'];
+  const coreMappedHeaders = new Set(
+    CORE_DEDUPE_CATEGORIES.map((cat) => mapping[cat]?.rawHeader).filter(Boolean)
+  );
+  const hasExtraDistinguishingColumn = rawHeaders.some((h) => !coreMappedHeaders.has(h));
+
+  let duplicatesRemoved = 0;
+  if (hasExtraDistinguishingColumn) {
+    const dedupResult = deduplicateTransactionsV2(normalized, cleanedRows);
+    normalized = dedupResult.records;
+    duplicatesRemoved = dedupResult.duplicatesRemoved;
+  }
 
   // Step 7.7: Structural Validation — can values be parsed?
   const structResult = structuralValidate(normalized);
@@ -879,24 +934,33 @@ function fillMissingValuesV2(records, mapping, tiers) {
   });
 }
 
-function deduplicateTransactionsV2(records) {
+function deduplicateTransactionsV2(records, rawRows) {
   const seen = new Set();
   const deduped = [];
   let duplicatesRemoved = 0;
-  for (const rec of records) {
-    // Use a broad key: product + qty + price + date + invoice + customer
-    // This avoids treating different transactions as duplicates while
-    // still catching truly identical rows.
-    const key = [
-      rec.product_name ?? '',
-      rec.quantity ?? '',
-      rec.selling_price ?? '',
-      rec.revenue ?? '',
-      rec.cost_price ?? '',
-      rec.transaction_date ?? '',
-      rec.invoice_number ?? '',
-      rec.customer ?? '',
-    ].join('|');
+  for (let i = 0; i < records.length; i++) {
+    const rec = records[i];
+    const raw = rawRows ? rawRows[i] : null;
+
+    // Prefer hashing every column from the original uploaded row (minus
+    // internal "_"-prefixed enrichment metadata added earlier in the
+    // pipeline) — this naturally distinguishes real separate sales that
+    // happen to share product/qty/price/date but differ in something else
+    // in the row, from a genuinely duplicated row. Falls back to the
+    // curated business-field key only if no raw row is available.
+    const key = raw
+      ? Object.keys(raw).sort().filter((k) => !k.startsWith('_')).map((k) => `${k}=${raw[k] ?? ''}`).join('|')
+      : [
+          rec.product_name ?? '',
+          rec.quantity ?? '',
+          rec.selling_price ?? '',
+          rec.revenue ?? '',
+          rec.cost_price ?? '',
+          rec.transaction_date ?? '',
+          rec.invoice_number ?? '',
+          rec.customer ?? '',
+        ].join('|');
+
     if (seen.has(key)) { duplicatesRemoved++; continue; }
     seen.add(key);
     deduped.push(rec);

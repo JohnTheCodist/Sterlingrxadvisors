@@ -1,11 +1,18 @@
+import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceDot } from 'recharts';
 import InfoBadge from './InfoBadge';
 import { makeDateFormatter } from '../utils/dateFormat';
 import { revenueGap } from '../utils/metrics';
 
+const GRANULARITY_LABELS = { month: 'Month', week: 'Week', day: 'Day' };
+
 function MonthlySalesPerformanceWidget({ widget, totalRevenue }) {
   const w = widget;
   const result = w.result || {};
+
+  const drillLevels = result.drillLevels;
+  const levels = drillLevels ? Object.keys(drillLevels) : null;
+  const [activeLevel, setActiveLevel] = useState(result.displayGranularity || (levels ? levels[0] : null));
 
   if (result?.error) {
     return (
@@ -17,9 +24,6 @@ function MonthlySalesPerformanceWidget({ widget, totalRevenue }) {
   }
 
   const {
-    highestMonth,
-    lowestMonth,
-    averageMonthlyRevenue,
     trend,
     title,
     subtitle,
@@ -28,8 +32,9 @@ function MonthlySalesPerformanceWidget({ widget, totalRevenue }) {
     chartType
   } = result;
 
-  // Prepare chart data
-  const chartData = w.series?.[0]?.data || [];
+  // Prepare chart data — active drill level if present, else the primary series
+  const activeLevelData = levels && drillLevels[activeLevel] ? drillLevels[activeLevel] : null;
+  const chartData = activeLevelData || result.series?.[0]?.data || [];
   const { gap: unknownRevenue, direction: gapDir } = revenueGap({ totalRevenue, monthlyRevenue: chartData });
   const hasUnknown = unknownRevenue > 1 && gapDir === '+' && chartData.length > 0;
   const chartDataWithUnknown = hasUnknown
@@ -37,6 +42,17 @@ function MonthlySalesPerformanceWidget({ widget, totalRevenue }) {
     : chartData;
   const unknownIndex = hasUnknown ? chartDataWithUnknown.length - 1 : -1;
   const { tickFormatter: formatMonthDate } = makeDateFormatter(chartData, 'name');
+
+  // Derive highest/lowest/average from whichever level is active so the
+  // summary cards always match what's charted, not just the server's
+  // primary-level defaults.
+  const highestMonth = chartData.reduce((best, d) => (!best || d.revenue > best.revenue ? d : best), null) || { name: '—', revenue: 0 };
+  const lowestMonth = chartData.reduce((worst, d) => (!worst || d.revenue < worst.revenue ? d : worst), null) || { name: '—', revenue: 0 };
+  const averageMonthlyRevenue = chartData.length > 0
+    ? Math.round(chartData.reduce((s, d) => s + (d.revenue || 0), 0) / chartData.length)
+    : 0;
+  const periodNoun = activeLevel === 'week' ? 'weeks' : activeLevel === 'day' ? 'days' : 'months';
+  const periodLabelCap = activeLevel === 'week' ? 'Weekly' : activeLevel === 'day' ? 'Daily' : 'Monthly';
 
   // Find indices
   const highestIndex = chartData.findIndex(d => d.revenue === highestMonth.revenue);
@@ -59,34 +75,53 @@ function MonthlySalesPerformanceWidget({ widget, totalRevenue }) {
     <div className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6 mb-4">
       {/* Title & Subtitle */}
       <div className="mb-4">
-        <div className="flex items-center gap-1.5">
-          <h3 className="text-base font-semibold text-[var(--color-ink)] mb-1">{w.title}</h3>
-          <InfoBadge description={w.description} />
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <h3 className="text-base font-semibold text-[var(--color-ink)] mb-1">{w.title}</h3>
+            <InfoBadge description={w.description} />
+          </div>
+          {levels && levels.length > 1 && (
+            <div className="flex items-center gap-1">
+              {levels.map((lvl) => (
+                <button
+                  key={lvl}
+                  onClick={() => setActiveLevel(lvl)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    activeLevel === lvl
+                      ? 'bg-[var(--color-primary)] text-primary-foreground'
+                      : 'bg-[var(--color-bg)] text-[var(--color-ink-soft)] hover:bg-[var(--color-primary-tint)]'
+                  }`}
+                >
+                  {GRANULARITY_LABELS[lvl] || lvl}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <p className="text-xs text-[var(--color-ink-faint)]">{subtitle}</p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-        {/* Highest Month */}
+        {/* Highest period */}
         <div className="rounded-lg bg-[var(--color-bg)] border border-[var(--color-line)] p-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-faint)] mb-1">Highest Month</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-faint)] mb-1">Highest {GRANULARITY_LABELS[activeLevel] || 'Month'}</p>
           <p className="text-sm font-bold text-[var(--color-ink)]">{highestMonth.name}</p>
           <p className="text-xs text-[var(--color-ink-soft)]">{formatCurrency(highestMonth.revenue)}</p>
         </div>
 
-        {/* Lowest Month */}
+        {/* Lowest period */}
         <div className="rounded-lg bg-[var(--color-bg)] border border-[var(--color-line)] p-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-faint)] mb-1">Lowest Month</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-faint)] mb-1">Lowest {GRANULARITY_LABELS[activeLevel] || 'Month'}</p>
           <p className="text-sm font-bold text-[var(--color-ink)]">{lowestMonth.name}</p>
           <p className="text-xs text-[var(--color-ink-soft)]">{formatCurrency(lowestMonth.revenue)}</p>
         </div>
 
         {/* Average */}
         <div className="rounded-lg bg-[var(--color-bg)] border border-[var(--color-line)] p-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-faint)] mb-1">Average Monthly</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-faint)] mb-1">Average {periodLabelCap}</p>
           <p className="text-sm font-bold text-[var(--color-ink)]">{formatCurrency(averageMonthlyRevenue)}</p>
-          <p className="text-xs text-[var(--color-ink-soft)]">{chartData.length} months</p>
+          <p className="text-xs text-[var(--color-ink-soft)]">{chartData.length} {periodNoun}</p>
         </div>
 
         {/* Trend */}
@@ -103,11 +138,7 @@ function MonthlySalesPerformanceWidget({ widget, totalRevenue }) {
 
       {/* Chart */}
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h4 className="text-sm font-semibold text-[var(--color-ink)]">{w.title}</h4>
-            <p className="text-xs text-[var(--color-ink-faint)]">{w.description || 'Compare monthly performance to identify seasonal patterns and plan inventory accordingly.'}</p>
-          </div>
+        <div className="flex items-center justify-end mb-2">
           <button
             onClick={() => document.getElementById('explain-btn').classList.toggle('hidden')}
             className="inline-flex items-center gap-1 rounded-md bg-[var(--color-primary)] px-3 py-1 text-xs font-medium text-white hover:bg-[var(--color-primary-2)]"
@@ -142,39 +173,31 @@ function MonthlySalesPerformanceWidget({ widget, totalRevenue }) {
                   border: 'none',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 }}
-                formatter={(value, name, props) => {
-                  if (name === 'Revenue') {
-                    return [new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(value), 'Revenue'];
-                  }
-                  if (name === 'change' || name === 'previousMonthRevenue') {
-                    return [[props.payload[dataKey]], `${name.charAt(0).toUpperCase() + name.slice(1)}`];
-                  }
-                }}
+                formatter={(value) => [formatCurrency(value), 'Revenue']}
                 labelStyle={{ fontSize: 11, fill: 'var(--color-ink)', fontWeight: 600 }}
+              />
+              <Bar
+                dataKey="revenue"
+                radius={[4, 4, 0, 0]}
+                activeBar={{ fill: 'var(--color-primary)', radius: [4, 4, 0, 0] }}
               >
-                <Bar
-                  dataKey="revenue"
-                  radius={[4, 4, 0, 0]}
-                  activeBar={{ fill: 'var(--color-primary)', radius: [4, 4, 0, 0] }}
-                >
-                  {chartDataWithUnknown.map((entry, index) => {
-                    if (entry.isUnknown) {
-                      return <Cell key={`bar-${index}`} fill="#f3f4f6" stroke="#9ca3af" strokeWidth={1} strokeDasharray="3 2" />;
-                    }
-                    let fill;
-                    if (highestIndex >= 0 && index === highestIndex) {
-                      fill = highlightDot;
-                    } else if (lowestIndex >= 0 && index === lowestIndex) {
-                      fill = lowDot;
-                    } else {
-                      fill = mutedDot;
-                    }
-                    return <Cell key={`bar-${index}`} fill={fill} stroke={mutedStroke} />;
-                  })}
-                </Bar>
-                <ReferenceDot x={highestIndex} y={highestMonth.revenue} r={4} fill={highlightDot} stroke="#fff" strokeWidth={0} />
-                <ReferenceDot x={lowestIndex} y={lowestMonth.revenue} r={4} fill={lowDot} stroke="#fff" strokeWidth={0} />
-              </Tooltip>
+                {chartDataWithUnknown.map((entry, index) => {
+                  if (entry.isUnknown) {
+                    return <Cell key={`bar-${index}`} fill="#f3f4f6" stroke="#9ca3af" strokeWidth={1} strokeDasharray="3 2" />;
+                  }
+                  let fill;
+                  if (highestIndex >= 0 && index === highestIndex) {
+                    fill = highlightDot;
+                  } else if (lowestIndex >= 0 && index === lowestIndex) {
+                    fill = lowDot;
+                  } else {
+                    fill = mutedDot;
+                  }
+                  return <Cell key={`bar-${index}`} fill={fill} stroke={mutedStroke} />;
+                })}
+              </Bar>
+              <ReferenceDot x={highestIndex} y={highestMonth.revenue} r={4} fill={highlightDot} stroke="#fff" strokeWidth={0} />
+              <ReferenceDot x={lowestIndex} y={lowestMonth.revenue} r={4} fill={lowDot} stroke="#fff" strokeWidth={0} />
             </BarChart>
           </ResponsiveContainer>
         </div>

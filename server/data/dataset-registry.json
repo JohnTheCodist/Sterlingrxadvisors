@@ -1,271 +1,9 @@
 [
   {
-    "datasetId": "8c5ac2f0-281b-452d-82b7-850f6416846d",
-    "filename": "Messy_Pharmacy_Sales_Data_50Rows.xlsx",
+    "datasetId": "ecc0af36-219e-407a-a1c0-624158e972ae",
+    "filename": "transaction_summary_only.xlsx",
     "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-24T09:55:09.363Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": false,
-      "sales": false
-    },
-    "mappedColumns": {
-      "Txn Dt ": "",
-      "Discount%": "discount",
-      "Prod_Name(Dispensed?)": "product_name",
-      "Inv.Batch": "batch_number",
-      "Pt_Type": "sales_channel",
-      "Cashier_ID": "sales_representative",
-      "Store_Loc": "warehouse",
-      "Qty??": "quantity",
-      "Amt_Paid(NGN)#": "selling_price"
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": "Prod_Name(Dispensed?)",
-        "normalizedHeader": "prod name dispensed",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.73,
-            "headerScore": 0.47,
-            "valueScore": 1,
-            "source": "token match (52%) with \"product name\"; 100% of values are text names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Qty??",
-        "normalizedHeader": "qty",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.82,
-            "headerScore": 1,
-            "valueScore": 0.54,
-            "source": "exact match: \"qty\"; 54% of values are integers"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.54,
-            "headerScore": 0.54,
-            "valueScore": 0.54,
-            "source": "token match (60%) with \"pack qty\"; 54% of values are pack sizes"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.54,
-            "headerScore": 0.54,
-            "valueScore": 0.54,
-            "source": "token match (60%) with \"stock qty\"; 54% of values are stock quantities"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Amt_Paid(NGN)#",
-        "normalizedHeader": "amt paid ngn",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.55,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — token match (110%) with \"retail amount\"; low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Txn Dt ",
-        "normalizedHeader": "txn dt",
-        "detections": [
-          {
-            "category": "invoice_number",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"txn id\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Pt_Type",
-        "normalizedHeader": "pt type",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"type\"; 100% of values are classification text"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"channel type\"; 100% of values are channel names"
-          },
-          {
-            "category": "payment_method",
-            "confidence": 0.6,
-            "headerScore": 0.75,
-            "valueScore": 0.38,
-            "source": "fuzzy match (75%): \"pay type\"; 38% of values are payment types"
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"drug type\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Inv.Batch",
-        "normalizedHeader": "inv batch",
-        "detections": [
-          {
-            "category": "batch_number",
-            "confidence": 0.81,
-            "headerScore": 0.63,
-            "valueScore": 1,
-            "source": "fuzzy match (63%): \"batch\"; 100% of values are batch/lot codes"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Cashier_ID",
-        "normalizedHeader": "cashier id",
-        "detections": [
-          {
-            "category": "sales_representative",
-            "confidence": 0.87,
-            "headerScore": 0.78,
-            "valueScore": 1,
-            "source": "fuzzy match (78%): \"cashier\"; 100% of values are text/names"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.82,
-            "headerScore": 0.64,
-            "valueScore": 1,
-            "source": "fuzzy match (64%): \"customer id\"; 100% of values are text/names"
-          },
-          {
-            "category": "supplier",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"supplier id\"; 100% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Rx/OTC?",
-        "normalizedHeader": "rx otc",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.5,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — value pattern (100%); low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Discount%",
-        "normalizedHeader": "discount",
-        "detections": [
-          {
-            "category": "discount",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"discount\"; 100% of values are numeric"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.68,
-            "headerScore": 0.63,
-            "valueScore": 0.74,
-            "source": "fuzzy match (63%): \"count\"; 74% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Store_Loc",
-        "normalizedHeader": "store loc",
-        "detections": [
-          {
-            "category": "warehouse",
-            "confidence": 0.85,
-            "headerScore": 0.7,
-            "valueScore": 1,
-            "source": "fuzzy match (70%): \"store room\"; 100% of values are text/names"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.81,
-            "headerScore": 0.63,
-            "valueScore": 1,
-            "source": "fuzzy match (63%): \"store\"; 100% of values are text/names"
-          },
-          {
-            "category": "opening_stock",
-            "confidence": 0.27,
-            "headerScore": 0.55,
-            "valueScore": 0,
-            "source": "fuzzy match (55%): \"start stock\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Notes*",
-        "normalizedHeader": "notes",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.3,
-            "headerScore": 0.6,
-            "valueScore": 0,
-            "source": "fuzzy match (60%): \"nos\""
-          }
-        ],
-        "ignored": true
-      }
-    ],
-    "processingStatus": "processed",
-    "rowCount": 41,
-    "sheetNames": [
-      "Sheet"
-    ],
-    "fingerprint": "cbb995470ae22560a610c272a79a715b",
-    "fileSize": 7908,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "inventory_snapshot",
-    "updatedAt": "2026-07-24T18:16:00.096Z",
-    "recommended_dashboards": []
-  },
-  {
-    "datasetId": "3971ada1-b690-4cdb-ab32-2dc62f439845",
-    "filename": "NAFDAC_Pharma_Sales_V2_Realistic.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-24T08:58:57.747Z",
+    "uploadTimestamp": "2026-07-25T15:40:35.062Z",
     "capabilities": {
       "inventory": false,
       "expiry": false,
@@ -274,60 +12,504 @@
       "sales": true
     },
     "mappedColumns": {
-      "Brand Name": "brand",
-      "Route": "",
-      "Generic": "generic_name",
-      "Company": "manufacturer",
-      "Selling Price (₦)": "selling_price",
-      "Cost Price (₦)": "cost_price",
-      "Expiry Date": "expiry_date",
-      "Sales Channel": "sales_channel",
-      "Reorder Level": "reorder_level",
-      "Units In Stock": "",
-      "Registration Date": "",
-      "Therapeutic Group": "category",
-      "Category": "subcategory",
-      "Units Sold Monthly": "quantity",
-      "Form": "dosage_form",
-      "Strength": "strength",
-      "NAFDAC No": "",
-      "Therapeutic Subgroup": "",
-      "Days Out of Stock": "",
-      "Units Expired (Last 6mo)": "",
-      "SKU Class": ""
+      "Transaction ID": "invoice_number",
+      "Sale Date": "transaction_date",
+      "Store Location": "branch",
+      "Total Units": "quantity",
+      "Total Basket Revenue (NGN)": "revenue",
+      "Product List": "product_name"
     },
     "normalizedSchema": [
       {
-        "rawHeader": "Brand Name",
-        "normalizedHeader": "brand name",
+        "rawHeader": "Transaction ID",
+        "normalizedHeader": "transaction id",
         "detections": [
           {
-            "category": "brand",
+            "category": "invoice_number",
             "confidence": 1,
             "headerScore": 1,
             "valueScore": 1,
-            "source": "exact match: \"brand name\"; 100% of values are product-like text"
+            "source": "exact match: \"transaction id\"; 100% of values are invoice/reference codes"
           },
           {
-            "category": "branch",
-            "confidence": 0.89,
-            "headerScore": 0.82,
+            "category": "transaction_date",
+            "confidence": 0.45,
+            "headerScore": 0.75,
+            "valueScore": 0,
+            "source": "fuzzy match (75%): \"transaction date\""
+          },
+          {
+            "category": "payment_method",
+            "confidence": 0.45,
+            "headerScore": 0.75,
+            "valueScore": 0,
+            "source": "fuzzy match (75%): \"transaction type\""
+          },
+          {
+            "category": "revenue",
+            "confidence": 0.33,
+            "headerScore": 0.67,
+            "valueScore": 0,
+            "source": "fuzzy match (67%): \"transaction amount\""
+          }
+        ],
+        "ignored": false
+      },
+      {
+        "rawHeader": "Sale Date",
+        "normalizedHeader": "sale date",
+        "detections": [
+          {
+            "category": "transaction_date",
+            "confidence": 1,
+            "headerScore": 1,
             "valueScore": 1,
-            "source": "fuzzy match (82%): \"branch name\"; 100% of values are text/names"
+            "source": "exact match: \"sale date\"; 100% of values are dates"
           },
           {
-            "category": "product_name",
-            "confidence": 0.8,
+            "category": "expiry_date",
+            "confidence": 0.78,
+            "headerScore": 0.56,
+            "valueScore": 1,
+            "source": "fuzzy match (56%): \"exp date\"; 100% of values are dates"
+          },
+          {
+            "category": "revenue",
+            "confidence": 0.32,
+            "headerScore": 0.64,
+            "valueScore": 0,
+            "source": "fuzzy match (64%): \"sales value\""
+          },
+          {
+            "category": "selling_price",
+            "confidence": 0.3,
             "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"drug name\"; 100% of values are text names"
+            "valueScore": 0,
+            "source": "fuzzy match (60%): \"sale price\""
+          },
+          {
+            "category": "sales_channel",
+            "confidence": 0.3,
+            "headerScore": 0.6,
+            "valueScore": 0,
+            "source": "fuzzy match (60%): \"sales type\""
+          },
+          {
+            "category": "tax",
+            "confidence": 0.28,
+            "headerScore": 0.56,
+            "valueScore": 0,
+            "source": "fuzzy match (56%): \"sales tax\""
           },
           {
             "category": "sales_representative",
+            "confidence": 0.28,
+            "headerScore": 0.56,
+            "valueScore": 0,
+            "source": "fuzzy match (56%): \"sales_rep\""
+          },
+          {
+            "category": "invoice_number",
+            "confidence": 0.28,
+            "headerScore": 0.56,
+            "valueScore": 0,
+            "source": "fuzzy match (56%): \"sale id\""
+          }
+        ],
+        "ignored": false
+      },
+      {
+        "rawHeader": "Store Location",
+        "normalizedHeader": "store location",
+        "detections": [
+          {
+            "category": "warehouse",
+            "confidence": 0.93,
+            "headerScore": 0.88,
+            "valueScore": 1,
+            "source": "fuzzy match (88%): \"storage location\"; 100% of values are text/names"
+          },
+          {
+            "category": "branch",
+            "confidence": 0.83,
+            "headerScore": 0.72,
+            "valueScore": 1,
+            "source": "fuzzy match (62%): \"location\"; 100% of values are text/names"
+          },
+          {
+            "category": "product_name",
+            "confidence": 0.79,
+            "headerScore": 0.57,
+            "valueScore": 1,
+            "source": "fuzzy match (57%): \"formulation\"; 100% of values are text names"
+          },
+          {
+            "category": "dosage_form",
+            "confidence": 0.29,
+            "headerScore": 0.57,
+            "valueScore": 0,
+            "source": "fuzzy match (57%): \"formulation\""
+          },
+          {
+            "category": "discount",
+            "confidence": 0.27,
+            "headerScore": 0.54,
+            "valueScore": 0,
+            "source": "fuzzy match (54%): \"reduction\""
+          }
+        ],
+        "ignored": false
+      },
+      {
+        "rawHeader": "Number of Items (Lines)",
+        "normalizedHeader": "number of items lines",
+        "detections": [
+          {
+            "category": "transaction_date",
+            "confidence": 0.51,
+            "headerScore": 0,
+            "valueScore": 0,
+            "source": "best guess — token match (30%) with \"date of sale\"; low confidence — please review"
+          }
+        ],
+        "ignored": false
+      },
+      {
+        "rawHeader": "Total Units",
+        "normalizedHeader": "total units",
+        "detections": [
+          {
+            "category": "quantity",
+            "confidence": 1,
+            "headerScore": 1,
+            "valueScore": 1,
+            "source": "exact match: \"total units\"; 100% of values are integers"
+          },
+          {
+            "category": "pack_size",
+            "confidence": 0.77,
+            "headerScore": 0.54,
+            "valueScore": 1,
+            "source": "token match (60%) with \"units per pack\"; 100% of values are pack sizes"
+          },
+          {
+            "category": "revenue",
+            "confidence": 0.77,
+            "headerScore": 0.64,
+            "valueScore": 0.9,
+            "source": "fuzzy match (64%): \"total sales\"; 90% monetary + revenue pattern"
+          }
+        ],
+        "ignored": false
+      },
+      {
+        "rawHeader": "Total Basket Revenue (NGN)",
+        "normalizedHeader": "total basket revenue ngn",
+        "detections": [
+          {
+            "category": "quantity",
+            "confidence": 0.51,
+            "headerScore": 0,
+            "valueScore": 0,
+            "source": "best guess — token match (30%) with \"total units\"; low confidence — please review"
+          }
+        ],
+        "ignored": false
+      },
+      {
+        "rawHeader": "Product List",
+        "normalizedHeader": "product list",
+        "detections": [
+          {
+            "category": "category",
+            "confidence": 0.86,
+            "headerScore": 0.77,
+            "valueScore": 1,
+            "source": "fuzzy match (77%): \"product class\"; 100% of values are classification text"
+          },
+          {
+            "category": "product_name",
+            "confidence": 0.83,
+            "headerScore": 0.67,
+            "valueScore": 1,
+            "source": "fuzzy match (67%): \"product name\"; 100% of values are text names"
+          },
+          {
+            "category": "brand",
+            "confidence": 0.81,
+            "headerScore": 0.62,
+            "valueScore": 1,
+            "source": "fuzzy match (62%): \"product brand\"; 100% of values are product-like text"
+          },
+          {
+            "category": "subcategory",
             "confidence": 0.8,
             "headerScore": 0.6,
             "valueScore": 1,
-            "source": "fuzzy match (60%): \"staff name\"; 100% of values are text/names"
+            "source": "fuzzy match (60%): \"product segment\"; 100% of values are classification text"
+          },
+          {
+            "category": "manufacturer",
+            "confidence": 0.77,
+            "headerScore": 0.55,
+            "valueScore": 1,
+            "source": "fuzzy match (55%): \"producer\"; 100% of values are text/names"
+          },
+          {
+            "category": "discount",
+            "confidence": 0.27,
+            "headerScore": 0.55,
+            "valueScore": 0,
+            "source": "fuzzy match (55%): \"reduction\""
+          },
+          {
+            "category": "batch_number",
+            "confidence": 0.27,
+            "headerScore": 0.53,
+            "valueScore": 0,
+            "source": "fuzzy match (53%): \"production batch\""
+          }
+        ],
+        "ignored": false
+      }
+    ],
+    "processingStatus": "processed",
+    "rowCount": 906,
+    "sheetNames": [
+      "Transaction Summary"
+    ],
+    "fingerprint": "710c2519cad0fb868f0acbfba52daf7f",
+    "fileSize": 38622,
+    "branch": "Downtown Branch",
+    "mappingVersion": 1,
+    "assetType": "sales_transaction",
+    "updatedAt": "2026-07-25T15:41:10.080Z",
+    "recommended_dashboards": [
+      "sales"
+    ]
+  },
+  {
+    "datasetId": "3593cfac-3293-4fbe-858b-f0451c385928",
+    "filename": "pharmacy_basket_sales.xlsx",
+    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "uploadTimestamp": "2026-07-25T15:32:22.888Z",
+    "capabilities": {
+      "inventory": false,
+      "expiry": false,
+      "supplier": false,
+      "customer": false,
+      "sales": true
+    },
+    "mappedColumns": {
+      "Transaction ID": "invoice_number",
+      "Sale Date": "transaction_date",
+      "Store Location": "branch",
+      "Product Name": "product_name",
+      "Category": "category",
+      "Unit Price (NGN)": "selling_price",
+      "Quantity": "quantity",
+      "Line Revenue (NGN)": "revenue"
+    },
+    "normalizedSchema": [
+      {
+        "rawHeader": "Row ID",
+        "normalizedHeader": "row id",
+        "detections": [
+          {
+            "category": "invoice_number",
+            "confidence": 0.53,
+            "headerScore": 0,
+            "valueScore": 0,
+            "source": "best guess — token match (40%) with \"transaction id\"; low confidence — please review"
+          }
+        ],
+        "ignored": true
+      },
+      {
+        "rawHeader": "Transaction ID",
+        "normalizedHeader": "transaction id",
+        "detections": [
+          {
+            "category": "invoice_number",
+            "confidence": 1,
+            "headerScore": 1,
+            "valueScore": 1,
+            "source": "exact match: \"transaction id\"; 100% of values are invoice/reference codes"
+          },
+          {
+            "category": "transaction_date",
+            "confidence": 0.45,
+            "headerScore": 0.75,
+            "valueScore": 0,
+            "source": "fuzzy match (75%): \"transaction date\""
+          },
+          {
+            "category": "payment_method",
+            "confidence": 0.45,
+            "headerScore": 0.75,
+            "valueScore": 0,
+            "source": "fuzzy match (75%): \"transaction type\""
+          },
+          {
+            "category": "revenue",
+            "confidence": 0.33,
+            "headerScore": 0.67,
+            "valueScore": 0,
+            "source": "fuzzy match (67%): \"transaction amount\""
+          }
+        ],
+        "ignored": false
+      },
+      {
+        "rawHeader": "Sale Date",
+        "normalizedHeader": "sale date",
+        "detections": [
+          {
+            "category": "transaction_date",
+            "confidence": 1,
+            "headerScore": 1,
+            "valueScore": 1,
+            "source": "exact match: \"sale date\"; 100% of values are dates"
+          },
+          {
+            "category": "expiry_date",
+            "confidence": 0.78,
+            "headerScore": 0.56,
+            "valueScore": 1,
+            "source": "fuzzy match (56%): \"exp date\"; 100% of values are dates"
+          },
+          {
+            "category": "revenue",
+            "confidence": 0.32,
+            "headerScore": 0.64,
+            "valueScore": 0,
+            "source": "fuzzy match (64%): \"sales value\""
+          },
+          {
+            "category": "selling_price",
+            "confidence": 0.3,
+            "headerScore": 0.6,
+            "valueScore": 0,
+            "source": "fuzzy match (60%): \"sale price\""
+          },
+          {
+            "category": "sales_channel",
+            "confidence": 0.3,
+            "headerScore": 0.6,
+            "valueScore": 0,
+            "source": "fuzzy match (60%): \"sales type\""
+          },
+          {
+            "category": "tax",
+            "confidence": 0.28,
+            "headerScore": 0.56,
+            "valueScore": 0,
+            "source": "fuzzy match (56%): \"sales tax\""
+          },
+          {
+            "category": "sales_representative",
+            "confidence": 0.28,
+            "headerScore": 0.56,
+            "valueScore": 0,
+            "source": "fuzzy match (56%): \"sales_rep\""
+          },
+          {
+            "category": "invoice_number",
+            "confidence": 0.28,
+            "headerScore": 0.56,
+            "valueScore": 0,
+            "source": "fuzzy match (56%): \"sale id\""
+          }
+        ],
+        "ignored": false
+      },
+      {
+        "rawHeader": "Store Location",
+        "normalizedHeader": "store location",
+        "detections": [
+          {
+            "category": "warehouse",
+            "confidence": 0.93,
+            "headerScore": 0.88,
+            "valueScore": 1,
+            "source": "fuzzy match (88%): \"storage location\"; 100% of values are text/names"
+          },
+          {
+            "category": "branch",
+            "confidence": 0.83,
+            "headerScore": 0.72,
+            "valueScore": 1,
+            "source": "fuzzy match (62%): \"location\"; 100% of values are text/names"
+          },
+          {
+            "category": "product_name",
+            "confidence": 0.79,
+            "headerScore": 0.57,
+            "valueScore": 1,
+            "source": "fuzzy match (57%): \"formulation\"; 100% of values are text names"
+          },
+          {
+            "category": "dosage_form",
+            "confidence": 0.29,
+            "headerScore": 0.57,
+            "valueScore": 0,
+            "source": "fuzzy match (57%): \"formulation\""
+          },
+          {
+            "category": "discount",
+            "confidence": 0.27,
+            "headerScore": 0.54,
+            "valueScore": 0,
+            "source": "fuzzy match (54%): \"reduction\""
+          }
+        ],
+        "ignored": false
+      },
+      {
+        "rawHeader": "Product Name",
+        "normalizedHeader": "product name",
+        "detections": [
+          {
+            "category": "product_name",
+            "confidence": 1,
+            "headerScore": 1,
+            "valueScore": 1,
+            "source": "exact match: \"product name\"; 100% of values are text names"
+          },
+          {
+            "category": "brand",
+            "confidence": 0.85,
+            "headerScore": 0.69,
+            "valueScore": 1,
+            "source": "fuzzy match (69%): \"product brand\"; 100% of values are product-like text"
+          },
+          {
+            "category": "category",
+            "confidence": 0.85,
+            "headerScore": 0.75,
+            "valueScore": 1,
+            "source": "fuzzy match (75%): \"product type\"; 100% of values are classification text"
+          },
+          {
+            "category": "subcategory",
+            "confidence": 0.83,
+            "headerScore": 0.67,
+            "valueScore": 1,
+            "source": "fuzzy match (67%): \"product segment\"; 100% of values are classification text"
+          },
+          {
+            "category": "branch",
+            "confidence": 0.79,
+            "headerScore": 0.58,
+            "valueScore": 1,
+            "source": "fuzzy match (58%): \"branch name\"; 100% of values are text/names"
+          },
+          {
+            "category": "customer",
+            "confidence": 0.79,
+            "headerScore": 0.58,
+            "valueScore": 1,
+            "source": "fuzzy match (58%): \"patient name\"; 100% of values are text/names"
           },
           {
             "category": "generic_name",
@@ -339,16 +521,23 @@
           {
             "category": "manufacturer",
             "confidence": 0.77,
-            "headerScore": 0.54,
+            "headerScore": 0.55,
             "valueScore": 1,
-            "source": "token match (60%) with \"manufacturer name\"; 100% of values are text/names"
+            "source": "fuzzy match (55%): \"producer\"; 100% of values are text/names"
           },
           {
             "category": "supplier",
             "confidence": 0.77,
-            "headerScore": 0.55,
+            "headerScore": 0.54,
             "valueScore": 1,
-            "source": "fuzzy match (55%): \"vendor name\"; 100% of values are text/names"
+            "source": "token match (60%) with \"supplier name\"; 100% of values are text/names"
+          },
+          {
+            "category": "sales_representative",
+            "confidence": 0.77,
+            "headerScore": 0.54,
+            "valueScore": 1,
+            "source": "token match (60%) with \"staff name\"; 100% of values are text/names"
           },
           {
             "category": "warehouse",
@@ -358,11 +547,11 @@
             "source": "token match (60%) with \"warehouse name\"; 100% of values are text/names"
           },
           {
-            "category": "customer",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"client name\"; 100% of values are text/names"
+            "category": "batch_number",
+            "confidence": 0.3,
+            "headerScore": 0.6,
+            "valueScore": 0,
+            "source": "fuzzy match (60%): \"production batch\""
           }
         ],
         "ignored": false
@@ -389,2627 +578,15 @@
         "ignored": false
       },
       {
-        "rawHeader": "NAFDAC No",
-        "normalizedHeader": "nafdac no",
-        "detections": [
-          {
-            "category": "invoice_number",
-            "confidence": 0.55,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — token match (110%) with \"invoice number\"; low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Form",
-        "normalizedHeader": "form",
-        "detections": [
-          {
-            "category": "dosage_form",
-            "confidence": 0.93,
-            "headerScore": 1,
-            "valueScore": 0.82,
-            "source": "exact match: \"form\"; 82% of values are dosage forms (tablet/capsule/syrup)"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.75,
-            "headerScore": 0.5,
-            "valueScore": 1,
-            "source": "substring match: \"platform\"; 100% of values are channel names"
-          },
-          {
-            "category": "strength",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"dosage\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Route",
-        "normalizedHeader": "route",
+        "rawHeader": "Unit Price (NGN)",
+        "normalizedHeader": "unit price ngn",
         "detections": [
           {
             "category": "selling_price",
-            "confidence": 0.3,
-            "headerScore": 0.6,
-            "valueScore": 0,
-            "source": "fuzzy match (60%): \"rate\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Strength",
-        "normalizedHeader": "strength",
-        "detections": [
-          {
-            "category": "strength",
-            "confidence": 0.94,
-            "headerScore": 1,
-            "valueScore": 0.84,
-            "source": "exact match: \"strength\"; 84% of values are dosage strengths (mg/g/%)"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.71,
-            "headerScore": 0.56,
-            "valueScore": 0.86,
-            "source": "fuzzy match (56%): \"store name\"; 86% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Registration Date",
-        "normalizedHeader": "registration date",
-        "detections": [
-          {
-            "category": "expiry_date",
-            "confidence": 0.82,
-            "headerScore": 0.71,
-            "valueScore": 1,
-            "source": "fuzzy match (71%): \"expiration date\"; 100% of values are dates"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.79,
-            "headerScore": 0.59,
-            "valueScore": 1,
-            "source": "fuzzy match (59%): \"transaction date\"; 100% of values are dates"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Status",
-        "normalizedHeader": "status",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.5,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — value pattern (100%); low confidence — please review"
-          }
-        ],
-        "ignored": true
-      },
-      {
-        "rawHeader": "Generic",
-        "normalizedHeader": "generic",
-        "detections": [
-          {
-            "category": "generic_name",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"generic\"; 100% of values are product-like text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Therapeutic Group",
-        "normalizedHeader": "therapeutic group",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 0.82,
-            "headerScore": 0.71,
-            "valueScore": 1,
-            "source": "fuzzy match (71%): \"therapeutic class\"; 100% of values are classification text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Therapeutic Subgroup",
-        "normalizedHeader": "therapeutic subgroup",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"therapeutic class\"; 100% of values are classification text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Company",
-        "normalizedHeader": "company",
-        "detections": [
-          {
-            "category": "manufacturer",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"company\"; 100% of values are text/names"
-          },
-          {
-            "category": "generic_name",
             "confidence": 0.81,
-            "headerScore": 0.63,
-            "valueScore": 1,
-            "source": "fuzzy match (63%): \"compound\"; 100% of values are product-like text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Selling Price (₦)",
-        "normalizedHeader": "selling price",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"selling price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"billing date\"; 100% of values are dates"
-          },
-          {
-            "category": "discount",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"price off\"; 100% of values are numeric"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.75,
-            "headerScore": 0.69,
-            "valueScore": 0.81,
-            "source": "fuzzy match (69%): \"buying price\"; 81% monetary + cost pattern"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.3,
-            "headerScore": 0.6,
-            "valueScore": 0,
-            "source": "fuzzy match (60%): \"selling channel\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Cost Price (₦)",
-        "normalizedHeader": "cost price",
-        "detections": [
-          {
-            "category": "cost_price",
-            "confidence": 0.92,
-            "headerScore": 1,
-            "valueScore": 0.81,
-            "source": "exact match: \"cost price\"; 81% monetary + cost pattern"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.8,
-            "headerScore": 0.7,
-            "valueScore": 0.9,
-            "source": "fuzzy match (70%): \"unit price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "discount",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"price off\"; 100% of values are numeric"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Units Sold Monthly",
-        "normalizedHeader": "units sold monthly",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.83,
-            "headerScore": 0.72,
-            "valueScore": 1,
-            "source": "fuzzy match (56%): \"units sold\"; 100% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Units In Stock",
-        "normalizedHeader": "units in stock",
-        "detections": [
-          {
-            "category": "pack_size",
-            "confidence": 0.79,
-            "headerScore": 0.58,
-            "valueScore": 1,
-            "source": "fuzzy match (58%): \"units per pack\"; 100% of values are pack sizes"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.79,
-            "headerScore": 0.58,
-            "valueScore": 1,
-            "source": "fuzzy match (58%): \"units sold\"; 100% of values are integers"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.79,
-            "headerScore": 0.58,
-            "valueScore": 1,
-            "source": "fuzzy match (58%): \"closing stock\"; 100% of values are stock quantities"
-          },
-          {
-            "category": "opening_stock",
-            "confidence": 0.79,
-            "headerScore": 0.57,
-            "valueScore": 1,
-            "source": "fuzzy match (57%): \"beginning stock\"; 100% of values are stock quantities"
-          },
-          {
-            "category": "reorder_level",
-            "confidence": 0.29,
-            "headerScore": 0.58,
-            "valueScore": 0,
-            "source": "fuzzy match (58%): \"min stock\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Reorder Level",
-        "normalizedHeader": "reorder level",
-        "detections": [
-          {
-            "category": "transaction_date",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"order date\"; 100% of values are dates"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"stock level\"; 100% of values are stock quantities"
-          },
-          {
-            "category": "reorder_level",
-            "confidence": 0.6,
-            "headerScore": 1,
-            "valueScore": 0,
-            "source": "exact match: \"reorder level\""
-          },
-          {
-            "category": "min_stock",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"min level\""
-          },
-          {
-            "category": "max_stock",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"max level\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Days Out of Stock",
-        "normalizedHeader": "days out of stock",
-        "detections": [
-          {
-            "category": "current_stock",
-            "confidence": 0.51,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — token match (30%) with \"stock\"; low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Expiry Date",
-        "normalizedHeader": "expiry date",
-        "detections": [
-          {
-            "category": "expiry_date",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"expiry date\"; 100% of values are dates"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.84,
-            "headerScore": 0.73,
-            "valueScore": 1,
-            "source": "fuzzy match (73%): \"entry date\"; 100% of values are dates"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Units Expired (Last 6mo)",
-        "normalizedHeader": "units expired last 6mo",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.51,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — token match (30%) with \"units sold\"; low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Sales Channel",
-        "normalizedHeader": "sales channel",
-        "detections": [
-          {
-            "category": "sales_channel",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"sales channel\"; 100% of values are channel names"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"sales rep\"; 100% of values are text/names"
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.31,
-            "headerScore": 0.62,
-            "valueScore": 0,
-            "source": "fuzzy match (62%): \"sales value\""
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"sales price\""
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"sale date\""
-          },
-          {
-            "category": "tax",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"sales tax\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "SKU Class",
-        "normalizedHeader": "sku class",
-        "detections": [
-          {
-            "category": "subcategory",
-            "confidence": 0.87,
-            "headerScore": 0.78,
-            "valueScore": 1,
-            "source": "fuzzy match (78%): \"subclass\"; 100% of values are classification text"
-          },
-          {
-            "category": "category",
-            "confidence": 0.85,
-            "headerScore": 0.7,
-            "valueScore": 1,
-            "source": "fuzzy match (70%): \"drug class\"; 100% of values are classification text"
-          }
-        ],
-        "ignored": false
-      }
-    ],
-    "processingStatus": "processed",
-    "rowCount": 510,
-    "sheetNames": [
-      "Original_Data",
-      "Realistic_Transactions"
-    ],
-    "fingerprint": "6809d76c9bbeaf851b03bf84dc1ccc9e",
-    "fileSize": 584672,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "sales_transaction",
-    "updatedAt": "2026-07-24T09:25:33.736Z",
-    "recommended_dashboards": [
-      "sales"
-    ]
-  },
-  {
-    "datasetId": "c7560b5d-e89b-46af-b109-5d9d5c483e4c",
-    "filename": "NAFDAC_Pharma_Sales_Simulation_v4.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-24T08:43:55.760Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": false,
-      "sales": true
-    },
-    "mappedColumns": null,
-    "normalizedSchema": null,
-    "processingStatus": "schema_detected",
-    "rowCount": 510,
-    "sheetNames": [
-      "Pharma_Data"
-    ],
-    "fingerprint": "bfa2a8f4ff9495de6285a0f6714bcbb4",
-    "fileSize": 78424,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "sales_transaction",
-    "updatedAt": "2026-07-24T08:46:37.976Z",
-    "recommended_dashboards": [
-      "sales"
-    ]
-  },
-  {
-    "datasetId": "2d5634e2-dfd2-4842-ad33-33ceb1e74095",
-    "filename": "Pharmacy_Sales_Data_500_Rows_Messy.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-24T08:40:20.915Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": false,
-      "sales": false
-    },
-    "mappedColumns": {
-      " Txn Date ": "transaction_date",
-      "Inv #": "invoice_number",
-      "Medicine ": "product_name",
-      "Qty ": "quantity",
-      "Unit Price (₦)": "selling_price",
-      "Total Sales ": "revenue",
-      "Cost_Price": "cost_price",
-      "Profit ₦": "profit",
-      "Pay Mode": "payment_method",
-      "Cust_Type": "",
-      "Drug Cat.": "category",
-      "Disc": "discount"
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": " Txn Date ",
-        "normalizedHeader": "txn date",
-        "detections": [
-          {
-            "category": "expiry_date",
-            "confidence": 0.71,
             "headerScore": 0.75,
-            "valueScore": 0.64,
-            "source": "fuzzy match (75%): \"exp date\"; 64% of values are dates"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.62,
-            "headerScore": 0.6,
-            "valueScore": 0.64,
-            "source": "fuzzy match (60%): \"entry date\"; 64% of values are dates"
-          },
-          {
-            "category": "invoice_number",
-            "confidence": 0.45,
-            "headerScore": 0.54,
-            "valueScore": 0.36,
-            "source": "token match (60%) with \"txn id\"; 36% of values are invoice/reference codes"
-          },
-          {
-            "category": "tax",
-            "confidence": 0.31,
-            "headerScore": 0.63,
-            "valueScore": 0,
-            "source": "fuzzy match (63%): \"tax rate\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Inv #",
-        "normalizedHeader": "inv",
-        "detections": [
-          {
-            "category": "generic_name",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"inn\"; 100% of values are product-like text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Cust_Type",
-        "normalizedHeader": "cust type",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 0.79,
-            "headerScore": 0.58,
-            "valueScore": 1,
-            "source": "fuzzy match (58%): \"product type\"; 100% of values are classification text"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.73,
-            "headerScore": 0.47,
-            "valueScore": 1,
-            "source": "token match (52%) with \"customer\"; 100% of values are text/names"
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"drug type\""
-          },
-          {
-            "category": "payment_method",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"pay type\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Drug Cat.",
-        "normalizedHeader": "drug cat",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 0.85,
-            "headerScore": 0.7,
-            "valueScore": 1,
-            "source": "fuzzy match (70%): \"drug class\"; 100% of values are classification text"
-          },
-          {
-            "category": "product_name",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"drug name\"; 100% of values are text names"
-          },
-          {
-            "category": "subcategory",
-            "confidence": 0.73,
-            "headerScore": 0.47,
-            "valueScore": 1,
-            "source": "token match (52%) with \"sub category\"; 100% of values are classification text"
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"drug form\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Medicine ",
-        "normalizedHeader": "medicine",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"medicine\"; 100% of values are text names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Qty ",
-        "normalizedHeader": "qty",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"qty\"; 100% of values are integers"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"pack qty\"; 100% of values are pack sizes"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"stock qty\"; 100% of values are stock quantities"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Unit Price (₦)",
-        "normalizedHeader": "unit price",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.96,
-            "headerScore": 1,
             "valueScore": 0.9,
-            "source": "exact match: \"unit price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.77,
-            "headerScore": 0.7,
-            "valueScore": 0.85,
-            "source": "fuzzy match (70%): \"cost price\"; 85% monetary + cost pattern"
-          },
-          {
-            "category": "discount",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"price off\"; 100% of values are numeric"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.44,
-            "headerScore": 0.58,
-            "valueScore": 0.3,
-            "source": "fuzzy match (58%): \"units per pack\"; 30% of values are pack sizes"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Disc",
-        "normalizedHeader": "disc",
-        "detections": [
-          {
-            "category": "discount",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"disc\"; 100% of values are numeric"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Total Sales ",
-        "normalizedHeader": "total sales",
-        "detections": [
-          {
-            "category": "revenue",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"total sales\"; 90% monetary + revenue pattern"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.82,
-            "headerScore": 0.64,
-            "valueScore": 1,
-            "source": "fuzzy match (64%): \"total units\"; 100% of values are integers"
-          },
-          {
-            "category": "tax",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"sales tax\"; 100% of values are numeric"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.21,
-            "headerScore": 0.54,
-            "valueScore": 0.5,
-            "source": "token match (60%) with \"sales price\"; 50% monetary + unit-price pattern; downgraded — values too large vs similar column \"Unit Price (₦)\""
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"sales rep\""
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"sales channel\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Cost_Price",
-        "normalizedHeader": "cost price",
-        "detections": [
-          {
-            "category": "cost_price",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.91,
-            "source": "exact match: \"cost price\"; 91% monetary + cost pattern"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.32,
-            "headerScore": 0.7,
-            "valueScore": 0.9,
-            "source": "fuzzy match (70%): \"unit price\"; 90% monetary + unit-price pattern; downgraded — values too large vs similar column \"Unit Price (₦)\""
-          },
-          {
-            "category": "discount",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"price off\"; 100% of values are numeric"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Profit ₦",
-        "normalizedHeader": "profit",
-        "detections": [
-          {
-            "category": "profit",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"profit\"; 100% of values are monetary/profit"
-          },
-          {
-            "category": "margin",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "substring match: \"profit margin\""
-          },
-          {
-            "category": "product_name",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"product\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Pay Mode",
-        "normalizedHeader": "pay mode",
-        "detections": [
-          {
-            "category": "payment_method",
-            "confidence": 0.82,
-            "headerScore": 0.7,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"payment mode\"; 100% of values are payment types"
-          }
-        ],
-        "ignored": false
-      }
-    ],
-    "processingStatus": "processed",
-    "rowCount": 500,
-    "sheetNames": [
-      "Sheet"
-    ],
-    "fingerprint": "2e627edf79a7cf41d25ccb8a2b53ac88",
-    "fileSize": 34057,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "unknown",
-    "updatedAt": "2026-07-24T10:24:06.523Z",
-    "recommended_dashboards": []
-  },
-  {
-    "datasetId": "17f3de34-c280-43de-8e3a-369dc3d87524",
-    "filename": "Extreme_Messy_Pharmacy_Data_530Rows.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-24T06:25:20.001Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": true,
-      "supplier": false,
-      "customer": true,
-      "sales": false
-    },
-    "mappedColumns": {
-      "WhenSold": "",
-      "RxFlag": "",
-      "Mystery": "",
-      "Sold_Qty": "quantity",
-      "Expiry??": "expiry_date",
-      "Batch#": "batch_number",
-      "Customer??": "",
-      "Drug??": "product_name",
-      "Amount$$": "revenue",
-      "Who": "sales_representative"
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": "Drug??",
-        "normalizedHeader": "drug",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.84,
-            "headerScore": 1,
-            "valueScore": 0.6,
-            "source": "exact match: \"drug\"; 60% of values are text names"
-          },
-          {
-            "category": "generic_name",
-            "confidence": 0.78,
-            "headerScore": 0.9,
-            "valueScore": 0.6,
-            "source": "token match (100%) with \"drug substance\"; 60% of values are product-like text"
-          },
-          {
-            "category": "category",
-            "confidence": 0.78,
-            "headerScore": 0.9,
-            "valueScore": 0.6,
-            "source": "token match (100%) with \"drug class\"; 60% of values are classification text"
-          },
-          {
-            "category": "strength",
-            "confidence": 0.64,
-            "headerScore": 0.9,
-            "valueScore": 0.26,
-            "source": "token match (100%) with \"drug strength\"; 26% of values are dosage strengths (mg/g/%)"
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "substring match: \"drug form\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Sold_Qty",
-        "normalizedHeader": "sold qty",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.58,
-            "headerScore": 0.72,
-            "valueScore": 0.38,
-            "source": "fuzzy match (62%): \"sold quantity\"; 38% of values are integers"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.52,
-            "headerScore": 0.67,
-            "valueScore": 0.38,
-            "source": "fuzzy match (67%): \"sold date\"; 38% of values are dates"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.52,
-            "headerScore": 0.67,
-            "valueScore": 0.38,
-            "source": "fuzzy match (67%): \"stock qty\"; 38% of values are stock quantities"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "WhenSold",
-        "normalizedHeader": "whensold",
-        "detections": [
-          {
-            "category": "transaction_date",
-            "confidence": 0.47,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — token match (36%) with \"sold date\"; low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Amount$$",
-        "normalizedHeader": "amount",
-        "detections": [
-          {
-            "category": "revenue",
-            "confidence": 0.83,
-            "headerScore": 1,
-            "valueScore": 0.57,
-            "source": "exact match: \"amount\"; 57% monetary + revenue pattern"
-          },
-          {
-            "category": "discount",
-            "confidence": 0.68,
-            "headerScore": 0.9,
-            "valueScore": 0.35,
-            "source": "token match (100%) with \"discount amount\"; 35% of values are numeric"
-          },
-          {
-            "category": "tax",
-            "confidence": 0.68,
-            "headerScore": 0.9,
-            "valueScore": 0.35,
-            "source": "fuzzy match (67%): \"tax amount\"; 35% of values are numeric"
-          },
-          {
-            "category": "profit",
-            "confidence": 0.68,
-            "headerScore": 0.9,
-            "valueScore": 0.35,
-            "source": "substring match: \"profit amount\"; 35% of values are monetary/profit"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.24,
-            "headerScore": 0.9,
-            "valueScore": 0.18,
-            "source": "substring match: \"retail amount\"; 18% monetary + unit-price pattern; downgraded — values too large vs similar column \"Customer??\""
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.4,
-            "headerScore": 0.67,
-            "valueScore": 0.13,
-            "source": "fuzzy match (67%): \"count\"; 13% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Customer??",
-        "normalizedHeader": "customer",
-        "detections": [
-          {
-            "category": "customer",
-            "confidence": 0.88,
-            "headerScore": 1,
-            "valueScore": 0.71,
-            "source": "exact match: \"customer\"; 71% of values are text/names"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.6,
-            "headerScore": 0.9,
-            "valueScore": 0.15,
-            "source": "fuzzy match (62%): \"customer price\"; 15% monetary + unit-price pattern"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "RxFlag",
-        "normalizedHeader": "rxflag",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.32,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — value pattern (64%); low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Batch#",
-        "normalizedHeader": "batch",
-        "detections": [
-          {
-            "category": "batch_number",
-            "confidence": 0.75,
-            "headerScore": 1,
-            "valueScore": 0.37,
-            "source": "exact match: \"batch\"; 37% of values are batch/lot codes"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.52,
-            "headerScore": 0.67,
-            "valueScore": 0.37,
-            "source": "fuzzy match (67%): \"branch\"; 37% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Expiry??",
-        "normalizedHeader": "expiry",
-        "detections": [
-          {
-            "category": "expiry_date",
-            "confidence": 0.94,
-            "headerScore": 1,
-            "valueScore": 0.85,
-            "source": "exact match: \"expiry\"; 85% of values are dates"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Notes",
-        "normalizedHeader": "notes",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.4,
-            "headerScore": 0.6,
-            "valueScore": 0.2,
-            "source": "fuzzy match (60%): \"nos\"; 20% of values are integers"
-          }
-        ],
-        "ignored": true
-      },
-      {
-        "rawHeader": "Who",
-        "normalizedHeader": "who",
-        "detections": [
-          {
-            "category": "invoice_number",
-            "confidence": 0.5,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — value pattern (100%); low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Mystery",
-        "normalizedHeader": "mystery",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.21,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — value pattern (41%); low confidence — please review"
-          }
-        ],
-        "ignored": false
-      }
-    ],
-    "processingStatus": "processed",
-    "rowCount": 233,
-    "sheetNames": [
-      "Sheet"
-    ],
-    "fingerprint": "5e59b277fd699cb5bee4a796366cbe3a",
-    "fileSize": 29000,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "inventory_snapshot",
-    "updatedAt": "2026-07-24T14:38:14.153Z",
-    "recommended_dashboards": [
-      "expiry",
-      "customer"
-    ]
-  },
-  {
-    "datasetId": "17c52d72-8058-4451-b614-9e1d980c0a15",
-    "filename": "Pharmacy_Sales_500_Rows_RealWorld_Messy.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-24T03:39:47.677Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": false,
-      "sales": false
-    },
-    "mappedColumns": {
-      " txn_date ": "transaction_date",
-      "Invoice No.": "invoice_number",
-      "Drug Name ": "product_name",
-      "UnitPrice": "selling_price",
-      "Sales Amt": "revenue",
-      "Pay-Method": "payment_method",
-      "Branch ": "branch",
-      "Sales Rep": "sales_representative",
-      "Customer type ": "customer",
-      "Cust_Type": "category",
-      "QTY": "quantity",
-      "Discount%": "discount",
-      "Inv No": "",
-      "Unit Price (₦)": "cost_price",
-      "Drug/Item": "",
-      "Item Desc": "",
-      "Qty Sold ": "quantity",
-      "Total ": ""
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": " txn_date ",
-        "normalizedHeader": "txn date",
-        "detections": [
-          {
-            "category": "expiry_date",
-            "confidence": 0.72,
-            "headerScore": 0.75,
-            "valueScore": 0.69,
-            "source": "fuzzy match (75%): \"exp date\"; 69% of values are dates"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.64,
-            "headerScore": 0.6,
-            "valueScore": 0.69,
-            "source": "fuzzy match (60%): \"entry date\"; 69% of values are dates"
-          },
-          {
-            "category": "invoice_number",
-            "confidence": 0.43,
-            "headerScore": 0.54,
-            "valueScore": 0.31,
-            "source": "token match (60%) with \"txn id\"; 31% of values are invoice/reference codes"
-          },
-          {
-            "category": "tax",
-            "confidence": 0.31,
-            "headerScore": 0.63,
-            "valueScore": 0,
-            "source": "fuzzy match (63%): \"tax rate\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Invoice No.",
-        "normalizedHeader": "invoice no",
-        "detections": [
-          {
-            "category": "invoice_number",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"invoice no\"; 100% of values are invoice/reference codes"
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.55,
-            "headerScore": 0.69,
-            "valueScore": 0.4,
-            "source": "fuzzy match (69%): \"invoice total\"; 40% monetary + revenue pattern"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"invoice date\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Inv No",
-        "normalizedHeader": "inv no",
-        "detections": [
-          {
-            "category": "generic_name",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"inn\"; 100% of values are product-like text"
-          },
-          {
-            "category": "invoice_number",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"invoice no\"; 100% of values are invoice/reference codes"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"inventory\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Customer type ",
-        "normalizedHeader": "customer type",
-        "detections": [
-          {
-            "category": "customer",
-            "confidence": 0.86,
-            "headerScore": 0.77,
-            "valueScore": 1,
-            "source": "fuzzy match (77%): \"customer name\"; 100% of values are text/names"
-          },
-          {
-            "category": "category",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"type\"; 100% of values are classification text"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"channel type\"; 100% of values are channel names"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.43,
-            "headerScore": 0.71,
-            "valueScore": 0,
-            "source": "fuzzy match (71%): \"customer price\""
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"dosage type\""
-          },
-          {
-            "category": "payment_method",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"tender type\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Cust_Type",
-        "normalizedHeader": "cust type",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 0.79,
-            "headerScore": 0.58,
-            "valueScore": 1,
-            "source": "fuzzy match (58%): \"product type\"; 100% of values are classification text"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.73,
-            "headerScore": 0.47,
-            "valueScore": 1,
-            "source": "token match (52%) with \"customer\"; 100% of values are text/names"
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"drug type\""
-          },
-          {
-            "category": "payment_method",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"pay type\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Drug/Item",
-        "normalizedHeader": "drug item",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.78,
-            "headerScore": 0.56,
-            "valueScore": 1,
-            "source": "fuzzy match (56%): \"drug name\"; 100% of values are text names"
-          },
-          {
-            "category": "generic_name",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"drug substance\"; 100% of values are product-like text"
-          },
-          {
-            "category": "category",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"drug class\"; 100% of values are classification text"
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"drug form\""
-          },
-          {
-            "category": "strength",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"drug strength\""
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"item count\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Drug Name ",
-        "normalizedHeader": "drug name",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"drug name\"; 100% of values are text names"
-          },
-          {
-            "category": "brand",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"brand name\"; 100% of values are product-like text"
-          },
-          {
-            "category": "category",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"drug class\"; 100% of values are classification text"
-          },
-          {
-            "category": "generic_name",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"generic name\"; 100% of values are product-like text"
-          },
-          {
-            "category": "manufacturer",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"manufacturer name\"; 100% of values are text/names"
-          },
-          {
-            "category": "supplier",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"supplier name\"; 100% of values are text/names"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"branch name\"; 100% of values are text/names"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"staff name\"; 100% of values are text/names"
-          },
-          {
-            "category": "warehouse",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"warehouse name\"; 100% of values are text/names"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"customer name\"; 100% of values are text/names"
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"drug type\""
-          },
-          {
-            "category": "strength",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"drug strength\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Item Desc",
-        "normalizedHeader": "item desc",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.9,
-            "headerScore": 0.83,
-            "valueScore": 1,
-            "source": "fuzzy match (56%): \"item description\"; 100% of values are text names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "QTY",
-        "normalizedHeader": "qty",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.91,
-            "headerScore": 1,
-            "valueScore": 0.76,
-            "source": "exact match: \"qty\"; 76% of values are integers"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.65,
-            "headerScore": 0.54,
-            "valueScore": 0.76,
-            "source": "token match (60%) with \"pack qty\"; 76% of values are pack sizes"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.65,
-            "headerScore": 0.54,
-            "valueScore": 0.76,
-            "source": "token match (60%) with \"stock qty\"; 76% of values are stock quantities"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Qty Sold ",
-        "normalizedHeader": "qty sold",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.95,
-            "headerScore": 1,
-            "valueScore": 0.88,
-            "source": "exact match: \"qty sold\"; 88% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "UnitPrice",
-        "normalizedHeader": "unitprice",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"unit price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.74,
-            "headerScore": 0.67,
-            "valueScore": 0.81,
-            "source": "fuzzy match (67%): \"cost price\"; 81% monetary + cost pattern"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.33,
-            "headerScore": 0.58,
-            "valueScore": 0.08,
-            "source": "fuzzy match (58%): \"units per pack\"; 8% of values are pack sizes"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Unit Price (₦)",
-        "normalizedHeader": "unit price",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"unit price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "discount",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"price off\"; 100% of values are numeric"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.75,
-            "headerScore": 0.7,
-            "valueScore": 0.81,
-            "source": "fuzzy match (70%): \"cost price\"; 81% monetary + cost pattern"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.34,
-            "headerScore": 0.58,
-            "valueScore": 0.09,
-            "source": "fuzzy match (58%): \"units per pack\"; 9% of values are pack sizes"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Sales Amt",
-        "normalizedHeader": "sales amt",
-        "detections": [
-          {
-            "category": "tax",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"sales tax\"; 100% of values are numeric"
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.79,
-            "headerScore": 0.75,
-            "valueScore": 0.85,
-            "source": "fuzzy match (75%): \"sales amount\"; 85% monetary + revenue pattern"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.08,
-            "headerScore": 0.55,
-            "valueScore": 0.5,
-            "source": "fuzzy match (55%): \"sales price\"; 50% monetary + unit-price pattern; downgraded — values too large vs similar column \"UnitPrice\"; downgraded — values too large vs similar column \"Unit Price (₦)\""
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.49,
-            "headerScore": 0.63,
-            "valueScore": 0.36,
-            "source": "fuzzy match (63%): \"sale date\"; 36% of values are dates"
-          },
-          {
-            "category": "invoice_number",
-            "confidence": 0.46,
-            "headerScore": 0.56,
-            "valueScore": 0.36,
-            "source": "fuzzy match (56%): \"sale id\"; 36% of values are invoice/reference codes"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"sales rep\""
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.3,
-            "headerScore": 0.6,
-            "valueScore": 0,
-            "source": "fuzzy match (60%): \"sales type\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Total ",
-        "normalizedHeader": "total",
-        "detections": [
-          {
-            "category": "revenue",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"total\"; 90% monetary + revenue pattern"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.79,
-            "headerScore": 0.9,
-            "valueScore": 0.63,
-            "source": "substring match: \"total units\"; 63% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Discount%",
-        "normalizedHeader": "discount",
-        "detections": [
-          {
-            "category": "discount",
-            "confidence": 0.93,
-            "headerScore": 1,
-            "valueScore": 0.83,
-            "source": "exact match: \"discount\"; 83% of values are numeric"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.64,
-            "headerScore": 0.63,
-            "valueScore": 0.66,
-            "source": "fuzzy match (63%): \"count\"; 66% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Pay-Method",
-        "normalizedHeader": "pay method",
-        "detections": [
-          {
-            "category": "payment_method",
-            "confidence": 0.94,
-            "headerScore": 1,
-            "valueScore": 0.84,
-            "source": "exact match: \"pay method\"; 84% of values are payment types"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Branch ",
-        "normalizedHeader": "branch",
-        "detections": [
-          {
-            "category": "branch",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"branch\"; 100% of values are text/names"
-          },
-          {
-            "category": "brand",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"brand\"; 100% of values are product-like text"
-          },
-          {
-            "category": "batch_number",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"batch\"; 100% of values are batch/lot codes"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"balance\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Sales Rep",
-        "normalizedHeader": "sales rep",
-        "detections": [
-          {
-            "category": "sales_representative",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"sales rep\"; 100% of values are text/names"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.85,
-            "headerScore": 0.7,
-            "valueScore": 1,
-            "source": "fuzzy match (70%): \"sales type\"; 100% of values are channel names"
-          },
-          {
-            "category": "invoice_number",
-            "confidence": 0.66,
-            "headerScore": 0.56,
-            "valueScore": 0.76,
-            "source": "fuzzy match (56%): \"sale id\"; 76% of values are invoice/reference codes"
-          },
-          {
-            "category": "tax",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"sales tax\""
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.32,
-            "headerScore": 0.64,
-            "valueScore": 0,
-            "source": "fuzzy match (64%): \"sales price\""
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.31,
-            "headerScore": 0.63,
-            "valueScore": 0,
-            "source": "fuzzy match (63%): \"sales\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Notes",
-        "normalizedHeader": "notes",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.35,
-            "headerScore": 0.6,
-            "valueScore": 0.09,
-            "source": "fuzzy match (60%): \"nos\"; 9% of values are integers"
-          }
-        ],
-        "ignored": true
-      }
-    ],
-    "processingStatus": "processed",
-    "rowCount": 500,
-    "sheetNames": [
-      "Sheet"
-    ],
-    "fingerprint": "edf8bfadce9ef7ed876cec459de8f80d",
-    "fileSize": 45870,
-    "branch": "Surulere",
-    "mappingVersion": 1,
-    "assetType": "inventory_snapshot",
-    "updatedAt": "2026-07-24T03:41:33.324Z",
-    "recommended_dashboards": []
-  },
-  {
-    "datasetId": "dad6ffcc-a17b-4449-b52f-0882ab9675eb",
-    "filename": "generated_data.csv",
-    "mimeType": "text/csv",
-    "uploadTimestamp": "2026-07-23T18:38:28.616Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": false,
-      "sales": false
-    },
-    "mappedColumns": {
-      "transaction_id": "invoice_number",
-      "quantity_sold": "quantity",
-      "drug_sku": "generic_name",
-      "inventory_on_hand": "current_stock"
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": "transaction_id",
-        "normalizedHeader": "transaction id",
-        "detections": [
-          {
-            "category": "invoice_number",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"transaction id\"; 100% of values are invoice/reference codes"
-          },
-          {
-            "category": "date",
-            "confidence": 0.45,
-            "headerScore": 0.75,
-            "valueScore": 0,
-            "source": "fuzzy match (75%): \"transaction date\""
-          },
-          {
-            "category": "payment_method",
-            "confidence": 0.45,
-            "headerScore": 0.75,
-            "valueScore": 0,
-            "source": "fuzzy match (75%): \"transaction type\""
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"transaction amount\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "transaction_timestamp",
-        "normalizedHeader": "transaction timestamp",
-        "detections": [
-          {
-            "category": "date",
-            "confidence": 0.81,
-            "headerScore": 0.62,
-            "valueScore": 1,
-            "source": "fuzzy match (62%): \"transaction date\"; 100% of values are dates"
-          },
-          {
-            "category": "payment_method",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"transaction type\""
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.31,
-            "headerScore": 0.62,
-            "valueScore": 0,
-            "source": "fuzzy match (62%): \"transaction amount\""
-          },
-          {
-            "category": "invoice_number",
-            "confidence": 0.31,
-            "headerScore": 0.62,
-            "valueScore": 0,
-            "source": "fuzzy match (62%): \"transaction id\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "drug_sku",
-        "normalizedHeader": "drug sku",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"drug\""
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"drug form\""
-          },
-          {
-            "category": "generic_name",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"drug substance\""
-          },
-          {
-            "category": "strength",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"drug strength\""
-          },
-          {
-            "category": "category",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"drug class\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "quantity_sold",
-        "normalizedHeader": "quantity sold",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (69%): \"units sold\"; 100% of values are integers"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"pack_quantity\"; 100% of values are pack sizes"
-          },
-          {
-            "category": "date",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"sold date\"; 100% of values are dates"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"stock_quantity\"; 100% of values are stock quantities"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "inventory_on_hand",
-        "normalizedHeader": "inventory on hand",
-        "detections": [
-          {
-            "category": "current_stock",
-            "confidence": 0.83,
-            "headerScore": 0.72,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"inventory\"; 100% of values are stock quantities"
-          },
-          {
-            "category": "warehouse",
-            "confidence": 0.31,
-            "headerScore": 0.61,
-            "valueScore": 0,
-            "source": "fuzzy match (61%): \"inventory location\""
-          }
-        ],
-        "ignored": false
-      }
-    ],
-    "processingStatus": "schema_detected",
-    "rowCount": 100,
-    "sheetNames": [
-      "Sheet1"
-    ],
-    "fingerprint": "02802252826e2cb01a6c3f109467684e",
-    "fileSize": 8790,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "inventory_snapshot",
-    "updatedAt": "2026-07-25T06:50:41.049Z",
-    "recommended_dashboards": []
-  },
-  {
-    "datasetId": "8e7d0570-59e6-4186-b64a-5d7d6bbda973",
-    "filename": "Pharmacy_Sales_Data_300.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-23T18:35:31.079Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": false,
-      "sales": true
-    },
-    "mappedColumns": {
-      "Invoice": "invoice_number",
-      "Product": "product_name",
-      "Brand": "brand",
-      "Qty": "quantity",
-      "Unit Price": "selling_price",
-      "Discount": "discount",
-      "Payment": "payment_method",
-      "Date": ""
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": "Invoice",
-        "normalizedHeader": "invoice",
-        "detections": [
-          {
-            "category": "invoice_number",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"invoice\"; 100% of values are invoice/reference codes"
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.7,
-            "headerScore": 0.9,
-            "valueScore": 0.4,
-            "source": "substring match: \"invoice total\"; 40% monetary + revenue pattern"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "fuzzy match (64%): \"invoice date\""
-          },
-          {
-            "category": "profit",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"income\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Date",
-        "normalizedHeader": "date",
-        "detections": [
-          {
-            "category": "transaction_date",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"date\"; 100% of values are dates"
-          },
-          {
-            "category": "expiry_date",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (57%): \"exp date\"; 100% of values are dates"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.45,
-            "headerScore": 0.75,
-            "valueScore": 0,
-            "source": "fuzzy match (75%): \"rate\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Product",
-        "normalizedHeader": "product",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"product\"; 100% of values are text names"
-          },
-          {
-            "category": "brand",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "substring match: \"product brand\"; 100% of values are product-like text"
-          },
-          {
-            "category": "category",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (64%): \"product type\"; 100% of values are classification text"
-          },
-          {
-            "category": "subcategory",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "substring match: \"product segment\"; 100% of values are classification text"
-          },
-          {
-            "category": "manufacturer",
-            "confidence": 0.85,
-            "headerScore": 0.75,
-            "valueScore": 1,
-            "source": "fuzzy match (75%): \"producer\"; 100% of values are text/names"
-          },
-          {
-            "category": "profit",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"profit\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Brand",
-        "normalizedHeader": "brand",
-        "detections": [
-          {
-            "category": "brand",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"brand\"; 100% of values are product-like text"
-          },
-          {
-            "category": "product_name",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (56%): \"drug brand\"; 100% of values are text names"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"branch\"; 100% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Qty",
-        "normalizedHeader": "qty",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"qty\"; 100% of values are integers"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"pack qty\"; 100% of values are pack sizes"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"stock qty\"; 100% of values are stock quantities"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Unit Price",
-        "normalizedHeader": "unit price",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"unit price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "discount",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"price off\"; 100% of values are numeric"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.75,
-            "headerScore": 0.7,
-            "valueScore": 0.81,
-            "source": "fuzzy match (70%): \"cost price\"; 81% monetary + cost pattern"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.31,
-            "headerScore": 0.58,
-            "valueScore": 0.04,
-            "source": "fuzzy match (58%): \"units per pack\"; 4% of values are pack sizes"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Discount",
-        "normalizedHeader": "discount",
-        "detections": [
-          {
-            "category": "discount",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"discount\"; 100% of values are numeric"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.81,
-            "headerScore": 0.63,
-            "valueScore": 1,
-            "source": "fuzzy match (63%): \"count\"; 100% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Payment",
-        "normalizedHeader": "payment",
-        "detections": [
-          {
-            "category": "payment_method",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"payment\"; 100% of values are payment types"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.83,
-            "headerScore": 0.71,
-            "valueScore": 1,
-            "source": "fuzzy match (71%): \"patient\"; 100% of values are text/names"
-          },
-          {
-            "category": "subcategory",
-            "confidence": 0.79,
-            "headerScore": 0.57,
-            "valueScore": 1,
-            "source": "fuzzy match (57%): \"segment\"; 100% of values are classification text"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.79,
-            "headerScore": 0.57,
-            "valueScore": 1,
-            "source": "fuzzy match (57%): \"agent\"; 100% of values are text/names"
-          }
-        ],
-        "ignored": false
-      }
-    ],
-    "processingStatus": "processed",
-    "rowCount": 300,
-    "sheetNames": [
-      "Sheet"
-    ],
-    "fingerprint": "8648e11484c7834bf37d666c58c72a9b",
-    "fileSize": 17104,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "sales_transaction",
-    "updatedAt": "2026-07-25T07:25:25.666Z",
-    "recommended_dashboards": [
-      "sales"
-    ]
-  },
-  {
-    "datasetId": "7ed28c3a-3f1d-462f-a2fe-01a5086b7639",
-    "filename": "Pharmacy_Sales_Data_500_Rows.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-23T18:33:51.209Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": true,
-      "sales": true
-    },
-    "mappedColumns": {
-      "Date": "transaction_date",
-      "Drug_Name": "product_name",
-      "Quantity": "quantity",
-      "Unit_Price": "selling_price",
-      "Discount": "discount",
-      "Sales": "revenue",
-      "Cost": "cost_price",
-      "Profit": "profit",
-      "Payment_Method": "payment_method",
-      "Customer_Type": "customer",
-      "Drug_Category": "subcategory"
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": "Date",
-        "normalizedHeader": "date",
-        "detections": [
-          {
-            "category": "transaction_date",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"date\"; 100% of values are dates"
-          },
-          {
-            "category": "expiry_date",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (57%): \"exp date\"; 100% of values are dates"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.45,
-            "headerScore": 0.75,
-            "valueScore": 0,
-            "source": "fuzzy match (75%): \"rate\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Invoice_ID",
-        "normalizedHeader": "invoice id",
-        "detections": [
-          {
-            "category": "invoice_number",
-            "confidence": 0.88,
-            "headerScore": 0.8,
-            "valueScore": 1,
-            "source": "fuzzy match (80%): \"invoice no\"; 100% of values are invoice/reference codes"
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.51,
-            "headerScore": 0.62,
-            "valueScore": 0.4,
-            "source": "fuzzy match (62%): \"invoice total\"; 40% monetary + revenue pattern"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"invoice date\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Customer_Type",
-        "normalizedHeader": "customer type",
-        "detections": [
-          {
-            "category": "customer",
-            "confidence": 0.86,
-            "headerScore": 0.77,
-            "valueScore": 1,
-            "source": "fuzzy match (77%): \"customer name\"; 100% of values are text/names"
-          },
-          {
-            "category": "category",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"type\"; 100% of values are classification text"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"channel type\"; 100% of values are channel names"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.43,
-            "headerScore": 0.71,
-            "valueScore": 0,
-            "source": "fuzzy match (71%): \"customer price\""
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"dosage type\""
-          },
-          {
-            "category": "payment_method",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"tender type\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Drug_Category",
-        "normalizedHeader": "drug category",
-        "detections": [
-          {
-            "category": "subcategory",
-            "confidence": 0.86,
-            "headerScore": 0.77,
-            "valueScore": 1,
-            "source": "fuzzy match (77%): \"sub category\"; 100% of values are classification text"
-          },
-          {
-            "category": "category",
-            "confidence": 0.84,
-            "headerScore": 0.69,
-            "valueScore": 1,
-            "source": "fuzzy match (69%): \"product category\"; 100% of values are classification text"
-          },
-          {
-            "category": "product_name",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"drug name\"; 100% of values are text names"
-          },
-          {
-            "category": "generic_name",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"drug substance\"; 100% of values are product-like text"
-          },
-          {
-            "category": "strength",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"drug strength\""
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"drug form\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Drug_Name",
-        "normalizedHeader": "drug name",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"drug name\"; 100% of values are text names"
-          },
-          {
-            "category": "brand",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"brand name\"; 100% of values are product-like text"
-          },
-          {
-            "category": "category",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"drug class\"; 100% of values are classification text"
-          },
-          {
-            "category": "generic_name",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"generic name\"; 100% of values are product-like text"
-          },
-          {
-            "category": "manufacturer",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"manufacturer name\"; 100% of values are text/names"
-          },
-          {
-            "category": "supplier",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"supplier name\"; 100% of values are text/names"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"branch name\"; 100% of values are text/names"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"staff name\"; 100% of values are text/names"
-          },
-          {
-            "category": "warehouse",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"warehouse name\"; 100% of values are text/names"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"customer name\"; 100% of values are text/names"
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"drug type\""
-          },
-          {
-            "category": "strength",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"drug strength\""
+            "source": "fuzzy match (75%): \"unit price\"; 90% monetary + unit-price pattern"
           }
         ],
         "ignored": false
@@ -3043,2208 +620,35 @@
         "ignored": false
       },
       {
-        "rawHeader": "Unit_Price",
-        "normalizedHeader": "unit price",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"unit price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "discount",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"price off\"; 100% of values are numeric"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.75,
-            "headerScore": 0.7,
-            "valueScore": 0.81,
-            "source": "fuzzy match (70%): \"cost price\"; 81% monetary + cost pattern"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.34,
-            "headerScore": 0.58,
-            "valueScore": 0.1,
-            "source": "fuzzy match (58%): \"units per pack\"; 10% of values are pack sizes"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Discount",
-        "normalizedHeader": "discount",
-        "detections": [
-          {
-            "category": "discount",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"discount\"; 100% of values are numeric"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.81,
-            "headerScore": 0.63,
-            "valueScore": 1,
-            "source": "fuzzy match (63%): \"count\"; 100% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Sales",
-        "normalizedHeader": "sales",
+        "rawHeader": "Line Revenue (NGN)",
+        "normalizedHeader": "line revenue ngn",
         "detections": [
           {
             "category": "revenue",
-            "confidence": 0.94,
-            "headerScore": 1,
-            "valueScore": 0.85,
-            "source": "exact match: \"sales\"; 85% monetary + revenue pattern"
-          },
-          {
-            "category": "tax",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (63%): \"sales tax\"; 100% of values are numeric"
-          },
-          {
-            "category": "invoice_number",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"sale id\"; 100% of values are invoice/reference codes"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.79,
-            "headerScore": 0.57,
-            "valueScore": 1,
-            "source": "fuzzy match (57%): \"tablets\"; 100% of values are integers"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.3,
-            "headerScore": 0.9,
-            "valueScore": 0.5,
-            "source": "substring match: \"sales price\"; 50% monetary + unit-price pattern; downgraded — values too large vs similar column \"Unit_Price\""
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "fuzzy match (63%): \"sales rep\""
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"sales type\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Cost",
-        "normalizedHeader": "cost",
-        "detections": [
-          {
-            "category": "cost_price",
-            "confidence": 0.95,
-            "headerScore": 1,
-            "valueScore": 0.88,
-            "source": "exact match: \"cost\"; 88% monetary + cost pattern"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"count\"; 100% of values are integers"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.74,
-            "headerScore": 0.9,
-            "valueScore": 0.5,
-            "source": "token match (100%) with \"selling cost\"; 50% monetary + unit-price pattern"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Profit",
-        "normalizedHeader": "profit",
-        "detections": [
-          {
-            "category": "profit",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"profit\"; 100% of values are monetary/profit"
-          },
-          {
-            "category": "margin",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "substring match: \"profit margin\""
-          },
-          {
-            "category": "product_name",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"product\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Payment_Method",
-        "normalizedHeader": "payment method",
-        "detections": [
-          {
-            "category": "payment_method",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"payment method\"; 100% of values are payment types"
-          }
-        ],
-        "ignored": false
-      }
-    ],
-    "processingStatus": "processed",
-    "rowCount": 500,
-    "sheetNames": [
-      "Sales"
-    ],
-    "fingerprint": "aab83b8d5b6b34a59f8daf1926742067",
-    "fileSize": 32290,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "sales_transaction",
-    "updatedAt": "2026-07-25T07:19:41.470Z",
-    "recommended_dashboards": [
-      "customer",
-      "sales"
-    ]
-  },
-  {
-    "datasetId": "2eb01e23-7e7b-4b27-9ee0-fd3a679c4b8d",
-    "filename": "NAFDAC_Pharma_Sales_Simulation.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-23T18:24:23.583Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": false,
-      "sales": true
-    },
-    "mappedColumns": null,
-    "normalizedSchema": null,
-    "processingStatus": "schema_detected",
-    "rowCount": 6670,
-    "sheetNames": [
-      "Pharma_Data",
-      "Summary_Dashboard",
-      "Risk_Flags"
-    ],
-    "fingerprint": "0d15bcaca35d166fb896911bb34d7e54",
-    "fileSize": 1086863,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "sales_transaction",
-    "updatedAt": "2026-07-23T18:24:31.602Z",
-    "recommended_dashboards": [
-      "sales"
-    ]
-  },
-  {
-    "datasetId": "333a4f2b-b649-42df-a160-7e62e5ee6eb2",
-    "filename": "NAFDAC_Pharma_Sales_Enhanced_2500_Transactions.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-23T18:13:14.056Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": false,
-      "sales": true
-    },
-    "mappedColumns": {
-      "Brand Name": "brand",
-      "Route": "",
-      "Generic": "generic_name",
-      "Company": "manufacturer",
-      "Selling Price (₦)": "selling_price",
-      "Cost Price (₦)": "cost_price",
-      "Expiry Date": "expiry_date",
-      "Sales Channel": "sales_channel",
-      "Reorder Level": "reorder_level",
-      "Units In Stock": "quantity",
-      "Registration Date": "transaction_date",
-      "Therapeutic Group": "",
-      "Category": "",
-      "Units Sold Monthly": "",
-      "Form": "dosage_form",
-      "Strength": "strength"
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": "Brand Name",
-        "normalizedHeader": "brand name",
-        "detections": [
-          {
-            "category": "brand",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"brand name\"; 100% of values are product-like text"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.89,
-            "headerScore": 0.82,
-            "valueScore": 1,
-            "source": "fuzzy match (82%): \"branch name\"; 100% of values are text/names"
-          },
-          {
-            "category": "product_name",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"drug name\"; 100% of values are text names"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"staff name\"; 100% of values are text/names"
-          },
-          {
-            "category": "generic_name",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"generic name\"; 100% of values are product-like text"
-          },
-          {
-            "category": "manufacturer",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"manufacturer name\"; 100% of values are text/names"
-          },
-          {
-            "category": "supplier",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"vendor name\"; 100% of values are text/names"
-          },
-          {
-            "category": "warehouse",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"warehouse name\"; 100% of values are text/names"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"client name\"; 100% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Category",
-        "normalizedHeader": "category",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"category\"; 100% of values are classification text"
-          },
-          {
-            "category": "subcategory",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (73%): \"subcategory\"; 100% of values are classification text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "NAFDAC No",
-        "normalizedHeader": "nafdac no",
-        "detections": [
-          {
-            "category": "invoice_number",
-            "confidence": 0.55,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — token match (110%) with \"invoice number\"; low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Form",
-        "normalizedHeader": "form",
-        "detections": [
-          {
-            "category": "dosage_form",
-            "confidence": 0.93,
-            "headerScore": 1,
-            "valueScore": 0.82,
-            "source": "exact match: \"form\"; 82% of values are dosage forms (tablet/capsule/syrup)"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.75,
+            "confidence": 0.63,
             "headerScore": 0.5,
-            "valueScore": 1,
-            "source": "substring match: \"platform\"; 100% of values are channel names"
-          },
-          {
-            "category": "strength",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"dosage\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Route",
-        "normalizedHeader": "route",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.3,
-            "headerScore": 0.6,
-            "valueScore": 0,
-            "source": "fuzzy match (60%): \"rate\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Strength",
-        "normalizedHeader": "strength",
-        "detections": [
-          {
-            "category": "strength",
-            "confidence": 0.94,
-            "headerScore": 1,
-            "valueScore": 0.84,
-            "source": "exact match: \"strength\"; 84% of values are dosage strengths (mg/g/%)"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.71,
-            "headerScore": 0.56,
-            "valueScore": 0.86,
-            "source": "fuzzy match (56%): \"store name\"; 86% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Registration Date",
-        "normalizedHeader": "registration date",
-        "detections": [
-          {
-            "category": "expiry_date",
-            "confidence": 0.82,
-            "headerScore": 0.71,
-            "valueScore": 1,
-            "source": "fuzzy match (71%): \"expiration date\"; 100% of values are dates"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.79,
-            "headerScore": 0.59,
-            "valueScore": 1,
-            "source": "fuzzy match (59%): \"transaction date\"; 100% of values are dates"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Status",
-        "normalizedHeader": "status",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.5,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — value pattern (100%); low confidence — please review"
-          }
-        ],
-        "ignored": true
-      },
-      {
-        "rawHeader": "Generic",
-        "normalizedHeader": "generic",
-        "detections": [
-          {
-            "category": "generic_name",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"generic\"; 100% of values are product-like text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Therapeutic Group",
-        "normalizedHeader": "therapeutic group",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 0.82,
-            "headerScore": 0.71,
-            "valueScore": 1,
-            "source": "fuzzy match (71%): \"therapeutic class\"; 100% of values are classification text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Therapeutic Subgroup",
-        "normalizedHeader": "therapeutic subgroup",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"therapeutic class\"; 100% of values are classification text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Company",
-        "normalizedHeader": "company",
-        "detections": [
-          {
-            "category": "manufacturer",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"company\"; 100% of values are text/names"
-          },
-          {
-            "category": "generic_name",
-            "confidence": 0.81,
-            "headerScore": 0.63,
-            "valueScore": 1,
-            "source": "fuzzy match (63%): \"compound\"; 100% of values are product-like text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Selling Price (₦)",
-        "normalizedHeader": "selling price",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"selling price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"billing date\"; 100% of values are dates"
-          },
-          {
-            "category": "discount",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"price off\"; 100% of values are numeric"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.75,
-            "headerScore": 0.69,
-            "valueScore": 0.81,
-            "source": "fuzzy match (69%): \"buying price\"; 81% monetary + cost pattern"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.3,
-            "headerScore": 0.6,
-            "valueScore": 0,
-            "source": "fuzzy match (60%): \"selling channel\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Cost Price (₦)",
-        "normalizedHeader": "cost price",
-        "detections": [
-          {
-            "category": "cost_price",
-            "confidence": 0.92,
-            "headerScore": 1,
-            "valueScore": 0.81,
-            "source": "exact match: \"cost price\"; 81% monetary + cost pattern"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.8,
-            "headerScore": 0.7,
-            "valueScore": 0.9,
-            "source": "fuzzy match (70%): \"unit price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "discount",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"price off\"; 100% of values are numeric"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Units Sold Monthly",
-        "normalizedHeader": "units sold monthly",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.83,
-            "headerScore": 0.72,
-            "valueScore": 1,
-            "source": "fuzzy match (56%): \"units sold\"; 100% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Units In Stock",
-        "normalizedHeader": "units in stock",
-        "detections": [
-          {
-            "category": "pack_size",
-            "confidence": 0.79,
-            "headerScore": 0.58,
-            "valueScore": 1,
-            "source": "fuzzy match (58%): \"units per pack\"; 100% of values are pack sizes"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.79,
-            "headerScore": 0.58,
-            "valueScore": 1,
-            "source": "fuzzy match (58%): \"units sold\"; 100% of values are integers"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.79,
-            "headerScore": 0.58,
-            "valueScore": 1,
-            "source": "fuzzy match (58%): \"closing stock\"; 100% of values are stock quantities"
-          },
-          {
-            "category": "opening_stock",
-            "confidence": 0.79,
-            "headerScore": 0.57,
-            "valueScore": 1,
-            "source": "fuzzy match (57%): \"beginning stock\"; 100% of values are stock quantities"
-          },
-          {
-            "category": "reorder_level",
-            "confidence": 0.29,
-            "headerScore": 0.58,
-            "valueScore": 0,
-            "source": "fuzzy match (58%): \"min stock\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Reorder Level",
-        "normalizedHeader": "reorder level",
-        "detections": [
-          {
-            "category": "transaction_date",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"order date\"; 100% of values are dates"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"stock level\"; 100% of values are stock quantities"
-          },
-          {
-            "category": "reorder_level",
-            "confidence": 0.6,
-            "headerScore": 1,
-            "valueScore": 0,
-            "source": "exact match: \"reorder level\""
-          },
-          {
-            "category": "min_stock",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"min level\""
-          },
-          {
-            "category": "max_stock",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"max level\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Days Out of Stock",
-        "normalizedHeader": "days out of stock",
-        "detections": [
-          {
-            "category": "current_stock",
-            "confidence": 0.51,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — token match (30%) with \"stock\"; low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Expiry Date",
-        "normalizedHeader": "expiry date",
-        "detections": [
-          {
-            "category": "expiry_date",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"expiry date\"; 100% of values are dates"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.84,
-            "headerScore": 0.73,
-            "valueScore": 1,
-            "source": "fuzzy match (73%): \"entry date\"; 100% of values are dates"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Units Expired (Last 6mo)",
-        "normalizedHeader": "units expired last 6mo",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.51,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — token match (30%) with \"units sold\"; low confidence — please review"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Sales Channel",
-        "normalizedHeader": "sales channel",
-        "detections": [
-          {
-            "category": "sales_channel",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"sales channel\"; 100% of values are channel names"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "fuzzy match (54%): \"sales rep\"; 100% of values are text/names"
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.31,
-            "headerScore": 0.62,
-            "valueScore": 0,
-            "source": "fuzzy match (62%): \"sales value\""
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"sales price\""
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"sale date\""
-          },
-          {
-            "category": "tax",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"sales tax\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "SKU Class",
-        "normalizedHeader": "sku class",
-        "detections": [
-          {
-            "category": "subcategory",
-            "confidence": 0.87,
-            "headerScore": 0.78,
-            "valueScore": 1,
-            "source": "fuzzy match (78%): \"subclass\"; 100% of values are classification text"
-          },
-          {
-            "category": "category",
-            "confidence": 0.85,
-            "headerScore": 0.7,
-            "valueScore": 1,
-            "source": "fuzzy match (70%): \"drug class\"; 100% of values are classification text"
+            "valueScore": 0.75,
+            "source": "substring match: \"revenue\"; 75% monetary + revenue pattern"
           }
         ],
         "ignored": false
       }
     ],
     "processingStatus": "processed",
-    "rowCount": 510,
+    "rowCount": 1641,
     "sheetNames": [
-      "Original_Pharma_Data",
-      "Enhanced_Transactions"
+      "Raw Data",
+      "Transaction Summary",
+      "Daily Summary",
+      "Category Summary"
     ],
-    "fingerprint": "d07e050ecaf17c24445e1c6ccc5d4e2c",
-    "fileSize": 506170,
-    "branch": null,
+    "fingerprint": "4dbf980c466b5bad5873ea305ed75508",
+    "fileSize": 123489,
+    "branch": "Downtown Branch",
     "mappingVersion": 1,
     "assetType": "sales_transaction",
-    "updatedAt": "2026-07-24T14:40:28.157Z",
+    "updatedAt": "2026-07-25T17:35:24.292Z",
     "recommended_dashboards": [
-      "sales"
-    ]
-  },
-  {
-    "datasetId": "5d16d2bd-ace0-4462-aea4-3d715537c29d",
-    "filename": "deepseek_csv_20260716_d063e2.txt",
-    "mimeType": "text/plain",
-    "uploadTimestamp": "2026-07-23T16:01:18.788Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": true,
-      "sales": false
-    },
-    "mappedColumns": {
-      "TransactionID": "invoice_number",
-      "Date": "transaction_date",
-      "ItemName": "product_name",
-      "QuantitySold": "quantity",
-      "UnitPrice": "selling_price",
-      "TotalAmount": "revenue",
-      "PaymentMethod": "payment_method",
-      "CustomerType": ""
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": "TransactionID",
-        "normalizedHeader": "transactionid",
-        "detections": [
-          {
-            "category": "invoice_number",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"transaction id\"; 100% of values are invoice/reference codes"
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.45,
-            "headerScore": 0.75,
-            "valueScore": 0,
-            "source": "fuzzy match (75%): \"transaction date\""
-          },
-          {
-            "category": "payment_method",
-            "confidence": 0.44,
-            "headerScore": 0.73,
-            "valueScore": 0,
-            "source": "fuzzy match (73%): \"transaction type\""
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.32,
-            "headerScore": 0.65,
-            "valueScore": 0,
-            "source": "fuzzy match (65%): \"transaction amount\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Date",
-        "normalizedHeader": "date",
-        "detections": [
-          {
-            "category": "transaction_date",
-            "confidence": 0.6,
-            "headerScore": 1,
-            "valueScore": 0,
-            "source": "exact match: \"date\""
-          },
-          {
-            "category": "expiry_date",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"exp date\""
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.07,
-            "headerScore": 0.75,
-            "valueScore": 0,
-            "source": "fuzzy match (75%): \"rate\"; downgraded — values too large vs similar column \"UnitPrice\"; downgraded — values too large vs similar column \"TotalAmount\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "ItemCode",
-        "normalizedHeader": "itemcode",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.81,
-            "headerScore": 0.63,
-            "valueScore": 1,
-            "source": "fuzzy match (63%): \"item name\"; 100% of values are text names"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"item count\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "ItemName",
-        "normalizedHeader": "itemname",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"item name\"; 100% of values are text names"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"store name\"; 100% of values are text/names"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.78,
-            "headerScore": 0.56,
-            "valueScore": 1,
-            "source": "fuzzy match (56%): \"staff name\"; 100% of values are text/names"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"patient name\"; 100% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "QuantitySold",
-        "normalizedHeader": "quantitysold",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"quantity\"; 100% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "UnitPrice",
-        "normalizedHeader": "unitprice",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"unit price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.68,
-            "headerScore": 0.67,
-            "valueScore": 0.7,
-            "source": "fuzzy match (67%): \"cost price\"; 70% monetary + cost pattern"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.29,
-            "headerScore": 0.58,
-            "valueScore": 0,
-            "source": "fuzzy match (58%): \"units per pack\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "TotalAmount",
-        "normalizedHeader": "totalamount",
-        "detections": [
-          {
-            "category": "tax",
-            "confidence": 0.84,
-            "headerScore": 0.73,
-            "valueScore": 1,
-            "source": "fuzzy match (73%): \"tax amount\"; 100% of values are numeric"
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.8,
-            "headerScore": 1,
-            "valueScore": 0.5,
-            "source": "exact match: \"total amount\"; 50% monetary + revenue pattern"
-          },
-          {
-            "category": "profit",
-            "confidence": 0.79,
-            "headerScore": 0.58,
-            "valueScore": 1,
-            "source": "fuzzy match (58%): \"profit amount\"; 100% of values are monetary/profit"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.77,
-            "headerScore": 0.75,
-            "valueScore": 0.8,
-            "source": "fuzzy match (75%): \"retail amount\"; 80% monetary + unit-price pattern"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.27,
-            "headerScore": 0.55,
-            "valueScore": 0,
-            "source": "fuzzy match (55%): \"total units\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "PaymentMethod",
-        "normalizedHeader": "paymentmethod",
-        "detections": [
-          {
-            "category": "payment_method",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"payment method\"; 100% of values are payment types"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "CustomerType",
-        "normalizedHeader": "customertype",
-        "detections": [
-          {
-            "category": "customer",
-            "confidence": 0.85,
-            "headerScore": 0.75,
-            "valueScore": 1,
-            "source": "fuzzy match (75%): \"customer name\"; 100% of values are text/names"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.35,
-            "headerScore": 0.69,
-            "valueScore": 0,
-            "source": "fuzzy match (69%): \"customer price\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "PrescriptionRequired",
-        "normalizedHeader": "prescriptionrequired",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.5,
-            "headerScore": 0,
-            "valueScore": 0,
-            "source": "best guess — value pattern (100%); low confidence — please review"
-          }
-        ],
-        "ignored": false
-      }
-    ],
-    "processingStatus": "processed",
-    "rowCount": 50,
-    "sheetNames": [
-      "Sheet1"
-    ],
-    "fingerprint": "af032b25af558ac9e803a8a91bcec92d",
-    "fileSize": 3822,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "inventory_snapshot",
-    "updatedAt": "2026-07-24T15:57:44.278Z",
-    "recommended_dashboards": [
-      "customer"
-    ]
-  },
-  {
-    "datasetId": "b6359746-38a2-4066-a2f8-98a135ac2694",
-    "filename": "deepseek_csv_20260716_7b480d.txt",
-    "mimeType": "text/plain",
-    "uploadTimestamp": "2026-07-23T16:01:08.283Z",
-    "capabilities": {
-      "inventory": true,
-      "expiry": true,
-      "supplier": true,
-      "customer": false,
-      "sales": false
-    },
-    "mappedColumns": {
-      "ItemName": "product_name",
-      "Category": "category",
-      "Supplier": "supplier",
-      "PurchasePrice": "cost_price",
-      "SellingPrice": "selling_price",
-      "CurrentStock": "current_stock",
-      "ExpiryDate": "expiry_date",
-      "BatchNumber": "batch_number",
-      "ItemCode": "",
-      "ReorderLevel": "reorder_level"
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": "ItemCode",
-        "normalizedHeader": "itemcode",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.81,
-            "headerScore": 0.63,
-            "valueScore": 1,
-            "source": "fuzzy match (63%): \"item name\"; 100% of values are text names"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"item count\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "ItemName",
-        "normalizedHeader": "itemname",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"item name\"; 100% of values are text names"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"store name\"; 100% of values are text/names"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.78,
-            "headerScore": 0.56,
-            "valueScore": 1,
-            "source": "fuzzy match (56%): \"staff name\"; 100% of values are text/names"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"patient name\"; 100% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Category",
-        "normalizedHeader": "category",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"category\"; 100% of values are classification text"
-          },
-          {
-            "category": "subcategory",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (73%): \"subcategory\"; 100% of values are classification text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Supplier",
-        "normalizedHeader": "supplier",
-        "detections": [
-          {
-            "category": "supplier",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"supplier\"; 100% of values are text/names"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"supplier cost\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "PurchasePrice",
-        "normalizedHeader": "purchaseprice",
-        "detections": [
-          {
-            "category": "cost_price",
-            "confidence": 0.88,
-            "headerScore": 1,
-            "valueScore": 0.7,
-            "source": "exact match: \"purchase price\"; 70% monetary + cost pattern"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.67,
-            "headerScore": 0.54,
-            "valueScore": 0.8,
-            "source": "fuzzy match (54%): \"retail price\"; 80% monetary + unit-price pattern"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.35,
-            "headerScore": 0.69,
-            "valueScore": 0,
-            "source": "fuzzy match (69%): \"purchaser\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "SellingPrice",
-        "normalizedHeader": "sellingprice",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"selling price\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.68,
-            "headerScore": 0.67,
-            "valueScore": 0.7,
-            "source": "fuzzy match (67%): \"buying price\"; 70% monetary + cost pattern"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"selling channel\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "CurrentStock",
-        "normalizedHeader": "currentstock",
-        "detections": [
-          {
-            "category": "current_stock",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"current stock\"; 100% of values are stock quantities"
-          },
-          {
-            "category": "opening_stock",
-            "confidence": 0.79,
-            "headerScore": 0.58,
-            "valueScore": 1,
-            "source": "fuzzy match (58%): \"start stock\"; 100% of values are stock quantities"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "ReorderLevel",
-        "normalizedHeader": "reorderlevel",
-        "detections": [
-          {
-            "category": "reorder_level",
-            "confidence": 0.6,
-            "headerScore": 1,
-            "valueScore": 0,
-            "source": "exact match: \"reorder level\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "ExpiryDate",
-        "normalizedHeader": "expirydate",
-        "detections": [
-          {
-            "category": "expiry_date",
-            "confidence": 0.6,
-            "headerScore": 1,
-            "valueScore": 0,
-            "source": "exact match: \"expiry date\""
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.35,
-            "headerScore": 0.7,
-            "valueScore": 0,
-            "source": "fuzzy match (70%): \"entry date\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "BatchNumber",
-        "normalizedHeader": "batchnumber",
-        "detections": [
-          {
-            "category": "batch_number",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"batch number\"; 100% of values are batch/lot codes"
-          },
-          {
-            "category": "invoice_number",
-            "confidence": 0.82,
-            "headerScore": 0.64,
-            "valueScore": 1,
-            "source": "fuzzy match (64%): \"bill number\"; 100% of values are invoice/reference codes"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"branch name\"; 100% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Location",
-        "normalizedHeader": "location",
-        "detections": [
-          {
-            "category": "branch",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"location\"; 100% of values are text/names"
-          },
-          {
-            "category": "warehouse",
-            "confidence": 0.81,
-            "headerScore": 0.62,
-            "valueScore": 1,
-            "source": "fuzzy match (62%): \"stock location\"; 100% of values are text/names"
-          },
-          {
-            "category": "product_name",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"formulation\"; 100% of values are text names"
-          },
-          {
-            "category": "strength",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "fuzzy match (54%): \"concentration\""
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.27,
-            "headerScore": 0.55,
-            "valueScore": 0,
-            "source": "fuzzy match (55%): \"formulation\""
-          }
-        ],
-        "ignored": true
-      }
-    ],
-    "processingStatus": "processed",
-    "rowCount": 20,
-    "sheetNames": [
-      "Sheet1"
-    ],
-    "fingerprint": "d48058f7863f0b356720d41e3b384d14",
-    "fileSize": 2236,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "mixed",
-    "updatedAt": "2026-07-24T15:47:50.982Z",
-    "recommended_dashboards": [
-      "inventory",
-      "expiry",
-      "supplier"
-    ]
-  },
-  {
-    "datasetId": "61c2c90d-f0a5-492c-8387-9c57f1d1469a",
-    "filename": "Pharmacy_Inventory_300.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-23T15:30:46.300Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": true,
-      "supplier": false,
-      "customer": false,
-      "sales": false
-    },
-    "mappedColumns": {
-      "Product": "product_name",
-      "Brand": "brand",
-      "Stock": "current_stock",
-      "Cost": "cost_price",
-      "Selling": "selling_price",
-      "Expiry": "expiry_date",
-      "Reorder": "reorder_level"
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": "Product",
-        "normalizedHeader": "product",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"product\"; 100% of values are text names"
-          },
-          {
-            "category": "brand",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "substring match: \"product brand\"; 100% of values are product-like text"
-          },
-          {
-            "category": "category",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (64%): \"product type\"; 100% of values are classification text"
-          },
-          {
-            "category": "subcategory",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "substring match: \"product segment\"; 100% of values are classification text"
-          },
-          {
-            "category": "manufacturer",
-            "confidence": 0.85,
-            "headerScore": 0.75,
-            "valueScore": 1,
-            "source": "fuzzy match (75%): \"producer\"; 100% of values are text/names"
-          },
-          {
-            "category": "profit",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"profit\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Brand",
-        "normalizedHeader": "brand",
-        "detections": [
-          {
-            "category": "brand",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"brand\"; 100% of values are product-like text"
-          },
-          {
-            "category": "product_name",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (56%): \"drug brand\"; 100% of values are text names"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"branch\"; 100% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Stock",
-        "normalizedHeader": "stock",
-        "detections": [
-          {
-            "category": "current_stock",
-            "confidence": 0.99,
-            "headerScore": 1,
-            "valueScore": 0.98,
-            "source": "exact match: \"stock\"; 98% of values are stock quantities"
-          },
-          {
-            "category": "opening_stock",
-            "confidence": 0.93,
-            "headerScore": 0.9,
-            "valueScore": 0.98,
-            "source": "substring match: \"start stock\"; 98% of values are stock quantities"
-          },
-          {
-            "category": "product_name",
-            "confidence": 0.6,
-            "headerScore": 1,
-            "valueScore": 0,
-            "source": "exact match: \"stock\""
-          },
-          {
-            "category": "reorder_level",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "fuzzy match (63%): \"min stock\""
-          },
-          {
-            "category": "max_stock",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "token match (100%) with \"maximum stock\""
-          },
-          {
-            "category": "warehouse",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"stock room\""
-          },
-          {
-            "category": "branch",
-            "confidence": 0.3,
-            "headerScore": 0.6,
-            "valueScore": 0,
-            "source": "fuzzy match (60%): \"store\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Cost",
-        "normalizedHeader": "cost",
-        "detections": [
-          {
-            "category": "cost_price",
-            "confidence": 0.92,
-            "headerScore": 1,
-            "valueScore": 0.81,
-            "source": "exact match: \"cost\"; 81% monetary + cost pattern"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"count\"; 100% of values are integers"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.74,
-            "headerScore": 0.9,
-            "valueScore": 0.5,
-            "source": "token match (100%) with \"selling cost\"; 50% monetary + unit-price pattern"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Selling",
-        "normalizedHeader": "selling",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.96,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"selling\"; 90% monetary + unit-price pattern"
-          },
-          {
-            "category": "expiry_date",
-            "confidence": 0.78,
-            "headerScore": 0.56,
-            "valueScore": 1,
-            "source": "fuzzy match (56%): \"shelf life\"; 100% of values are dates"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.54,
-            "headerScore": 0.9,
-            "valueScore": 0,
-            "source": "substring match: \"selling channel\""
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"seller\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Reorder",
-        "normalizedHeader": "reorder",
-        "detections": [
-          {
-            "category": "reorder_level",
-            "confidence": 0.6,
-            "headerScore": 1,
-            "valueScore": 0,
-            "source": "exact match: \"re order\""
-          },
-          {
-            "category": "payment_method",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"tender\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Expiry",
-        "normalizedHeader": "expiry",
-        "detections": [
-          {
-            "category": "expiry_date",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"expiry\"; 100% of values are dates"
-          }
-        ],
-        "ignored": false
-      }
-    ],
-    "processingStatus": "processed",
-    "rowCount": 300,
-    "sheetNames": [
-      "Sheet"
-    ],
-    "fingerprint": "2b91e969e9a35f9d893d21878867e622",
-    "fileSize": 16850,
-    "branch": null,
-    "mappingVersion": 1,
-    "assetType": "inventory_snapshot",
-    "updatedAt": "2026-07-25T06:58:41.335Z",
-    "recommended_dashboards": [
-      "expiry"
-    ]
-  },
-  {
-    "datasetId": "1c240f23-72c2-4e92-a220-209f88ab1c12",
-    "filename": "pharmacy_sales_messy.xlsx",
-    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "uploadTimestamp": "2026-07-23T15:25:47.828Z",
-    "capabilities": {
-      "inventory": false,
-      "expiry": false,
-      "supplier": false,
-      "customer": true,
-      "sales": true
-    },
-    "mappedColumns": {
-      "Sale ID": "invoice_number",
-      "Branch": "branch",
-      "Drug Name": "product_name",
-      "Category": "category",
-      "Unit Price": "selling_price",
-      "Payment Method": "payment_method",
-      "Sales Rep": "sales_representative",
-      "Date": "",
-      "Total Sales": "revenue",
-      "Qty Sold": "quantity",
-      "Customer Age": "",
-      "Prescription (Y/N)": "dosage_form"
-    },
-    "normalizedSchema": [
-      {
-        "rawHeader": "Sale ID",
-        "normalizedHeader": "sale id",
-        "detections": [
-          {
-            "category": "invoice_number",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"sale id\"; 100% of values are invoice/reference codes"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.78,
-            "headerScore": 0.56,
-            "valueScore": 1,
-            "source": "fuzzy match (56%): \"sales rep\"; 100% of values are text/names"
-          },
-          {
-            "category": "supplier",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"supplier id\"; 100% of values are text/names"
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"sales\""
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.3,
-            "headerScore": 0.6,
-            "valueScore": 0,
-            "source": "fuzzy match (60%): \"sale price\""
-          },
-          {
-            "category": "transaction_date",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"sale date\""
-          },
-          {
-            "category": "tax",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"sales tax\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Date",
-        "normalizedHeader": "date",
-        "detections": [
-          {
-            "category": "transaction_date",
-            "confidence": 0.91,
-            "headerScore": 1,
-            "valueScore": 0.78,
-            "source": "exact match: \"date\"; 78% of values are dates"
-          },
-          {
-            "category": "expiry_date",
-            "confidence": 0.85,
-            "headerScore": 0.9,
-            "valueScore": 0.78,
-            "source": "fuzzy match (57%): \"exp date\"; 78% of values are dates"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.45,
-            "headerScore": 0.75,
-            "valueScore": 0,
-            "source": "fuzzy match (75%): \"rate\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Branch",
-        "normalizedHeader": "branch",
-        "detections": [
-          {
-            "category": "branch",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"branch\"; 100% of values are text/names"
-          },
-          {
-            "category": "brand",
-            "confidence": 0.83,
-            "headerScore": 0.67,
-            "valueScore": 1,
-            "source": "fuzzy match (67%): \"brand\"; 100% of values are product-like text"
-          },
-          {
-            "category": "batch_number",
-            "confidence": 0.71,
-            "headerScore": 0.67,
-            "valueScore": 0.75,
-            "source": "fuzzy match (67%): \"batch\"; 75% of values are batch/lot codes"
-          },
-          {
-            "category": "current_stock",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"balance\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Drug Name",
-        "normalizedHeader": "drug name",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"drug name\"; 100% of values are text names"
-          },
-          {
-            "category": "brand",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"brand name\"; 100% of values are product-like text"
-          },
-          {
-            "category": "category",
-            "confidence": 0.8,
-            "headerScore": 0.6,
-            "valueScore": 1,
-            "source": "fuzzy match (60%): \"drug class\"; 100% of values are classification text"
-          },
-          {
-            "category": "generic_name",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"generic name\"; 100% of values are product-like text"
-          },
-          {
-            "category": "manufacturer",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"manufacturer name\"; 100% of values are text/names"
-          },
-          {
-            "category": "supplier",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"supplier name\"; 100% of values are text/names"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.77,
-            "headerScore": 0.55,
-            "valueScore": 1,
-            "source": "fuzzy match (55%): \"branch name\"; 100% of values are text/names"
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"staff name\"; 100% of values are text/names"
-          },
-          {
-            "category": "warehouse",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"warehouse name\"; 100% of values are text/names"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"customer name\"; 100% of values are text/names"
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"drug type\""
-          },
-          {
-            "category": "strength",
-            "confidence": 0.27,
-            "headerScore": 0.54,
-            "valueScore": 0,
-            "source": "token match (60%) with \"drug strength\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Category",
-        "normalizedHeader": "category",
-        "detections": [
-          {
-            "category": "category",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"category\"; 100% of values are classification text"
-          },
-          {
-            "category": "subcategory",
-            "confidence": 0.94,
-            "headerScore": 0.9,
-            "valueScore": 1,
-            "source": "fuzzy match (73%): \"subcategory\"; 100% of values are classification text"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Qty Sold",
-        "normalizedHeader": "qty sold",
-        "detections": [
-          {
-            "category": "quantity",
-            "confidence": 0.91,
-            "headerScore": 1,
-            "valueScore": 0.77,
-            "source": "exact match: \"qty sold\"; 77% of values are integers"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Unit Price",
-        "normalizedHeader": "unit price",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.38,
-            "headerScore": 1,
-            "valueScore": 0.9,
-            "source": "exact match: \"unit price\"; 90% monetary + unit-price pattern; downgraded — values too large vs similar column \"Customer Age\""
-          },
-          {
-            "category": "discount",
-            "confidence": 0.77,
-            "headerScore": 0.54,
-            "valueScore": 1,
-            "source": "token match (60%) with \"price off\"; 100% of values are numeric"
-          },
-          {
-            "category": "cost_price",
-            "confidence": 0.7,
-            "headerScore": 0.7,
-            "valueScore": 0.7,
-            "source": "fuzzy match (70%): \"cost price\"; 70% monetary + cost pattern"
-          },
-          {
-            "category": "pack_size",
-            "confidence": 0.52,
-            "headerScore": 0.58,
-            "valueScore": 0.46,
-            "source": "fuzzy match (58%): \"units per pack\"; 46% of values are pack sizes"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Total Sales",
-        "normalizedHeader": "total sales",
-        "detections": [
-          {
-            "category": "revenue",
-            "confidence": 0.9,
-            "headerScore": 1,
-            "valueScore": 0.75,
-            "source": "exact match: \"total sales\"; 75% monetary + revenue pattern"
-          },
-          {
-            "category": "tax",
-            "confidence": 0.62,
-            "headerScore": 0.54,
-            "valueScore": 0.7,
-            "source": "token match (60%) with \"sales tax\"; 70% of values are numeric"
-          },
-          {
-            "category": "quantity",
-            "confidence": 0.53,
-            "headerScore": 0.64,
-            "valueScore": 0.43,
-            "source": "fuzzy match (64%): \"total units\"; 43% of values are integers"
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.07,
-            "headerScore": 0.54,
-            "valueScore": 0.35,
-            "source": "token match (60%) with \"sales price\"; 35% monetary + unit-price pattern; downgraded — values too large vs similar column \"Unit Price\"; downgraded — values too large vs similar column \"Customer Age\""
-          },
-          {
-            "category": "sales_representative",
-            "confidence": 0.42,
-            "headerScore": 0.54,
-            "valueScore": 0.3,
-            "source": "token match (60%) with \"sales rep\"; 30% of values are text/names"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.42,
-            "headerScore": 0.54,
-            "valueScore": 0.3,
-            "source": "token match (60%) with \"sales channel\"; 30% of values are channel names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Payment Method",
-        "normalizedHeader": "payment method",
-        "detections": [
-          {
-            "category": "payment_method",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"payment method\"; 100% of values are payment types"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Customer Age",
-        "normalizedHeader": "customer age",
-        "detections": [
-          {
-            "category": "selling_price",
-            "confidence": 0.72,
-            "headerScore": 0.71,
-            "valueScore": 0.73,
-            "source": "fuzzy match (71%): \"customer price\"; 73% monetary + unit-price pattern"
-          },
-          {
-            "category": "customer",
-            "confidence": 0.56,
-            "headerScore": 0.85,
-            "valueScore": 0.13,
-            "source": "fuzzy match (85%): \"customer name\"; 13% of values are text/names"
-          },
-          {
-            "category": "warehouse",
-            "confidence": 0.38,
-            "headerScore": 0.64,
-            "valueScore": 0.13,
-            "source": "fuzzy match (64%): \"storage\"; 13% of values are text/names"
-          },
-          {
-            "category": "branch",
-            "confidence": 0.34,
-            "headerScore": 0.55,
-            "valueScore": 0.13,
-            "source": "fuzzy match (55%): \"store name\"; 13% of values are text/names"
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Prescription (Y/N)",
-        "normalizedHeader": "prescription y n",
-        "detections": [
-          {
-            "category": "product_name",
-            "confidence": 0.66,
-            "headerScore": 0.71,
-            "valueScore": 0.59,
-            "source": "fuzzy match (71%): \"description\"; 59% of values are text names"
-          },
-          {
-            "category": "dosage_form",
-            "confidence": 0.29,
-            "headerScore": 0.57,
-            "valueScore": 0,
-            "source": "fuzzy match (57%): \"presentation\""
-          }
-        ],
-        "ignored": false
-      },
-      {
-        "rawHeader": "Sales Rep",
-        "normalizedHeader": "sales rep",
-        "detections": [
-          {
-            "category": "sales_representative",
-            "confidence": 1,
-            "headerScore": 1,
-            "valueScore": 1,
-            "source": "exact match: \"sales rep\"; 100% of values are text/names"
-          },
-          {
-            "category": "sales_channel",
-            "confidence": 0.85,
-            "headerScore": 0.7,
-            "valueScore": 1,
-            "source": "fuzzy match (70%): \"sales type\"; 100% of values are channel names"
-          },
-          {
-            "category": "tax",
-            "confidence": 0.33,
-            "headerScore": 0.67,
-            "valueScore": 0,
-            "source": "fuzzy match (67%): \"sales tax\""
-          },
-          {
-            "category": "selling_price",
-            "confidence": 0.32,
-            "headerScore": 0.64,
-            "valueScore": 0,
-            "source": "fuzzy match (64%): \"sales price\""
-          },
-          {
-            "category": "revenue",
-            "confidence": 0.31,
-            "headerScore": 0.63,
-            "valueScore": 0,
-            "source": "fuzzy match (63%): \"sales\""
-          },
-          {
-            "category": "invoice_number",
-            "confidence": 0.28,
-            "headerScore": 0.56,
-            "valueScore": 0,
-            "source": "fuzzy match (56%): \"sale id\""
-          }
-        ],
-        "ignored": false
-      }
-    ],
-    "processingStatus": "schema_detected",
-    "rowCount": 52,
-    "sheetNames": [
-      "Sales Data"
-    ],
-    "fingerprint": "fd75f298198116948421567893603744",
-    "fileSize": 8515,
-    "branch": "Yaba",
-    "mappingVersion": 1,
-    "assetType": "sales_transaction",
-    "updatedAt": "2026-07-25T06:50:04.079Z",
-    "recommended_dashboards": [
-      "customer",
       "sales"
     ]
   }

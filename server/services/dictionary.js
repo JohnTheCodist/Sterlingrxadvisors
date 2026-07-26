@@ -584,7 +584,7 @@ const IGNORED_PATTERNS = [
   /\bstore\s*address\b/i,
   /\bbranch\s*address\b/i,
   /\bgps\b/i,
-  /\blocation\s*(url|link|coordinates?)?\b/i,
+  /\blocation\s*(url|link|coordinates?)\b/i,
   /\bgeolocation\b/i,
 
   // Images / media

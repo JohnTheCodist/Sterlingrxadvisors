@@ -25,6 +25,7 @@ import BusinessHealthCard from '../components/overview/BusinessHealthCard';
 import ExecutiveBrief from '../components/overview/ExecutiveBrief';
 import TopPriorities from '../components/overview/TopPriorities';
 import AlertsPanel from '../components/overview/AlertsPanel';
+import AdvisorChat from '../components/overview/AdvisorChat';
 
 // Widget ids (from server/services/widgetRegistry.js) that are product-centric
 // within the 'sales' dashboard category — used to give the "Products" nav tab
@@ -1183,37 +1184,8 @@ export default function Dashboard() {
           ))
         }
 
-        {/* AI Advisor — full insight list from the recommendation engine */}
-        {activeNav === 'advisor' && (
-          <div className="space-y-3">
-            {(bizHealth?.insights || []).length === 0 && (
-              <p className="text-sm text-[var(--color-ink-faint)]">No insights available yet.</p>
-            )}
-            {(bizHealth?.insights || []).map((ins, i) => (
-              <div key={i} className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className="text-[10px] font-semibold text-[var(--color-ink-faint)] uppercase tracking-wider">{ins.pillar}</span>
-                  <span className={`text-[10px] font-semibold rounded-full px-1.5 py-0.5 ${ins.impact >= 3 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-warning'}`}>
-                    {ins.impact >= 3 ? 'High Impact' : 'Medium Impact'}
-                  </span>
-                  <span className="text-[10px] text-[var(--color-ink-faint)] font-mono">{ins.confidence}% confidence</span>
-                </div>
-                <p className="text-sm text-[var(--color-ink)] font-medium leading-snug">{ins.observation}</p>
-                <div className="mt-2 space-y-1">
-                  {ins.evidence?.map((e, j) => (
-                    <p key={j} className="text-xs text-[var(--color-ink-faint)] flex gap-1">
-                      <span className="shrink-0 text-[var(--color-primary)]">•</span>
-                      <span>{e}</span>
-                    </p>
-                  ))}
-                </div>
-                <p className="mt-2 text-xs text-[var(--color-ink-soft)] leading-relaxed">{ins.businessImpact}</p>
-                <p className="mt-1 text-xs text-[var(--color-primary)] font-semibold leading-relaxed">{ins.recommendedAction}</p>
-                <p className="mt-0.5 text-xs text-emerald-700">{ins.expectedOutcome}</p>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* AI Advisor — conversational chat, grounded in the same data/recommendation engine */}
+        {activeNav === 'advisor' && <AdvisorChat />}
 
         {/* Legacy hardcoded sections — used only when no widget manifest exists */}
         {activeNav === 'overview' && !widgetManifest && (

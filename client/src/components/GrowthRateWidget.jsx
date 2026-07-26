@@ -1,8 +1,15 @@
+import { useState } from 'react';
 import InfoBadge from './InfoBadge';
+
+const GRANULARITY_LABELS = { month: 'Month', week: 'Week', day: 'Day' };
 
 function GrowthRateWidget({ widget }) {
   const w = widget;
   const result = w.result || {};
+
+  const drillLevels = result.drillLevels;
+  const levels = drillLevels ? Object.keys(drillLevels) : null;
+  const [activeLevel, setActiveLevel] = useState(result.displayGranularity || (levels ? levels[0] : null));
 
   if (result?.error) {
     return (
@@ -13,11 +20,16 @@ function GrowthRateWidget({ widget }) {
     );
   }
 
-  const growth = result?.growth ?? 0;
-  const classification = result?.growthClassification ?? 'Stable';
-  const supportingInsight = result?.supportingInsight ?? 'No insight available.';
-  const decisionSupport = result?.decisionSupport ?? 'Use historical data for better insights.';
-  const sublabel = result?.sublabel || 'vs Previous Month';
+  // Each drill level carries its own full summary (growth/classification/
+  // insight/decisionSupport) computed server-side — the toggle just swaps
+  // which one is displayed, it doesn't recompute anything client-side.
+  const active = (levels && drillLevels[activeLevel]) || result;
+
+  const growth = active?.growth ?? 0;
+  const classification = active?.growthClassification ?? 'Stable';
+  const supportingInsight = active?.supportingInsight ?? 'No insight available.';
+  const decisionSupport = active?.decisionSupport ?? 'Use historical data for better insights.';
+  const sublabel = active?.sublabel || 'vs Previous Month';
 
   // Trend color indicator
   const trendColor = classification === 'Growing' ? 'text-emerald-600' : classification === 'Declining' ? 'text-red-600' : 'text-amber-600';
@@ -33,10 +45,29 @@ function GrowthRateWidget({ widget }) {
           </div>
           <p className="text-xs text-[var(--color-ink-faint)] mt-1">{w.description || 'Identifies whether your business is accelerating, slowing, or remaining stable.'}</p>
         </div>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-full ${trendBg}`}>
-          <span className={`text-sm font-bold ${trendColor}`}>
-            {growth > 0 ? '↑' : growth < 0 ? '↓' : '—'}
-          </span>
+        <div className="flex items-center gap-3 shrink-0">
+          {levels && levels.length > 1 && (
+            <div className="flex items-center gap-1">
+              {levels.map((lvl) => (
+                <button
+                  key={lvl}
+                  onClick={() => setActiveLevel(lvl)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    activeLevel === lvl
+                      ? 'bg-[var(--color-primary)] text-primary-foreground'
+                      : 'bg-[var(--color-bg)] text-[var(--color-ink-soft)] hover:bg-[var(--color-primary-tint)]'
+                  }`}
+                >
+                  {GRANULARITY_LABELS[lvl] || lvl}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className={`flex h-10 w-10 items-center justify-center rounded-full ${trendBg}`}>
+            <span className={`text-sm font-bold ${trendColor}`}>
+              {growth > 0 ? '↑' : growth < 0 ? '↓' : '—'}
+            </span>
+          </div>
         </div>
       </div>
 

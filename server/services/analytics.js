@@ -318,7 +318,45 @@ function detectTimeGranularity(records) {
   };
 }
 
-module.exports = { analyze, calculateMetrics, monthlyRevenue, weeklyRevenue, dailyRevenue, yearlyRevenue, detectTimeGranularity, topProducts, monthlyProfit, revenueByCategory, monthlyQuantity, salesSeasonality, productPerformanceOverTime, revenueForecast, salesConcentrationRisk, profitLeakage };
+module.exports = { analyze, calculateMetrics, monthlyRevenue, weeklyRevenue, dailyRevenue, yearlyRevenue, detectTimeGranularity, topProducts, monthlyProfit, weeklyProfit, dailyProfit, revenueByCategory, monthlyQuantity, weeklyQuantity, dailyQuantity, monthlyTransactionCount, weeklyTransactionCount, dailyTransactionCount, salesSeasonality, productPerformanceOverTime, revenueForecast, salesConcentrationRisk, profitLeakage };
+
+// ---- transaction counts by period --------------------------------------
+
+function monthlyTransactionCount(normalizedRecords) {
+  const map = {};
+  for (const rec of normalizedRecords) {
+    const month = parseMonth(rec.transaction_date);
+    if (!month) continue;
+    map[month] = (map[month] || 0) + 1;
+  }
+  return Object.entries(map)
+    .map(([month, count]) => ({ month, count }))
+    .sort((a, b) => a.month.localeCompare(b.month));
+}
+
+function weeklyTransactionCount(normalizedRecords) {
+  const map = {};
+  for (const rec of normalizedRecords) {
+    const week = parseWeek(rec.transaction_date);
+    if (!week) continue;
+    map[week] = (map[week] || 0) + 1;
+  }
+  return Object.entries(map)
+    .map(([week, count]) => ({ week, count }))
+    .sort((a, b) => a.week.localeCompare(b.week));
+}
+
+function dailyTransactionCount(normalizedRecords) {
+  const map = {};
+  for (const rec of normalizedRecords) {
+    const day = parseMonth(rec.transaction_date) ? String(rec.transaction_date).trim().substring(0, 10) : null;
+    if (!day || !/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
+    map[day] = (map[day] || 0) + 1;
+  }
+  return Object.entries(map)
+    .map(([day, count]) => ({ day, count }))
+    .sort((a, b) => a.day.localeCompare(b.day));
+}
 
 // ---- monthly quantity trend -------------------------------------------
 
@@ -336,6 +374,90 @@ function monthlyQuantity(normalizedRecords) {
   return Object.entries(monthMap)
     .map(([month, quantity]) => ({ month, quantity: Math.round(quantity) }))
     .sort((a, b) => a.month.localeCompare(b.month));
+}
+
+// ---- weekly / daily quantity trend -------------------------------------
+
+function weeklyQuantity(normalizedRecords) {
+  const map = {};
+  for (const rec of normalizedRecords) {
+    const week = parseWeek(rec.transaction_date);
+    if (!week) continue;
+    const qty = num(rec.quantity);
+    if (qty <= 0) continue;
+    map[week] = (map[week] || 0) + qty;
+  }
+  return Object.entries(map)
+    .map(([week, quantity]) => ({ week, quantity: Math.round(quantity) }))
+    .sort((a, b) => a.week.localeCompare(b.week));
+}
+
+function dailyQuantity(normalizedRecords) {
+  const map = {};
+  for (const rec of normalizedRecords) {
+    const day = parseMonth(rec.transaction_date) ? String(rec.transaction_date).trim().substring(0, 10) : null;
+    if (!day || !/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
+    const qty = num(rec.quantity);
+    if (qty <= 0) continue;
+    map[day] = (map[day] || 0) + qty;
+  }
+  return Object.entries(map)
+    .map(([day, quantity]) => ({ day, quantity: Math.round(quantity) }))
+    .sort((a, b) => a.day.localeCompare(b.day));
+}
+
+// ---- weekly / daily profit breakdown -----------------------------------
+
+function weeklyProfit(normalizedRecords) {
+  const map = {};
+  for (const rec of normalizedRecords) {
+    const week = parseWeek(rec.transaction_date);
+    if (!week) continue;
+
+    const rev = num(revenueOf(rec));
+    const cost = totalCostOf(rec);
+
+    if (!map[week]) map[week] = { revenue: 0, cost: 0, hasCost: false };
+    map[week].revenue += rev;
+    if (cost > 0) {
+      map[week].cost += cost;
+      map[week].hasCost = true;
+    }
+  }
+  return Object.entries(map)
+    .map(([week, data]) => ({
+      week,
+      revenue: Math.round(data.revenue * 100) / 100,
+      cost: data.hasCost ? Math.round(data.cost * 100) / 100 : null,
+      profit: data.hasCost ? Math.round((data.revenue - data.cost) * 100) / 100 : null,
+    }))
+    .sort((a, b) => a.week.localeCompare(b.week));
+}
+
+function dailyProfit(normalizedRecords) {
+  const map = {};
+  for (const rec of normalizedRecords) {
+    const day = parseMonth(rec.transaction_date) ? String(rec.transaction_date).trim().substring(0, 10) : null;
+    if (!day || !/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
+
+    const rev = num(revenueOf(rec));
+    const cost = totalCostOf(rec);
+
+    if (!map[day]) map[day] = { revenue: 0, cost: 0, hasCost: false };
+    map[day].revenue += rev;
+    if (cost > 0) {
+      map[day].cost += cost;
+      map[day].hasCost = true;
+    }
+  }
+  return Object.entries(map)
+    .map(([day, data]) => ({
+      day,
+      revenue: Math.round(data.revenue * 100) / 100,
+      cost: data.hasCost ? Math.round(data.cost * 100) / 100 : null,
+      profit: data.hasCost ? Math.round((data.revenue - data.cost) * 100) / 100 : null,
+    }))
+    .sort((a, b) => a.day.localeCompare(b.day));
 }
 
 // ---- sales seasonality (multi-year overlay) --------------------------

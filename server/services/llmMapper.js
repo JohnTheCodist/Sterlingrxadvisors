@@ -636,7 +636,7 @@ async function mapColumns(headers, sampleValues, options = {}) {
 
     if (llmResult) {
       const validated = validateLlmMapping(llmResult, headers);
-      const columns = buildColumnsFromMapping(headers, validated.mapping, validated.confidence, sampleValues);
+      const columns = buildColumnsFromMapping(headers, validated.mapping, validated.confidence, sampleValues, 'LLM semantic match');
 
       const result = { source: 'llm', columns, rawLlm: llmResult };
       cacheResult(fp, { source: 'llm', columns });
@@ -646,7 +646,7 @@ async function mapColumns(headers, sampleValues, options = {}) {
 
   // Fall back to local mode
   const localResult = localMap(headers, sampleValues);
-  const columns = buildColumnsFromMapping(headers, localResult.mapping, localResult.confidence, sampleValues);
+  const columns = buildColumnsFromMapping(headers, localResult.mapping, localResult.confidence, sampleValues, 'Local heuristic match');
 
   const result = { source: 'local', columns };
   cacheResult(fp, { source: 'local', columns });
@@ -656,7 +656,7 @@ async function mapColumns(headers, sampleValues, options = {}) {
 /**
  * Build the standard column detection output format from a raw mapping.
  */
-function buildColumnsFromMapping(headers, mapping, confidence, sampleValues) {
+function buildColumnsFromMapping(headers, mapping, confidence, sampleValues, sourceLabel = 'LLM semantic match') {
   return headers.map((header, i) => {
     const mappedTo = mapping[header] || null;
     const conf = mappedTo ? (confidence[header] || 0.5) : 0;
@@ -668,7 +668,7 @@ function buildColumnsFromMapping(headers, mapping, confidence, sampleValues) {
       detections.push({
         category: mappedTo,
         confidence: conf,
-        source: 'LLM semantic match',
+        source: sourceLabel,
       });
 
       // Add alternative detections from value patterns

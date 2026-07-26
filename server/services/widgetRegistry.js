@@ -306,38 +306,63 @@ const WIDGETS = [
   {
     id: 'monthly-profit',
     title: 'Monthly Profit',
-    description: 'Monthly comparison of revenue versus profit. Shows how costs impact bottom-line performance over time.',
+    description: 'Comparison of revenue versus profit — monthly, weekly, or daily depending on how much date history is available.',
     dashboard: 'sales',
     category: 'Trends',
     priority: 8,
     chartType: 'line',
     requiredFields: ['transaction_date', 'selling_price', 'quantity', 'cost_price'],
-    optionalFields: [],
+    optionalFields: ['day', 'week'],
     compute(records) {
-      const data = analytics.monthlyProfit(records);
-      if (data.length === 0) {
+      const granularity = analytics.detectTimeGranularity(records);
+      if (!granularity.day) {
+        return { error: 'No date information available' };
+      }
+
+      const byLevel = {};
+      try {
+        if (granularity.month) byLevel.month = analytics.monthlyProfit(records);
+        if (granularity.week) byLevel.week = analytics.weeklyProfit(records);
+        if (granularity.day) byLevel.day = analytics.dailyProfit(records);
+      } catch (_) { /* drill-down is best-effort */ }
+
+      const levels = Object.keys(byLevel).filter((k) => byLevel[k].length > 0);
+      if (levels.length === 0) {
         return { error: 'No date or cost information available' };
       }
-      const hasProfit = data.some((d) => d.profit !== null);
-      if (!hasProfit) {
+      const hasProfitAnyLevel = levels.some((lvl) => byLevel[lvl].some((d) => d.profit !== null));
+      if (!hasProfitAnyLevel) {
         return { error: 'Cost data not available for profit calculation' };
       }
+
+      const primaryLevel = levels.includes('month') ? 'month' : (levels.includes('week') ? 'week' : levels[0]);
+      const data = byLevel[primaryLevel];
+      const periodKey = primaryLevel; // 'month' | 'week' | 'day' — matches the field name on each row
+
       const peak = data.reduce((best, d) => (d.profit || 0) > (best?.profit || 0) ? d : best, null);
       const first = data[0];
       const last = data[data.length - 1];
-      let insight = { title: 'Revenue vs. Profit', subtitle: 'How much we keep after costs — monthly trend.' };
+      let insight = { title: 'Revenue vs. Profit', subtitle: `How much we keep after costs — ${primaryLevel}ly trend.` };
       if (data.length >= 2 && (last?.profit || 0) > (first?.profit || 0) * 1.1) {
         insight = {
           title: 'Profit Margin Expanding',
-          subtitle: `Profit grew ${Math.round(((last.profit - first.profit) / first.profit) * 100)}% from ${first.month} to ${last.month}, ending at ₦${last.profit.toLocaleString()}.`,
+          subtitle: `Profit grew ${Math.round(((last.profit - first.profit) / first.profit) * 100)}% from ${first[periodKey]} to ${last[periodKey]}, ending at ₦${last.profit.toLocaleString()}.`,
         };
       }
+
+      const drillLevels = {};
+      for (const lvl of levels) {
+        drillLevels[lvl] = byLevel[lvl].map((d) => ({ x: d[lvl], y: d.revenue }));
+      }
+
       return {
         series: [
-          { name: 'Revenue', data: data.map((d) => ({ x: d.month, y: d.revenue })) },
-          { name: 'Profit', data: data.map((d) => ({ x: d.month, y: d.profit || 0 })) },
+          { name: 'Revenue', data: data.map((d) => ({ x: d[periodKey], y: d.revenue })) },
+          { name: 'Profit', data: data.map((d) => ({ x: d[periodKey], y: d.profit || 0 })) },
         ],
-        annotation: peak?.profit ? { x: peak.month, y: peak.profit, label: `Peak profit: ₦${peak.profit.toLocaleString()}` } : null,
+        drillLevels: levels.length > 1 ? drillLevels : null,
+        displayGranularity: primaryLevel,
+        annotation: peak?.profit ? { x: peak[periodKey], y: peak.profit, label: `Peak profit: ₦${peak.profit.toLocaleString()}` } : null,
         insight,
       };
     },
@@ -403,46 +428,74 @@ const WIDGETS = [
   {
     id: 'quantity-trend',
     title: 'Quantity Trend',
-    description: 'Monthly trend of units sold. Tracks sales volume changes over time.',
+    description: 'Trend of units sold — monthly, weekly, or daily depending on how much date history is available.',
     dashboard: 'sales',
     category: 'Trends',
     priority: 10,
     chartType: 'line',
     requiredFields: ['transaction_date', 'quantity'],
-    optionalFields: [],
+    optionalFields: ['day', 'week'],
     compute(records) {
-      const data = analytics.monthlyQuantity(records);
-      if (data.length === 0) {
+      const granularity = analytics.detectTimeGranularity(records);
+      if (!granularity.day) {
+        return { error: 'No date information available' };
+      }
+
+      const drillLevels = {};
+      try {
+        if (granularity.month) {
+          const monthData = analytics.monthlyQuantity(records);
+          if (monthData.length > 0) drillLevels.month = monthData.map((d) => ({ x: d.month, y: d.quantity }));
+        }
+        if (granularity.week) {
+          const weekData = analytics.weeklyQuantity(records);
+          if (weekData.length > 0) drillLevels.week = weekData.map((d) => ({ x: d.week, y: d.quantity }));
+        }
+        if (granularity.day) {
+          const dayData = analytics.dailyQuantity(records);
+          if (dayData.length > 0) drillLevels.day = dayData.map((d) => ({ x: d.day, y: d.quantity }));
+        }
+      } catch (_) { /* drill-down is best-effort */ }
+
+      if (Object.keys(drillLevels).length === 0) {
         return { error: 'No date or quantity data available' };
       }
-      const peak = data.reduce((best, d) => d.quantity > (best?.quantity || 0) ? d : best, null);
+
+      const levels = Object.keys(drillLevels);
+      const primaryLevel = levels.includes('month') ? 'month' : (levels.includes('week') ? 'week' : levels[0]);
+      const data = drillLevels[primaryLevel];
+      const periodLabel = primaryLevel === 'month' ? 'Monthly' : primaryLevel === 'week' ? 'Weekly' : 'Daily';
+
+      const peak = data.reduce((best, d) => d.y > (best?.y || 0) ? d : best, null);
       const first = data[0];
       const last = data[data.length - 1];
 
       // Pattern detection for insight
       let insight = { title: 'Quantity Trend', subtitle: null };
       if (data.length < 2) {
-        insight = { title: 'Single Period', subtitle: `${peak.quantity.toLocaleString()} units moved in ${peak.month}` };
-      } else if (last.quantity > first.quantity * 1.15) {
+        insight = { title: 'Single Period', subtitle: `${peak.y.toLocaleString()} units moved in ${peak.x}` };
+      } else if (last.y > first.y * 1.15) {
         insight = {
           title: 'Volume on the Rise',
-          subtitle: `Units shipped climbed ${Math.round(((last.quantity - first.quantity) / first.quantity) * 100)}% from ${first.month} to ${last.month}, ending at ${last.quantity.toLocaleString()} units.`,
+          subtitle: `Units shipped climbed ${Math.round(((last.y - first.y) / first.y) * 100)}% from ${first.x} to ${last.x}, ending at ${last.y.toLocaleString()} units.`,
         };
-      } else if (last.quantity < first.quantity * 0.85) {
+      } else if (last.y < first.y * 0.85) {
         insight = {
           title: 'Shipments Softening',
-          subtitle: `Monthly volume declined ${Math.round(((first.quantity - last.quantity) / first.quantity) * 100)}% from ${first.month}, with a peak of ${peak.quantity.toLocaleString()} units in ${peak.month}.`,
+          subtitle: `${periodLabel} volume declined ${Math.round(((first.y - last.y) / first.y) * 100)}% from ${first.x}, with a peak of ${peak.y.toLocaleString()} units in ${peak.x}.`,
         };
       } else {
         insight = {
           title: 'Volume Holding Steady',
-          subtitle: `Monthly units have been consistent around ${Math.round(data.reduce((s, d) => s + d.quantity, 0) / data.length).toLocaleString()}, peaking at ${peak.quantity.toLocaleString()} in ${peak.month}.`,
+          subtitle: `${periodLabel} units have been consistent around ${Math.round(data.reduce((s, d) => s + d.y, 0) / data.length).toLocaleString()}, peaking at ${peak.y.toLocaleString()} in ${peak.x}.`,
         };
       }
 
       return {
-        series: [{ name: 'Units', data: data.map((d) => ({ x: d.month, y: d.quantity })) }],
-        annotation: peak ? { x: peak.month, y: peak.quantity, label: `Peak: ${peak.quantity.toLocaleString()} units` } : null,
+        series: [{ name: 'Units', data }],
+        drillLevels: levels.length > 1 ? drillLevels : null,
+        displayGranularity: primaryLevel,
+        annotation: peak ? { x: peak.x, y: peak.y, label: `Peak: ${peak.y.toLocaleString()} units` } : null,
         insight,
       };
     },
@@ -451,22 +504,39 @@ const WIDGETS = [
   {
     id: 'profit-trend',
     title: 'Profit Trend',
-    description: 'Monthly profit trend showing how much was earned after costs.',
+    description: 'Profit trend showing how much was earned after costs — monthly, weekly, or daily depending on how much date history is available.',
     dashboard: 'sales',
     category: 'Trends',
     priority: 11,
     chartType: 'line',
     requiredFields: ['transaction_date', 'selling_price', 'quantity', 'cost_price'],
-    optionalFields: [],
+    optionalFields: ['day', 'week'],
     compute(records) {
-      const data = analytics.monthlyProfit(records);
-      if (data.length === 0) {
+      const granularity = analytics.detectTimeGranularity(records);
+      if (!granularity.day) {
+        return { error: 'No date information available' };
+      }
+
+      const byLevel = {};
+      try {
+        if (granularity.month) byLevel.month = analytics.monthlyProfit(records);
+        if (granularity.week) byLevel.week = analytics.weeklyProfit(records);
+        if (granularity.day) byLevel.day = analytics.dailyProfit(records);
+      } catch (_) { /* drill-down is best-effort */ }
+
+      const levels = Object.keys(byLevel).filter((k) => byLevel[k].length > 0);
+      if (levels.length === 0) {
         return { error: 'No date or cost data available' };
       }
-      const hasProfit = data.some((d) => d.profit !== null);
-      if (!hasProfit) {
+      const hasProfitAnyLevel = levels.some((lvl) => byLevel[lvl].some((d) => d.profit !== null));
+      if (!hasProfitAnyLevel) {
         return { error: 'Cost data not available for profit trend' };
       }
+
+      const primaryLevel = levels.includes('month') ? 'month' : (levels.includes('week') ? 'week' : levels[0]);
+      const data = byLevel[primaryLevel];
+      const periodKey = primaryLevel;
+      const periodLabel = primaryLevel === 'month' ? 'Monthly' : primaryLevel === 'week' ? 'Weekly' : 'Daily';
 
       const first = data[0];
       const last = data[data.length - 1];
@@ -480,28 +550,35 @@ const WIDGETS = [
       if (data.length < 2) {
         insight = {
           title: 'Single Period',
-          subtitle: `Profit of ₦${(last.profit || 0).toLocaleString()} recorded in ${last.month}.`,
+          subtitle: `Profit of ₦${(last.profit || 0).toLocaleString()} recorded in ${last[periodKey]}.`,
         };
       } else if ((last.profit || 0) > (first.profit || 0) * 1.15) {
         insight = {
           title: 'Profit on the Rise',
-          subtitle: `Bottom-line growth of ${Math.round(((last.profit - first.profit) / first.profit) * 100)}% from ${first.month} to ${last.month}, reaching ₦${last.profit.toLocaleString()}.`,
+          subtitle: `Bottom-line growth of ${Math.round(((last.profit - first.profit) / first.profit) * 100)}% from ${first[periodKey]} to ${last[periodKey]}, reaching ₦${last.profit.toLocaleString()}.`,
         };
       } else if ((last.profit || 0) < (first.profit || 0) * 0.85) {
         insight = {
           title: 'Margin Under Pressure',
-          subtitle: `Profit fell ${Math.round(((first.profit - last.profit) / first.profit) * 100)}% from ${first.month}, with the strongest month at ₦${(peak.profit || peak.revenue).toLocaleString()} in ${peak.month}.`,
+          subtitle: `Profit fell ${Math.round(((first.profit - last.profit) / first.profit) * 100)}% from ${first[periodKey]}, with the strongest period at ₦${(peak.profit || peak.revenue).toLocaleString()} in ${peak[periodKey]}.`,
         };
       } else {
         insight = {
           title: 'Profit Holding Steady',
-          subtitle: `Monthly profit has been stable around ₦${Math.round(data.reduce((s, d) => s + (d.profit || 0), 0) / data.length).toLocaleString()}, peaking at ₦${(peak.profit || peak.revenue).toLocaleString()} in ${peak.month}.`,
+          subtitle: `${periodLabel} profit has been stable around ₦${Math.round(data.reduce((s, d) => s + (d.profit || 0), 0) / data.length).toLocaleString()}, peaking at ₦${(peak.profit || peak.revenue).toLocaleString()} in ${peak[periodKey]}.`,
         };
       }
 
+      const drillLevels = {};
+      for (const lvl of levels) {
+        drillLevels[lvl] = byLevel[lvl].map((d) => ({ x: d[lvl], y: d.profit || 0 }));
+      }
+
       return {
-        series: [{ name: 'Profit', data: data.map((d) => ({ x: d.month, y: d.profit || 0 })) }],
-        annotation: peak ? { x: peak.month, y: peak.profit || peak.revenue, label: `Peak profit: ₦${(peak.profit || peak.revenue).toLocaleString()}` } : null,
+        series: [{ name: 'Profit', data: data.map((d) => ({ x: d[periodKey], y: d.profit || 0 })) }],
+        drillLevels: levels.length > 1 ? drillLevels : null,
+        displayGranularity: primaryLevel,
+        annotation: peak ? { x: peak[periodKey], y: peak.profit || peak.revenue, label: `Peak profit: ₦${(peak.profit || peak.revenue).toLocaleString()}` } : null,
         insight,
       };
     },
@@ -579,8 +656,8 @@ const WIDGETS = [
 
   {
     id: 'monthly-sales-performance',
-    title: 'Monthly Sales Performance',
-    description: 'Comprehensive monthly sales analysis. Identifies strongest and weakest months, seasonal patterns, and growth direction.',
+    title: 'Sales Performance',
+    description: 'Comprehensive sales analysis — monthly, weekly, or daily depending on how much date history is available. Identifies strongest and weakest periods, seasonal patterns, and growth direction.',
     dashboard: 'sales',
     category: 'Trends',
     priority: 9,
@@ -588,35 +665,59 @@ const WIDGETS = [
     requiredFields: ['transaction_date', 'selling_price', 'quantity'],
     optionalFields: ['day', 'week', 'cost_price'],
     compute(records) {
-      const data = analytics.monthlyRevenue(records);
-      if (data.length === 0) {
-        return { error: 'Monthly Sales Performance cannot be calculated because revenue information is unavailable.' };
+      const granularity = analytics.detectTimeGranularity(records);
+      if (!granularity.day) {
+        return { error: 'No date information available' };
       }
 
-      if (data.length < 3) {
+      // Build each available granularity with a display-friendly name
+      const byLevel = {};
+      if (granularity.month) {
+        const monthData = analytics.monthlyRevenue(records);
+        if (monthData.length > 0) byLevel.month = monthData.map((d) => ({
+          period: d.month,
+          revenue: d.revenue,
+          name: `${d.month.split('-')[0]}/${d.month.split('-')[1].padStart(2, '0')}`,
+        }));
+      }
+      if (granularity.week) {
+        const weekData = analytics.weeklyRevenue(records);
+        if (weekData.length > 0) byLevel.week = weekData.map((d) => ({ period: d.week, revenue: d.revenue, name: d.week }));
+      }
+      if (granularity.day) {
+        const dayData = analytics.dailyRevenue(records);
+        if (dayData.length > 0) byLevel.day = dayData.map((d) => ({
+          period: d.day,
+          revenue: d.revenue,
+          name: `${d.day.split('-')[1]}/${d.day.split('-')[2]}`,
+        }));
+      }
+
+      // Prefer the coarsest granularity with enough periods to be meaningful
+      // (month → week → day), falling back to a finer level automatically
+      // when the dataset's date span is too short for months.
+      const order = ['month', 'week', 'day'];
+      const primaryLevel = order.find((lvl) => byLevel[lvl] && byLevel[lvl].length >= 3);
+      if (!primaryLevel) {
         return {
-          error: 'At least three months of sales history are required to analyse monthly sales performance.',
+          error: 'At least three periods of sales history (month, week, or day) are required to analyse sales performance.',
         };
       }
 
-      // Sort chronologically
-      const sorted = [...data].sort((a, b) =>
-        `${a.month.split('-')[0]}-${a.month.split('-')[1].padStart(2, '0')}`.localeCompare(
-          `${b.month.split('-')[0]}-${b.month.split('-')[1].padStart(2, '0')}`
-        )
-      );
+      const sorted = [...byLevel[primaryLevel]].sort((a, b) => a.period.localeCompare(b.period));
+      const periodLabel = primaryLevel === 'month' ? 'month' : primaryLevel === 'week' ? 'week' : 'day';
+      const periodLabelCap = primaryLevel === 'month' ? 'Monthly' : primaryLevel === 'week' ? 'Weekly' : 'Daily';
 
       // Find highest, lowest, average
       const highest = sorted.reduce((best, d) => (d.revenue > (best ? best.revenue : 0) ? d : best), null);
       const lowest = sorted.reduce((worst, d) => (d.revenue < (worst ? worst.revenue : Number.MAX_VALUE) ? d : worst), null);
       const average = Math.round(sorted.reduce((a, d) => a + d.revenue, 0) / sorted.length);
 
-      // Calculate current trend (last month vs first month)
+      // Calculate current trend (last period vs first period)
       const first = sorted[0];
       const last = sorted[sorted.length - 1];
       const growthPct = (last.revenue - first.revenue) / (first.revenue || 1) * 100;
 
-      // Trend classification
       let trendText = 'Stable';
       let trendDirection = null;
       if (growthPct > 5) {
@@ -628,92 +729,61 @@ const WIDGETS = [
       }
 
       // Pattern detection for dynamic title
-      const revenueByMonth = sorted.map(d => ({
-        month: d.month,
-        revenue: d.revenue,
-        name: `${d.month.split('-')[0]}/${d.month.split('-')[1].padStart(2, '0')}`
-      }));
+      const last3 = sorted.slice(-3).map((d) => d.revenue);
+      const isIncreasing = last3.every((v, i) => i === 0 || v >= last3[i - 1] * 0.9);
 
       let title;
-      let subtitle;
-
-      // Detect seasonal patterns
-      const last3Months = sorted.slice(-3).map(m => m.revenue);
-      const first3Months = sorted.slice(0, 3).map(m => m.revenue);
-
-      // Pattern 1: Increasing trend
-      const isIncreasing = last3Months.every((v, i) => i === 0 || v >= last3Months[i - 1] * 0.9);
       if (isIncreasing && growthPct > 0) {
-        title = `Sales have steadily improved over the past ${sorted.length} months.`;
-      }
-      // Pattern 2: Declining trend
-      else if (!isIncreasing && growthPct < 0) {
-        title = `Monthly sales have weakened since ${first.name}.`;
-      }
-      // Pattern 3: Seasonal (year-end peak)
-      else if (highest && highest.name === '12/01' || highest.name === '11/01' || highest.name === '12/02' || highest.name === '11/02') {
-        title = `Sales consistently peak towards the end of the year.`;
-      }
-      // Pattern 4: Seasonal (summer peak)
-      else if (highest && (highest.month.startsWith('06') || highest.month.startsWith('07') || highest.month.startsWith('08'))) {
-        title = `Sales consistently peak during the ${highest.month} period.`;
-      }
-      // Default
-      else if (Math.abs(growthPct) < 5) {
-        title = `Monthly sales remained relatively stable throughout the ${first.name.split('/').join('-')} to ${last.name.split('/').join('-')} period.`;
+        title = `Sales have steadily improved over the past ${sorted.length} ${periodLabel}s.`;
+      } else if (!isIncreasing && growthPct < 0) {
+        title = `${periodLabelCap} sales have weakened since ${first.name}.`;
+      } else if (primaryLevel === 'month' && (highest.period.endsWith('-12') || highest.period.endsWith('-11'))) {
+        title = 'Sales consistently peak towards the end of the year.';
+      } else if (primaryLevel === 'month' && ['-06', '-07', '-08'].some((m) => highest.period.endsWith(m))) {
+        title = `Sales consistently peak during the ${highest.name} period.`;
+      } else if (Math.abs(growthPct) < 5) {
+        title = `${periodLabelCap} sales remained relatively stable throughout the ${first.name} to ${last.name} period.`;
       } else {
-        title = `Monthly sales showed volatility from ${first.name.split('/').join('-')} to ${last.name.split('/').join('-')}.`;
+        title = `${periodLabelCap} sales showed volatility from ${first.name} to ${last.name}.`;
       }
 
-      subtitle = `Identify your strongest and weakest trading months to improve inventory planning and cash-flow forecasting.`;
+      const subtitle = 'Identify your strongest and weakest trading periods to improve inventory planning and cash-flow forecasting.';
 
-      // Build drill-level data
-      const drillLevels = { month: sorted };
+      const businessInterpretation = `The ${highest.name} ${periodLabel} recorded the strongest performance at ₦${highest.revenue.toLocaleString()}, while ${lowest.name} was weakest at ₦${lowest.revenue.toLocaleString()}. ${
+        trendText === 'Growing'
+          ? 'Revenue has been trending upward — plan inventory to support continued demand.'
+          : trendText === 'Declining'
+            ? 'Revenue has been trending downward — investigate what changed around the weaker periods.'
+            : 'Revenue has been broadly stable across the period, suggesting predictable demand.'
+      }`;
 
-      try {
-        const weekData = analytics.weeklyRevenue(records);
-        if (weekData.length > 0) drillLevels.week = weekData.map(d => ({
-          x: d.week,
-          y: d.revenue,
-          label: d.week
-        }));
-        const dayData = analytics.dailyRevenue(records);
-        if (dayData.length > 0) drillLevels.day = dayData.slice(-60).map(d => ({
-          x: `${d.day.split('-')[0]}/${d.day.split('-')[1].padStart(2, '0')}`,
-          y: d.revenue,
-          label: d.day
-        }));
-      } catch (_) {}
+      const decisionSupport = trendText === 'Growing'
+        ? `Use strong ${periodLabel}s like ${highest.name} to build cash reserves and negotiate better supplier terms ahead of demand spikes.`
+        : trendText === 'Declining'
+          ? `Review promotional activity and stock availability around ${lowest.name} — consider a targeted campaign to rebuild volume.`
+          : `Increase stock purchases ahead of historically strong periods like ${highest.name}, and review promotions during slower periods like ${lowest.name}.`;
 
-      // Determine highest and lowest for chart highlighting
-      const maxRevenue = highest.revenue;
-      const minRevenue = lowest.revenue;
-
-      // Prepare series with highlight data
-      const highIndex = sorted.findIndex(m => m.revenue === maxRevenue);
-      const lowIndex = sorted.findIndex(m => m.revenue === minRevenue);
+      // Build drill levels from every granularity that qualified — the
+      // toggle can switch even if a level has fewer than 3 points.
+      const drillLevels = {};
+      for (const lvl of Object.keys(byLevel)) {
+        if (byLevel[lvl].length > 0) drillLevels[lvl] = byLevel[lvl];
+      }
 
       return {
-        highestMonth: {
-          name: highest.name,
-          revenue: highest.revenue,
-        },
-        lowestMonth: {
-          name: lowest.name,
-          revenue: lowest.revenue,
-        },
+        highestMonth: { name: highest.name, revenue: highest.revenue },
+        lowestMonth: { name: lowest.name, revenue: lowest.revenue },
         averageMonthlyRevenue: average,
         trend: trendText,
         direction: trendDirection,
         title,
         subtitle,
-        businessInterpretation: generateInterpretation(sorted, highest.name, lowest.name),
-        decisionSupport: generateDecisionSupport(highest.name, lowest.name, revenueByMonth),
-        series: [
-          { name: 'Revenue', data: sorted }
-        ],
+        businessInterpretation,
+        decisionSupport,
+        series: [{ name: 'Revenue', data: sorted }],
         data: sorted,
-        drillLevels: Object.keys(drillLevels).filter(k => drillLevels[k].length > 0),
+        drillLevels: Object.keys(drillLevels).length > 1 ? drillLevels : null,
+        displayGranularity: primaryLevel,
       };
     },
   },
@@ -721,7 +791,7 @@ const WIDGETS = [
   {
     id: 'sales-growth-rate',
     title: 'Sales Growth Rate',
-    description: 'Percentage change in revenue between periods. Positive values indicate growth, negative values indicate decline.',
+    description: 'Percentage change in revenue between periods — monthly, weekly, or daily depending on how much date history is available.',
     dashboard: 'sales',
     category: 'Trends',
     priority: 10,
@@ -729,79 +799,80 @@ const WIDGETS = [
     requiredFields: ['transaction_date', 'selling_price', 'quantity'],
     optionalFields: ['cost_price', 'day', 'week'],
     compute(records) {
-      const data = analytics.monthlyRevenue(records);
-      if (data.length < 2) {
+      const granularity = analytics.detectTimeGranularity(records);
+      if (!granularity.day) {
+        return { error: 'No date information available' };
+      }
+
+      const byLevel = {};
+      if (granularity.month) byLevel.month = analytics.monthlyRevenue(records);
+      if (granularity.week) byLevel.week = analytics.weeklyRevenue(records);
+      if (granularity.day) byLevel.day = analytics.dailyRevenue(records);
+
+      const order = ['month', 'week', 'day'];
+      const primaryLevel = order.find((lvl) => byLevel[lvl] && byLevel[lvl].length >= 2);
+      if (!primaryLevel) {
         return {
-          error: 'At least two months of sales history are required to calculate the Sales Growth Rate.',
+          error: 'At least two periods of sales history (month, week, or day) are required to calculate the Sales Growth Rate.',
         };
       }
 
-      if (data.length === 0) {
-        return {
-          error: 'Sales Growth Rate cannot be calculated because revenue information is unavailable.',
-        };
-      }
-
-      const growthPct = [];
-      const monthlyRevenue = data.map((d) => ({ month: d.month, revenue: d.revenue }));
-
-      for (let i = 1; i < data.length; i++) {
-        const curr = data[i].revenue || 0;
-        const prev = data[i - 1].revenue || 0;
-        if (prev > 0) {
-          growthPct.push({
-            month: data[i].month,
-            growth: Math.round(((curr - prev) / prev) * 100 * 10) / 10,
-          });
+      // Compute a full growth-rate summary for one granularity level.
+      function summarize(levelData, lvl) {
+        const periodLabel = lvl === 'month' ? 'month' : lvl === 'week' ? 'week' : 'day';
+        const growthSeries = [];
+        for (let i = 1; i < levelData.length; i++) {
+          const curr = levelData[i].revenue || 0;
+          const prev = levelData[i - 1].revenue || 0;
+          if (prev > 0) {
+            growthSeries.push({ x: levelData[i][lvl], y: Math.round(((curr - prev) / prev) * 100 * 10) / 10 });
+          }
         }
-      }
+        if (growthSeries.length === 0) return null;
 
-      if (growthPct.length === 0) {
+        const latest = growthSeries[growthSeries.length - 1];
+        const classification = latest.y > 10 ? 'Growing' : (latest.y >= -5 && latest.y <= 10 ? 'Stable' : 'Declining');
+        const supportingInsight = latest.y > 10
+          ? `Revenue increased by ${latest.y}% compared with the previous ${periodLabel}.`
+          : latest.y < -5
+            ? `Revenue declined by ${latest.y}% compared with the previous ${periodLabel}.`
+            : `Revenue remained relatively stable ${periodLabel}-over-${periodLabel}.`;
+        const decisionSupport = classification === 'Growing'
+          ? 'Sales are growing at a healthy pace. Ensure inventory levels can support increasing demand.'
+          : classification === 'Stable'
+            ? 'Sales are relatively stable. Focus on improving profitability and customer retention rather than pursuing aggressive growth.'
+            : 'Sales are declining. Investigate whether fewer customer transactions, lower basket values, or reduced product availability are contributing to the slowdown.';
+
         return {
-          error: 'Sales Growth Rate cannot be calculated because revenue information is unavailable.',
+          growth: latest.y,
+          growthClassification: classification,
+          supportingInsight,
+          decisionSupport,
+          sublabel: `vs Previous ${periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1)}`,
+          series: growthSeries,
         };
       }
 
-      const latestGrowth = growthPct[growthPct.length - 1];
-      const growthValidation = latestGrowth.growth > 10
-        ? 'Growing'
-        : latestGrowth.growth >= -5 && latestGrowth.growth <= 10
-          ? 'Stable'
-          : 'Declining';
+      const levelSummaries = {};
+      for (const lvl of order) {
+        if (!byLevel[lvl] || byLevel[lvl].length < 2) continue;
+        const s = summarize(byLevel[lvl], lvl);
+        if (s) levelSummaries[lvl] = s;
+      }
 
-      const supportingInsight = latestGrowth.growth > 10
-        ? `Revenue increased by ${latestGrowth.growth}% compared with last month.`
-        : latestGrowth.growth < -5
-          ? `Revenue declined by ${latestGrowth.growth}% compared with last month.`
-          : 'Revenue remained relatively stable month-over-month.';
-
-      const decisionSupport = growthValidation === 'Growing'
-        ? 'Sales are growing at a healthy pace. Ensure inventory levels can support increasing demand.'
-        : growthValidation === 'Stable'
-          ? 'Sales are relatively stable. Focus on improving profitability and customer retention rather than pursuing aggressive growth.'
-          : 'Sales are declining. Investigate whether fewer customer transactions, lower basket values, or reduced product availability are contributing to the slowdown.';
-
-      // Build drill-level data
-      const drillLevels = { month: growthPct.map((d) => ({ x: d.month, y: d.growth })) };
-      try {
-        const weekData = analytics.weeklyRevenue(records);
-        if (weekData.length > 0) drillLevels.week = weekData.map((d) => ({ x: d.week, y: d.revenue }));
-        const dayData = analytics.dailyRevenue(records);
-        if (dayData.length > 0) drillLevels.day = dayData.map((d) => ({ x: d.day, y: d.revenue }));
-      } catch (_) { /* drill-down is best-effort */ }
+      const primary = levelSummaries[primaryLevel];
+      if (!primary) {
+        return { error: 'Sales Growth Rate cannot be calculated because revenue information is unavailable.' };
+      }
 
       return {
-        monthlyRevenue,
-        monthlyGrowth: growthPct,
-        currentGrowthRate: latestGrowth.growth,
-        growthClassification: growthValidation,
-        supportingInsight: supportingInsight,
-        decisionSupport: decisionSupport,
-        series: [{ name: 'Growth %', data: drillLevels.month }],
-        drillLevels: Object.keys(drillLevels).length > 1 ? drillLevels : null,
-        sublabel: `vs Previous Month`,
-        trend: growthValidation,
-        growth: latestGrowth.growth,
+        ...primary,
+        trend: primary.growthClassification,
+        currentGrowthRate: primary.growth,
+        displayGranularity: primaryLevel,
+        // Per-level summaries (growth/classification/insight/decisionSupport/series each)
+        // — GrowthRateWidget.jsx's toggle swaps between these directly.
+        drillLevels: Object.keys(levelSummaries).length > 1 ? levelSummaries : null,
       };
     },
   },
@@ -809,33 +880,34 @@ const WIDGETS = [
   {
     id: 'transaction-trend',
     title: 'Transaction Trend',
-    description: 'Are customer visits increasing or decreasing? Monthly transaction count to measure demand over time.',
+    description: 'Are customer visits increasing or decreasing? Transaction count over time — monthly, weekly, or daily depending on how much date history is available.',
     dashboard: 'sales',
     category: 'Trends',
     priority: 11,
     chartType: 'line',
     requiredFields: ['transaction_date'],
+    optionalFields: ['day', 'week'],
     compute(records) {
-      // Count transactions per month
-      const monthMap = {};
-      for (const rec of records) {
-        const date = rec.transaction_date;
-        if (date == null || date === '') continue;
-        const s = String(date).trim();
-        if (!/^\d{4}-\d{2}/.test(s)) continue;
-        const month = s.substring(0, 7);
-        monthMap[month] = (monthMap[month] || 0) + 1;
+      const granularity = analytics.detectTimeGranularity(records);
+      if (!granularity.day) {
+        return { error: 'No date information available' };
       }
 
-      const data = Object.entries(monthMap)
-        .map(([month, count]) => ({ month, transactions: count }))
-        .sort((a, b) => a.month.localeCompare(b.month));
+      const byLevel = {};
+      if (granularity.month) byLevel.month = analytics.monthlyTransactionCount(records);
+      if (granularity.week) byLevel.week = analytics.weeklyTransactionCount(records);
+      if (granularity.day) byLevel.day = analytics.dailyTransactionCount(records);
 
-      if (data.length < 2) {
+      const order = ['month', 'week', 'day'];
+      const primaryLevel = order.find((lvl) => byLevel[lvl] && byLevel[lvl].length >= 2);
+      if (!primaryLevel) {
         return {
-          error: 'At least two months of transaction history are required to show a trend.',
+          error: 'At least two periods of transaction history (month, week, or day) are required to show a trend.',
         };
       }
+
+      const data = byLevel[primaryLevel].map((d) => ({ period: d[primaryLevel], transactions: d.count }));
+      const periodLabel = primaryLevel === 'month' ? 'months' : primaryLevel === 'week' ? 'weeks' : 'days';
 
       // Trend analysis — Knaflic: big idea → data → call to action
       const first = data[0];
@@ -847,15 +919,15 @@ const WIDGETS = [
       let trendDirection, insight, callToAction;
       if (changePct > 10) {
         trendDirection = 'Growing';
-        insight = `Customer visits are up ${changePct}% — demand is accelerating across ${data.length} months.`;
+        insight = `Customer visits are up ${changePct}% — demand is accelerating across ${data.length} ${periodLabel}.`;
         callToAction = 'Ensure staffing and inventory scale with rising demand. Use this data to negotiate better supplier terms before peak seasons hit.';
       } else if (changePct > 0) {
         trendDirection = 'Stable to Growing';
         insight = `Customer visits are trending up slightly (+${changePct}%) — demand is steady with room to accelerate.`;
-        callToAction = 'Run targeted promotions during slower months to smooth the demand curve and build visit frequency.';
+        callToAction = 'Run targeted promotions during slower periods to smooth the demand curve and build visit frequency.';
       } else if (changePct > -10) {
         trendDirection = 'Stable';
-        insight = `Customer visits are stable (${changePct}% change) — demand is predictable across ${data.length} months.`;
+        insight = `Customer visits are stable (${changePct}% change) — demand is predictable across ${data.length} ${periodLabel}.`;
         callToAction = 'Shift focus from acquisition to retention. Introduce a loyalty card or subscription to deepen existing customer relationships.';
       } else {
         trendDirection = 'Declining';
@@ -863,7 +935,7 @@ const WIDGETS = [
         callToAction = 'Investigate root causes: are competitors undercutting prices? Is foot traffic declining? Consider community outreach or free health checks to rebuild traffic.';
       }
 
-      // Find peak and trough months for context
+      // Find peak and trough periods for context
       let peak = data[0];
       let trough = data[0];
       for (const d of data) {
@@ -871,18 +943,24 @@ const WIDGETS = [
         if (d.transactions < trough.transactions) trough = d;
       }
 
-      const seriesData = data.map(d => ({ x: d.month, y: d.transactions }));
+      const drillLevels = {};
+      for (const lvl of order) {
+        if (!byLevel[lvl] || byLevel[lvl].length === 0) continue;
+        drillLevels[lvl] = byLevel[lvl].map((d) => ({ x: d[lvl], y: d.count }));
+      }
 
       return {
         insight: {
           title: `Visit Trend: ${trendDirection}`,
           subtitle: `${insight} ${callToAction}`,
         },
-        series: [{ name: 'Transactions', data: seriesData }],
+        series: [{ name: 'Transactions', data: data.map((d) => ({ x: d.period, y: d.transactions })) }],
+        drillLevels: Object.keys(drillLevels).length > 1 ? drillLevels : null,
+        displayGranularity: primaryLevel,
         trend: trendDirection,
         changePct,
-        peak: { month: peak.month, transactions: peak.transactions },
-        trough: { month: trough.month, transactions: trough.transactions },
+        peak: { month: peak.period, transactions: peak.transactions },
+        trough: { month: trough.period, transactions: trough.transactions },
       };
     },
   },
@@ -1977,73 +2055,6 @@ const WIDGETS = [
 /**
  * Generate business interpretation based on pattern analysis.
  */
-function generateInterpretation(sortedData, highestMonth, lowestMonth) {
-  const highestName = highestMonth.split('/').join('-');
-  const lowestName = lowestMonth.split('/').join('-');
-
-  // Year-end peak pattern
-  if (parseInt(highestName.split('/')[1]) === 12 && sortedData.length >= 3) {
-    return `Sales consistently increase towards year-end, suggesting seasonal demand. ${(highestName.split('/')[0])} recorded the strongest performance at ₦${parseInt(highestName) === 1000 ? highestMonth.split('/')[0] : highestMonth}. Consider increasing inventory before this period.`;
-  }
-
-  // Summer peak pattern
-  const summerMonths = ['06', '07', '08'];
-  if (summerMonths.some(m => highestMonth.startsWith(m))) {
-    return `Sales consistently peak during the summer period. The ${highestMonth} period showed the highest demand. Prepare additional inventory before these months.`;
-  }
-
-  // January peak pattern
-  if (highestName === '01/01' || highestName === '01/02') {
-    return `Sales consistently peak in ${highestMonth.split('/')[0]}. This suggests seasonal demand at year start or post-holiday emergency stock. Increase inventory purchases ahead of this period.`;
-  }
-
-  // Low sales pattern
-  if (parseInt(lowestName.split('/')[0])) {
-    return `The ${lowestMonth.split('/')[0]} period recorded the weakest sales performance at ₦${lowestMonth}. Review whether reduced demand or stock availability contributed to the decline.`;
-  }
-
-  // Stable pattern
-  if (parseFloat(highestMonth.split('/')[0]) - parseFloat(lowestMonth.split('/')[0]) < 10) {
-    return 'Monthly revenue remains relatively stable, indicating predictable demand throughout the year.';
-  }
-
-  // Default
-  const highestMonthNumber = parseInt(highestMonth.split('/')[0]) === 1000 ? highestMonth.split('/')[1] : highestMonth;
-  return `The ${highestMonth} period drive sales with ₦${highestMonthNumber}, suggesting strong customer demand during this time.`;
-}
-
-/**
- * Generate decision support based on pattern analysis.
- */
-function generateDecisionSupport(highestMonth, lowestMonth) {
-  const highestMonthNumber = parseInt(highestMonth.split('/')[0]) === 1000 ? highestMonth.split('/')[1] : highestMonth;
-
-  // Year-end peak
-  if (highestMonthNumber === '12/01' || highestMonthNumber === '11/02' || highestMonthNumber === '12/02') {
-    return `Increase stock purchases one month before the ${highestMonthNumber.split('/')[0]} period to ensure adequate stock levels during peak demand.`;
-  }
-
-  // Summer peak
-  const summerPatterns = ['06/01', '07/01', '08/01', '06/02', '07/02', '08/02'];
-  if (summerPatterns.some(pattern => highestMonthNumber === pattern)) {
-    return `Prepare additional inventory before the ${highestMonthNumber.split('/')[0]} season. Consider seasonal products for this period.`;
-  }
-
-  // High sales month
-  if (parseInt(highestMonthNumber.split('/')[0]) === 1000 || highestMonthNumber.startsWith('03') || highestMonthNumber.startsWith('04')) {
-    return `Use strong months like ${highestMonthNumber} to improve cash reserves before historically slower periods.`;
-  }
-
-  // Low performance
-  const weakMonths = ['07', '08', '01']; // Depends on data
-  if (lowestMonthNumber.startsWith('07')) {
-    return `Review promotional activities during slower months. Consider running marketing campaigns to drive sales during ${lowestMonthNumber.split('/')[0]}.`;
-  }
-
-  // Default
-  return `Increase stock purchases one month before historically strong sales periods. Review promotional activities during slower trading months.`;
-}
-
 /**
  * Return every registered widget definition.
  */
