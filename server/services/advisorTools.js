@@ -55,7 +55,7 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'getCategoryPerformance',
-      description: 'Revenue, profit, and margin by product category. Use for "which category performs best".',
+      description: 'Revenue, profit, and margin by product category, under `categories`. `hasCostData` is false when no cost prices were uploaded at all — in that case every category\'s profit/margin will be null, meaning not available, not zero. Use for "which category performs best".',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -71,7 +71,7 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'getProfitLeakage',
-      description: 'Products with margin below a threshold, ordered by revenue (biggest naira impact first). Use for "where am I losing profit".',
+      description: 'Products with margin below a threshold, under `products`, ordered by revenue (biggest naira impact first). Returns `available: false` if no cost-price data was uploaded at all — that means profit leakage cannot be determined, not that there is none. Use for "where am I losing profit".',
       parameters: {
         type: 'object',
         properties: {
@@ -198,7 +198,7 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'getRecommendations',
-      description: 'Concrete recommended actions (e.g. "increase X purchase by Y%", "address Z risk"), each with its reasoning (traceable to a specific decision opportunity), estimated stockout risk where computable, and confidence. Every number here is derived from real evidence, never invented. Use for "what should I do" / "what should I do next" questions.',
+      description: 'Concrete recommended actions under `recommendations`, each with its reasoning (traceable to a specific decision opportunity), estimated stockout risk where computable, and confidence. Every number here is derived from real evidence, never invented. Findings too weak to act on are already excluded — if `filteredCount` is present, that many existed but fell below the confidence bar to recommend as an action; mention this only if asked why so few recommendations appeared. Use for "what should I do" / "what should I do next" questions.',
       parameters: { type: 'object', properties: {} },
     },
   },

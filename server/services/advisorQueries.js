@@ -152,7 +152,21 @@ async function getTopProducts(organizationId, { sortBy = 'revenue', n = 10 } = {
 }
 
 async function getCategoryPerformance(organizationId) {
-  return profitByCategory(organizationId);
+  assertOrgId(organizationId);
+  const categories = await profitByCategory(organizationId);
+
+  // profitByCategory correctly returns null profit/margin per category when
+  // that category has no cost data — but a model reading a list where every
+  // row says profit: null could still read that as "margin data exists and
+  // happens to be exactly zero everywhere" rather than "no cost data was
+  // uploaded at all." One org-wide flag removes the ambiguity.
+  const db = getSql();
+  const [costCheck] = await db`
+    select count(*) filter (where unit_cost is not null)::int as "withCost"
+    from sale where organization_id = ${organizationId}
+  `;
+
+  return { hasCostData: (costCheck?.withCost || 0) > 0, categories };
 }
 
 async function getSlowMovers(organizationId, { n = 15 } = {}) {
@@ -163,6 +177,23 @@ async function getSlowMovers(organizationId, { n = 15 } = {}) {
 async function getProfitLeakage(organizationId, { marginThreshold = 15, n = 10 } = {}) {
   assertOrgId(organizationId);
   const db = getSql();
+
+  // The query below filters on `unit_cost is not null` to compute real
+  // margins. If NO row in this org has cost data at all, that filter alone
+  // makes the query return zero rows — identical to "we checked every
+  // product and none has a leaky margin." Those are opposite conclusions,
+  // so they must be distinguished before running the real query.
+  const [costCheck] = await db`
+    select count(*) filter (where unit_cost is not null)::int as "withCost"
+    from sale where organization_id = ${organizationId}
+  `;
+  if (!costCheck || costCheck.withCost === 0) {
+    return {
+      available: false,
+      reason: 'No cost-price data uploaded — profit leakage requires cost price, gross profit, or margin data.',
+    };
+  }
+
   const rows = await db`
     select p.name, coalesce(p.category, 'Uncategorised') as category,
            sum(s.unit_price * s.quantity) as revenue,
@@ -180,7 +211,10 @@ async function getProfitLeakage(organizationId, { marginThreshold = 15, n = 10 }
     order by revenue desc
     limit ${n}
   `;
-  return rows.map((r) => ({ ...r, revenue: round(r.revenue), profit: round(r.profit), margin: r.margin != null ? Number(r.margin) : null }));
+  return {
+    available: true,
+    products: rows.map((r) => ({ ...r, revenue: round(r.revenue), profit: round(r.profit), margin: r.margin != null ? Number(r.margin) : null })),
+  };
 }
 
 /**
@@ -678,6 +712,23 @@ async function getDecisionOpportunities(organizationId) {
   return generateDecisionOpportunities(organizationId);
 }
 
+// A recommendation tells the owner to take a specific action, unlike a raw
+// DecisionOpportunity (getDecisionOpportunities), which is allowed to surface
+// a low-confidence hypothesis as long as it's labeled as one. Below this
+// floor there isn't enough support to responsibly tell someone what to do —
+// filtered out here rather than left to the model to judge, so the answer
+// doesn't depend on the model noticing a low number. Not the same axis as
+// decisionIntelligenceEngine.js's PRIORITY_BANDS (that ranks a composite
+// priority score); this is a floor on the recommendation's own raw
+// `confidence` field specifically.
+const MIN_RECOMMENDATION_CONFIDENCE = 0.35;
+
+function splitByConfidence(recommendations) {
+  const kept = recommendations.filter((r) => (r.confidence ?? 0) >= MIN_RECOMMENDATION_CONFIDENCE);
+  const filteredCount = recommendations.length - kept.length;
+  return { kept, filteredCount };
+}
+
 /**
  * Concrete, evidence-derived recommended actions — each number traces
  * back to its source DecisionOpportunity's own evidence.
@@ -686,7 +737,15 @@ async function getRecommendations(organizationId) {
   const { generateDecisionOpportunities } = require('./decision/decisionIntelligenceEngine');
   const { generateRecommendations } = require('./recommendation/recommendationEngine');
   const opportunities = await generateDecisionOpportunities(organizationId);
-  return generateRecommendations(opportunities);
+  const all = generateRecommendations(opportunities);
+  const { kept, filteredCount } = splitByConfidence(all);
+  return {
+    recommendations: kept,
+    ...(filteredCount > 0 ? {
+      filteredCount,
+      filteredReason: `${filteredCount} additional finding${filteredCount === 1 ? '' : 's'} existed but fell below the minimum confidence to recommend as an action — mention only if asked why so few recommendations appeared.`,
+    } : {}),
+  };
 }
 
 /**
@@ -699,9 +758,13 @@ async function getExecutiveBrief(organizationId) {
   const { generateRecommendations } = require('./recommendation/recommendationEngine');
   const { generateExecutiveBrief } = require('./brief/executiveBriefGenerator');
   const opportunities = await generateDecisionOpportunities(organizationId);
-  const recommendations = generateRecommendations(opportunities);
+  const all = generateRecommendations(opportunities);
+  const { kept, filteredCount } = splitByConfidence(all);
   const health = await getBusinessHealth(organizationId);
-  return generateExecutiveBrief(opportunities, recommendations, health);
+  const brief = generateExecutiveBrief(opportunities, kept, health);
+  return filteredCount > 0
+    ? { ...brief, filteredCount, filteredReason: `${filteredCount} additional finding${filteredCount === 1 ? '' : 's'} fell below the minimum confidence to recommend as an action.` }
+    : brief;
 }
 
 module.exports = {
