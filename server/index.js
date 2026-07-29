@@ -1104,7 +1104,12 @@ app.post('/api/advisor-chat', async (req, res) => {
     await appendAdvisorMessage(req.organizationId, conversationId, 'user', question);
     const history = [...priorHistory, { role: 'user', content: question }];
 
-    const result = await advisorChatStream(req.organizationId, history, (token) => send({ type: 'token', token }));
+    const result = await advisorChatStream(
+      req.organizationId,
+      history,
+      (token) => send({ type: 'token', token }),
+      { analysisContext: req.body?.analysisContext || null }
+    );
     await appendAdvisorMessage(req.organizationId, conversationId, 'assistant', result.reply);
     send({ type: 'done', toolCalls: result.toolCalls, conversationId });
   } catch (err) {

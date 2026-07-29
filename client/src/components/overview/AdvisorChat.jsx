@@ -247,7 +247,7 @@ function SidebarSkeleton() {
   );
 }
 
-export default function AdvisorChat() {
+export default function AdvisorChat({ analysisContext = null }) {
   const { organization } = useAuth();
   const organizationId = organization?.organizationId || null;
 
@@ -349,7 +349,10 @@ export default function AdvisorChat() {
         // Send the on-screen conversation's id so a reply lands in the
         // thread the user is actually looking at, not whichever one the
         // server considers active.
-        body: JSON.stringify({ message: question, conversationId }),
+        // analysisContext is what the dashboard is currently showing. Sending
+        // it makes those figures authoritative, so the Advisor can't answer
+        // with a number that contradicts what's on screen.
+        body: JSON.stringify({ message: question, conversationId, analysisContext }),
       });
 
       if (!res.ok || !res.body) {

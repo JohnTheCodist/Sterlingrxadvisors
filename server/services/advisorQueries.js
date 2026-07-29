@@ -43,14 +43,47 @@ function levenshtein(a, b) {
 
 async function getRevenueProfitSummary(organizationId) {
   const a = await queryAnalytics(organizationId);
+  const db = getSql();
+
+  // These totals span EVERY dataset the pharmacy has uploaded, not just the
+  // most recent one — that's deliberate (uploads accumulate into sales
+  // history), but stating a bare total invites the owner to compare it
+  // against the dashboard's KPI cards, which show only the file they just
+  // uploaded, and conclude one of them is broken. Return the real coverage
+  // so the answer can say what it actually covers.
+  const [span] = await db`
+    select min(sale_date)::text as "periodStart",
+           max(sale_date)::text as "periodEnd",
+           count(distinct dataset_id)::int as "datasetCount"
+    from sale where organization_id = ${organizationId}
+  `;
+
+  const sources = await db`
+    select coalesce(d.filename, 'Unknown file') as filename,
+           count(*)::int as "transactionCount",
+           min(s.sale_date)::text as "from",
+           max(s.sale_date)::text as "to"
+    from sale s left join dataset_registry d on d.id = s.dataset_id
+    where s.organization_id = ${organizationId}
+    group by d.filename
+    order by count(*) desc
+  `;
+
   return {
+    scope: 'All uploaded datasets combined — not a single file.',
     totalRevenue: a.metrics.totalRevenue,
     grossProfit: a.metrics.grossProfit,
     grossMargin: a.metrics.grossMargin,
     totalQuantitySold: a.metrics.totalQuantitySold,
     transactionCount: a.metrics.recordCount,
     averageTransactionValue: a.metrics.averageTransactionValue,
-    monthsOfData: a.monthlyRevenue.length,
+    periodStart: span?.periodStart || null,
+    periodEnd: span?.periodEnd || null,
+    // Months that CONTAIN data — not necessarily consecutive. Reporting this
+    // as "N months of data" overstates coverage when the months are scattered.
+    monthsWithData: a.monthlyRevenue.length,
+    datasetCount: span?.datasetCount || 0,
+    sources,
   };
 }
 

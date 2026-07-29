@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -850,6 +850,46 @@ export default function Dashboard() {
     customer: (dashboards.customer?.available?.length || 0) > 0,
   };
 
+  // ---- Analysis context handed to the AI Advisor -------------------------
+  //
+  // The Advisor used to answer by re-querying the database itself, which is a
+  // second analytics path — so it could report a different revenue than the
+  // number on screen, and the owner had no way to tell which to believe.
+  // This snapshots what the dashboard is ACTUALLY displaying (the analytics
+  // engine's own precomputed widget results) and hands it over as the
+  // authoritative figures. The Advisor interprets these; it no longer
+  // recomputes them.
+  const analysisContext = useMemo(() => {
+    const kpis = [];
+    for (const [dashboardKey, data] of Object.entries(dashboards)) {
+      for (const w of data?.available || []) {
+        if (w.chartType !== 'kpi-card' || w.result?.error) continue;
+        kpis.push({
+          id: w.id,
+          label: w.title,
+          value: w.result?.value,
+          format: formatFor(w),
+          sublabel: w.result?.sublabel || w.result?.sub || null,
+          dashboard: dashboardKey,
+        });
+      }
+    }
+    if (kpis.length === 0 && !bizHealth?.health) return null;
+    return {
+      kpis,
+      businessHealth: bizHealth?.health
+        ? { score: bizHealth.health.overallScore, rating: bizHealth.health.rating }
+        : null,
+      capabilities,
+      activeView: activeNav,
+      // Every dataset the pharmacy has uploaded is included in these figures
+      // — the dashboard has no date/branch/category filter controls yet, so
+      // there is no narrower selection to report. When those land, add them
+      // here and the Advisor will scope to them without further changes.
+      scope: 'All uploaded datasets combined (no filters applied).',
+    };
+  }, [dashboards, bizHealth, capabilities, activeNav]);
+
   // The 'sales' dashboardKey holds both trend/KPI widgets and product-ranking
   // widgets — split it client-side for the Performance vs Products nav tabs
   // (no backend category exists for this split; PRODUCT_WIDGET_IDS reuses the
@@ -1199,7 +1239,7 @@ export default function Dashboard() {
         }
 
         {/* AI Advisor — conversational chat, grounded in the same data/recommendation engine */}
-        {activeNav === 'advisor' && <AdvisorChat />}
+        {activeNav === 'advisor' && <AdvisorChat analysisContext={analysisContext} />}
 
         {/* Legacy hardcoded sections — used only when no widget manifest exists */}
         {activeNav === 'overview' && !widgetManifest && (

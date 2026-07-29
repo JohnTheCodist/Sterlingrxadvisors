@@ -78,7 +78,7 @@ async function handleTextQuestion(organizationId, phoneNumber, messageBody, mess
 
   await appendMessage(organizationId, phoneNumber, 'user', messageBody);
   const history = await getRecentHistory(organizationId, phoneNumber);
-  const { reply } = await chatStream(organizationId, history, null, 'whatsapp');
+  const { reply } = await chatStream(organizationId, history, null, { channel: 'whatsapp' });
   await appendMessage(organizationId, phoneNumber, 'assistant', reply);
 
   await sendWhatsappMessage(phoneNumber, formatForWhatsapp(reply));
