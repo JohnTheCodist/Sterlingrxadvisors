@@ -356,6 +356,29 @@ p { margin: 0; }
   background: var(--background);
 }
 
+/* ---- Advisor loading placeholders ------------------------------------ */
+/* Shaped shimmer stand-ins shown while a conversation loads, so the panel
+   never renders blank. */
+.advisor-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-alt) 25%,
+    oklch(from var(--color-bg-alt) calc(l - 0.03) c h) 37%,
+    var(--color-bg-alt) 63%
+  );
+  background-size: 400% 100%;
+  animation: advisor-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes advisor-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .advisor-shimmer { animation: none; }
+}
+
 /* The sign-out control is a <button>, not a link — it performs an action
    rather than navigating — but it sits in the same list and must look
    identical, so the button resets bring it back to the anchor's baseline. */

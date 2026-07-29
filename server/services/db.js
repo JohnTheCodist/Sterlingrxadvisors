@@ -614,6 +614,60 @@ async function startNewConversation(organizationId) {
   });
 }
 
+/**
+ * Conversation list for the history sidebar.
+ *
+ * The title is derived on read from the conversation's first user message
+ * rather than stored — no column, no migration, and it can never drift out
+ * of sync with the thread it labels.
+ *
+ * Empty conversations are hidden unless they're the active one. A new
+ * conversation is opened automatically on every upload, so without this the
+ * sidebar would fill with untitled blanks nobody ever typed into.
+ */
+async function listConversations(organizationId) {
+  assertOrgId(organizationId);
+  const db = getSql();
+  const rows = await db`
+    select
+      c.id,
+      c.is_active,
+      c.created_at,
+      (select m.content from advisor_message m
+        where m.conversation_id = c.id and m.role = 'user'
+        order by m.created_at limit 1) as first_user_message,
+      (select count(*)::int from advisor_message m where m.conversation_id = c.id) as message_count,
+      (select max(m.created_at) from advisor_message m where m.conversation_id = c.id) as last_message_at
+    from advisor_conversation c
+    where c.organization_id = ${organizationId}
+    order by coalesce(
+      (select max(m.created_at) from advisor_message m where m.conversation_id = c.id),
+      c.created_at
+    ) desc
+  `;
+
+  return rows
+    .filter((r) => r.message_count > 0 || r.is_active)
+    .map((r) => ({
+      id: r.id,
+      title: buildConversationTitle(r.first_user_message),
+      messageCount: r.message_count,
+      lastMessageAt: r.last_message_at || r.created_at,
+      isActive: r.is_active,
+    }));
+}
+
+function buildConversationTitle(firstUserMessage) {
+  if (!firstUserMessage) return 'New conversation';
+  const flat = String(firstUserMessage).replace(/\s+/g, ' ').trim();
+  if (!flat) return 'New conversation';
+  if (flat.length <= 48) return flat;
+  // Prefer a word boundary so titles don't end mid-word.
+  const cut = flat.slice(0, 48);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > 24 ? cut.slice(0, lastSpace) : cut) + '…';
+}
+
 async function getConversationMessages(conversationId, limit = 40) {
   const db = getSql();
   const rows = await db`
@@ -623,6 +677,25 @@ async function getConversationMessages(conversationId, limit = 40) {
     limit ${limit}
   `;
   return rows.reverse().map((r) => ({ role: r.role, content: r.content }));
+}
+
+/**
+ * Confirms a conversation really belongs to this organization.
+ *
+ * The history sidebar lets the client name a conversation id, and an id
+ * from a request is never trustworthy on its own — without this check a
+ * caller could read another pharmacy's advisor thread by guessing a uuid.
+ * Returns the id when it checks out, null otherwise.
+ */
+async function resolveOwnedConversationId(organizationId, conversationId) {
+  assertOrgId(organizationId);
+  if (!conversationId) return null;
+  const db = getSql();
+  const [row] = await db`
+    select id from advisor_conversation
+    where id = ${conversationId} and organization_id = ${organizationId}
+  `;
+  return row ? row.id : null;
 }
 
 async function appendAdvisorMessage(organizationId, conversationId, role, content) {
@@ -683,6 +756,8 @@ module.exports = {
   queryAnalytics,
   getActiveConversationId,
   startNewConversation,
+  listConversations,
+  resolveOwnedConversationId,
   getConversationMessages,
   appendAdvisorMessage,
   getMembershipsForUser,

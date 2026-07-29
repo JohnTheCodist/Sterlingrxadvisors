@@ -9,7 +9,7 @@ const { normalize, normalizeFromSheets } = require('./services/normalizer');
 const { analyze } = require('./services/analytics');
 const { detectSchema, mergeLlmResults } = require('./services/schemaDetector');
 const { resolveMapping, saveMapping, loadMapping, loadPharmacyMappings } = require('./services/columnMapper');
-const { loadFactRecords, queryAnalytics, populateProductAttributes, getSql, computeProductNaturalKey, getActiveConversationId, startNewConversation, getConversationMessages, appendAdvisorMessage, getMembershipsForUser } = require('./services/db');
+const { loadFactRecords, queryAnalytics, populateProductAttributes, getSql, computeProductNaturalKey, getActiveConversationId, startNewConversation, listConversations, resolveOwnedConversationId, getConversationMessages, appendAdvisorMessage, getMembershipsForUser } = require('./services/db');
 const { validate } = require('./services/validator');
 const { joinSheets } = require('./services/sheetJoiner');
 const { profitByCategory, abcAnalysis, abcSummary, fastSlowMovers, fastSlowSummary, expirySummary, inventoryTurnover } = require('./services/insights');
@@ -1035,11 +1035,30 @@ app.get('/api/business-health', async (req, res) => {
 // state and vanish on refresh or navigating away.
 app.get('/api/advisor-chat/history', async (req, res) => {
   try {
-    const conversationId = await getActiveConversationId(req.organizationId);
+    // An explicit ?conversationId= loads that thread (history sidebar);
+    // omitting it keeps the original behaviour of loading the active one.
+    // Ownership is re-checked server-side — an id from the query string is
+    // never trusted on its own.
+    const requested = req.query.conversationId
+      ? await resolveOwnedConversationId(req.organizationId, req.query.conversationId)
+      : null;
+    if (req.query.conversationId && !requested) {
+      return res.status(404).json({ error: 'Conversation not found.' });
+    }
+    const conversationId = requested || (await getActiveConversationId(req.organizationId));
     const messages = await getConversationMessages(conversationId);
-    return res.json({ messages });
+    return res.json({ conversationId, messages });
   } catch (err) {
     return res.status(500).json({ error: `Failed to load advisor history: ${err.message}` });
+  }
+});
+
+// Conversation list for the history sidebar.
+app.get('/api/advisor-chat/conversations', async (req, res) => {
+  try {
+    return res.json({ conversations: await listConversations(req.organizationId) });
+  } catch (err) {
+    return res.status(500).json({ error: `Failed to load conversations: ${err.message}` });
   }
 });
 
@@ -1047,8 +1066,8 @@ app.get('/api/advisor-chat/history', async (req, res) => {
 // to the automatic reset that already happens after a new file upload.
 app.post('/api/advisor-chat/new', async (req, res) => {
   try {
-    await startNewConversation(req.organizationId);
-    return res.json({ ok: true });
+    const conversationId = await startNewConversation(req.organizationId);
+    return res.json({ ok: true, conversationId });
   } catch (err) {
     return res.status(500).json({ error: `Failed to start a new conversation: ${err.message}` });
   }
@@ -1073,14 +1092,21 @@ app.post('/api/advisor-chat', async (req, res) => {
   const send = (event) => res.write(`data: ${JSON.stringify(event)}\n\n`);
 
   try {
-    const conversationId = await getActiveConversationId(req.organizationId);
+    // Replying inside a conversation picked from the history sidebar must
+    // continue THAT thread, not the active one — otherwise the answer lands
+    // in a different conversation than the one on screen. Falls back to the
+    // active conversation when the client sends no id (original behaviour).
+    const selected = req.body?.conversationId
+      ? await resolveOwnedConversationId(req.organizationId, req.body.conversationId)
+      : null;
+    const conversationId = selected || (await getActiveConversationId(req.organizationId));
     const priorHistory = await getConversationMessages(conversationId);
     await appendAdvisorMessage(req.organizationId, conversationId, 'user', question);
     const history = [...priorHistory, { role: 'user', content: question }];
 
     const result = await advisorChatStream(req.organizationId, history, (token) => send({ type: 'token', token }));
     await appendAdvisorMessage(req.organizationId, conversationId, 'assistant', result.reply);
-    send({ type: 'done', toolCalls: result.toolCalls });
+    send({ type: 'done', toolCalls: result.toolCalls, conversationId });
   } catch (err) {
     console.error('[advisor-chat]', err);
     send({ type: 'error', error: `Advisor chat failed: ${err.message}` });

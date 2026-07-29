@@ -1,5 +1,40 @@
-import { useState, useRef, useEffect, Fragment } from 'react';
+import { useState, useRef, useEffect, Fragment, useCallback } from 'react';
 import { apiFetch } from '../../lib/apiClient.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+
+// Locally cached transcript so reopening the Advisor paints instantly
+// instead of showing an empty panel until the round trip finishes; the
+// fetch still runs and reconciles in the background.
+//
+// The key is namespaced by organization on purpose — a shared browser must
+// never flash one pharmacy's conversation to whoever signs in next.
+const CACHE_VERSION = 'v1';
+const cacheKey = (organizationId) => `rxnaija.advisor.${CACHE_VERSION}.${organizationId || 'anon'}`;
+
+function readCache(organizationId) {
+  if (!organizationId) return null;
+  try {
+    const raw = window.localStorage.getItem(cacheKey(organizationId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.messages)) return null;
+    return parsed;
+  } catch (_) {
+    return null; // corrupt or unavailable storage is never fatal here
+  }
+}
+
+function writeCache(organizationId, conversationId, messages) {
+  if (!organizationId) return;
+  try {
+    window.localStorage.setItem(
+      cacheKey(organizationId),
+      JSON.stringify({ conversationId, messages, savedAt: Date.now() })
+    );
+  } catch (_) {
+    // Quota exceeded or storage disabled — the server copy is authoritative.
+  }
+}
 
 const STARTER_QUESTIONS = [
   'How much did I sell?',
@@ -178,17 +213,77 @@ function Bubble({ role, content, streaming = false }) {
   );
 }
 
+// Shown only when there's nothing cached to paint — a shaped placeholder
+// reads as "content is coming" where a blank panel reads as "broken".
+function ChatSkeleton() {
+  const rows = [
+    { side: 'right', w: '42%' },
+    { side: 'left', w: '78%' },
+    { side: 'left', w: '55%' },
+    { side: 'right', w: '35%' },
+    { side: 'left', w: '68%' },
+  ];
+  return (
+    <div className="space-y-5" aria-hidden="true">
+      {rows.map((r, i) => (
+        <div key={i} className={`flex ${r.side === 'right' ? 'justify-end' : 'justify-start'}`}>
+          <div
+            className="advisor-shimmer rounded-2xl"
+            style={{ width: r.w, height: r.side === 'left' ? 56 : 34 }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SidebarSkeleton() {
+  return (
+    <div className="space-y-2 px-2" aria-hidden="true">
+      {[72, 88, 64, 80].map((w, i) => (
+        <div key={i} className="advisor-shimmer h-8 rounded-lg" style={{ width: `${w}%` }} />
+      ))}
+    </div>
+  );
+}
+
 export default function AdvisorChat() {
-  const [messages, setMessages] = useState([]);
-  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const { organization } = useAuth();
+  const organizationId = organization?.organizationId || null;
+
+  // Seed straight from cache during the very first render so returning to
+  // the Advisor paints the previous conversation immediately rather than
+  // after a round trip.
+  const [messages, setMessages] = useState(() => readCache(organizationId)?.messages || []);
+  const [conversationId, setConversationId] = useState(() => readCache(organizationId)?.conversationId || null);
+  // Only a cold start (nothing cached) should show skeletons.
+  const [historyLoaded, setHistoryLoaded] = useState(() => !!readCache(organizationId));
+  const [conversations, setConversations] = useState([]);
+  const [conversationsLoaded, setConversationsLoaded] = useState(false);
+  const [switching, setSwitching] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [error, setError] = useState('');
   const scrollRef = useRef(null);
 
+  const refreshConversations = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/advisor-chat/conversations');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data.conversations)) setConversations(data.conversations);
+    } catch (_) {
+      // Sidebar is an enhancement — its failure must not block the chat.
+    } finally {
+      setConversationsLoaded(true);
+    }
+  }, []);
+
   // Conversation is persisted server-side (advisor_message table) — load it
-  // once on mount so reloading the page or switching tabs doesn't wipe it.
+  // on mount so reloading the page or switching tabs doesn't wipe it. Any
+  // cached copy is already on screen; this reconciles it with the server.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -196,15 +291,41 @@ export default function AdvisorChat() {
         const res = await apiFetch('/api/advisor-chat/history');
         if (!res.ok) return;
         const data = await res.json();
-        if (!cancelled && Array.isArray(data.messages)) setMessages(data.messages);
+        if (cancelled) return;
+        if (Array.isArray(data.messages)) {
+          setMessages(data.messages);
+          setConversationId(data.conversationId || null);
+          writeCache(organizationId, data.conversationId, data.messages);
+        }
       } catch (_) {
         // Non-fatal — chat still works for this session, just without prior history.
       } finally {
         if (!cancelled) setHistoryLoaded(true);
       }
     })();
+    refreshConversations();
     return () => { cancelled = true; };
-  }, []);
+  }, [organizationId, refreshConversations]);
+
+  const selectConversation = async (id) => {
+    if (loading || id === conversationId) { setSidebarOpen(false); return; }
+    setSwitching(true);
+    setError('');
+    setStreamingText('');
+    setSidebarOpen(false);
+    try {
+      const res = await apiFetch(`/api/advisor-chat/history?conversationId=${encodeURIComponent(id)}`);
+      if (!res.ok) throw new Error('Could not open that conversation.');
+      const data = await res.json();
+      setMessages(Array.isArray(data.messages) ? data.messages : []);
+      setConversationId(data.conversationId || id);
+      writeCache(organizationId, data.conversationId || id, data.messages || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSwitching(false);
+    }
+  };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -225,7 +346,10 @@ export default function AdvisorChat() {
       const res = await apiFetch('/api/advisor-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: question }),
+        // Send the on-screen conversation's id so a reply lands in the
+        // thread the user is actually looking at, not whichever one the
+        // server considers active.
+        body: JSON.stringify({ message: question, conversationId }),
       });
 
       if (!res.ok || !res.body) {
@@ -262,8 +386,13 @@ export default function AdvisorChat() {
       }
 
       if (streamError) throw new Error(streamError);
-      setMessages([...nextMessages, { role: 'assistant', content: assembled }]);
+      const finalMessages = [...nextMessages, { role: 'assistant', content: assembled }];
+      setMessages(finalMessages);
       setStreamingText('');
+      writeCache(organizationId, conversationId, finalMessages);
+      // The first message in a thread is what the sidebar titles it by, so
+      // refresh the list once the exchange completes.
+      refreshConversations();
     } catch (err) {
       setError(err.message);
       setMessages(nextMessages);
@@ -281,7 +410,10 @@ export default function AdvisorChat() {
   const startNewChat = async () => {
     if (loading) return;
     try {
-      await apiFetch('/api/advisor-chat/new', { method: 'POST' });
+      const res = await apiFetch('/api/advisor-chat/new', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      setConversationId(data.conversationId || null);
+      writeCache(organizationId, data.conversationId || null, []);
     } catch (_) {
       // Non-fatal — worst case the next message still lands in the old
       // conversation rather than blocking the user from starting fresh.
@@ -289,17 +421,92 @@ export default function AdvisorChat() {
     setMessages([]);
     setStreamingText('');
     setError('');
+    setSidebarOpen(false);
+    refreshConversations();
   };
 
+  const conversationList = (
+    <>
+      <button
+        type="button"
+        onClick={startNewChat}
+        disabled={loading}
+        className="mb-3 flex w-full items-center gap-2 rounded-lg border border-[var(--color-line)] px-3 py-2 text-xs font-medium text-[var(--color-ink-soft)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:opacity-50"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        New chat
+      </button>
+
+      <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">Recent</p>
+
+      {!conversationsLoaded ? (
+        <SidebarSkeleton />
+      ) : conversations.length === 0 ? (
+        <p className="px-2 text-[11px] text-[var(--color-ink-faint)]">No conversations yet.</p>
+      ) : (
+        <ul className="space-y-0.5">
+          {conversations.map((c) => {
+            const isCurrent = c.id === conversationId;
+            return (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  onClick={() => selectConversation(c.id)}
+                  disabled={loading}
+                  aria-current={isCurrent ? 'true' : undefined}
+                  title={c.title}
+                  className={`w-full truncate rounded-lg px-2.5 py-2 text-left text-xs transition-colors disabled:opacity-50 ${
+                    isCurrent
+                      ? 'bg-[var(--color-primary-tint)] font-medium text-[var(--color-primary)]'
+                      : 'text-[var(--color-ink-soft)] hover:bg-[var(--color-bg-alt)]'
+                  }`}
+                >
+                  {c.title}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </>
+  );
+
   return (
-    <div className="flex flex-col rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] h-[70vh] min-h-[480px]">
+    <div className="relative flex overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] h-[70vh] min-h-[480px]">
+      {/* Conversation history — inline from md up, slide-over on small screens */}
+      <aside className="hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-[var(--color-line)] bg-[var(--color-bg-alt)]/40 p-3 md:flex">
+        {conversationList}
+      </aside>
+
+      {sidebarOpen && (
+        <div className="absolute inset-0 z-20 flex md:hidden">
+          <div className="absolute inset-0 bg-black/20" onClick={() => setSidebarOpen(false)} />
+          <aside className="relative z-10 flex h-full w-60 flex-col overflow-y-auto border-r border-[var(--color-line)] bg-[var(--color-bg)] p-3 shadow-xl">
+            {conversationList}
+          </aside>
+        </div>
+      )}
+
+      <div className="flex min-w-0 flex-1 flex-col">
       <div className="px-5 py-3 border-b border-[var(--color-line)] flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Show conversation history"
+          className="-ml-1 mr-0.5 rounded-lg p-1.5 text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-primary)] md:hidden"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-primary-tint)] text-[var(--color-primary)]">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
           </svg>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-[var(--color-ink)]">AI Advisor</p>
           <p className="text-[11px] text-[var(--color-ink-faint)]">Ask anything about your data</p>
         </div>
@@ -307,14 +514,18 @@ export default function AdvisorChat() {
           type="button"
           onClick={startNewChat}
           disabled={loading}
-          className="rounded-full border border-[var(--color-line)] px-3 py-1.5 text-xs text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-50"
+          className="rounded-full border border-[var(--color-line)] px-3 py-1.5 text-xs text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-50 md:hidden"
         >
           New chat
         </button>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-        {messages.length === 0 && historyLoaded && (
+        {/* Cold start (nothing cached) or mid-switch: shaped placeholders
+            rather than an empty panel, so it reads as loading not broken. */}
+        {(!historyLoaded || switching) && messages.length === 0 && <ChatSkeleton />}
+
+        {messages.length === 0 && historyLoaded && !switching && (
           <div className="h-full flex flex-col items-center justify-center text-center gap-4">
             <p className="text-sm text-[var(--color-ink-faint)] max-w-xs">
               Ask about revenue, margins, stock, customers, or what to do next — answers are grounded in your uploaded data.
@@ -382,6 +593,7 @@ export default function AdvisorChat() {
           </svg>
         </button>
       </form>
+      </div>
     </div>
   );
 }
