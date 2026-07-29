@@ -881,14 +881,13 @@ export default function Dashboard() {
         ? { score: bizHealth.health.overallScore, rating: bizHealth.health.rating }
         : null,
       capabilities,
-      activeView: activeNav,
       // Every dataset the pharmacy has uploaded is included in these figures
       // — the dashboard has no date/branch/category filter controls yet, so
       // there is no narrower selection to report. When those land, add them
       // here and the Advisor will scope to them without further changes.
       scope: 'All uploaded datasets combined (no filters applied).',
     };
-  }, [dashboards, bizHealth, capabilities, activeNav]);
+  }, [dashboards, bizHealth, capabilities]);
 
   // The 'sales' dashboardKey holds both trend/KPI widgets and product-ranking
   // widgets — split it client-side for the Performance vs Products nav tabs

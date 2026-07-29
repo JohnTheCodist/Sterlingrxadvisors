@@ -54,7 +54,6 @@ function buildAnalysisContextBlock(analysisContext) {
 The pharmacy owner is looking at these exact numbers right now. They come from
 this platform's analytics engine, the same computation that produced the
 dashboard. Scope: ${analysisContext.scope || 'current analysis'}
-Currently viewing: ${analysisContext.activeView || 'overview'}
 
 <current-kpis>
 ${lines.join('\n')}${health}
