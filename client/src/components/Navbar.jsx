@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const links = [
   { to: '/', label: 'Home' },
@@ -12,6 +13,11 @@ const links = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  // This bar renders above /upload and /onboarding, which are behind
+  // RequireAuth — so it was telling already-signed-in users to "Log in,"
+  // and offered them no way to sign out (the only sign-out control lives
+  // in the dashboard sidebar, and the dashboard hides this bar entirely).
+  const { session, signOut } = useAuth();
 
   return (
     <header className="navbar">
@@ -35,12 +41,25 @@ export default function Navbar() {
         </nav>
 
         <div className="nav-actions">
-          <a href="#login" className="btn btn-ghost btn-sm">
-            Log in
-          </a>
-          <NavLink to="/contact" className="btn btn-primary btn-sm">
-            Get Started
-          </NavLink>
+          {session ? (
+            <>
+              <NavLink to="/dashboard" className="btn btn-ghost btn-sm">
+                Dashboard
+              </NavLink>
+              <button type="button" onClick={signOut} className="btn btn-primary btn-sm">
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/signin" className="btn btn-ghost btn-sm">
+                Log in
+              </NavLink>
+              <NavLink to="/contact" className="btn btn-primary btn-sm">
+                Get Started
+              </NavLink>
+            </>
+          )}
           <button
             className="nav-toggle"
             aria-label="Toggle menu"
@@ -58,7 +77,16 @@ export default function Navbar() {
             {link.label}
           </NavLink>
         ))}
-        <a href="#login" onClick={() => setOpen(false)}>Log in</a>
+        {session ? (
+          <>
+            <NavLink to="/dashboard" onClick={() => setOpen(false)}>Dashboard</NavLink>
+            <button type="button" onClick={() => { setOpen(false); signOut(); }}>
+              Sign out
+            </button>
+          </>
+        ) : (
+          <NavLink to="/signin" onClick={() => setOpen(false)}>Log in</NavLink>
+        )}
       </div>
     </header>
   );

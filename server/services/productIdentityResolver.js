@@ -320,7 +320,12 @@ function enrichIdentity(resolved, originalFields) {
 
     // === Clinical Identity (Layer 3 — healthcare intelligence) ===
     clinical_product_id: nafdacNo || null,
-    therapeutic_class: therapeuticGroup || null,
+    // Prefer the specific subgroup ("Anti-Malarial") over the broad group
+    // ("Anti-Infectives") — NAFDAC's own data carries both, but the broad
+    // group is nearly useless for category-level insights (most drugs are
+    // "Anti-Infectives"). Only fall back to the group when NAFDAC has no
+    // subgroup for this entry.
+    therapeutic_class: therapeuticSubgroup || therapeuticGroup || null,
     active_ingredients: inferredActiveIngredients(resolvedGeneric, genericName),
 
     // === Resolution metadata ===

@@ -318,6 +318,8 @@ function isDateString(val) {
   // Month name formats: "20 May 2024" or "May 20, 2024"
   if (/^[a-zA-Z]{3,9}\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{2,4}$/.test(s)) return true;
   if (/^\d{1,2}(?:st|nd|rd|th)?\s+[a-zA-Z]{3,9}\s+\d{2,4}$/.test(s)) return true;
+  // DD-Mon-YYYY or DD/Mon/YYYY (hyphen/slash-separated month name): "25-Dec-2024"
+  if (/^\d{1,2}[\/\-\.]\s*[a-zA-Z]{3,9}\s*[\/\-\.]\d{2,4}$/.test(s)) return true;
   // Compact: YYYYMMDD or DDMMYYYY (8 digits) or DDMMYY (6 digits)
   if (/^\d{8}$/.test(s)) return true;
   if (/^\d{6}$/.test(s)) return true;
@@ -1188,7 +1190,15 @@ function detectSchema(rows, sampleSize = 50) {
 
 /**
  * Merge LLM mapping results into the rule-based schema detections.
- * LLM results take priority when confidence > 0.7.
+ *
+ * The LLM sees every column at once and can occasionally misclassify one
+ * (e.g. confusing a transaction date with an expiry date when both exist
+ * in the same file) even when the rule-based detector already had a
+ * stronger, correct answer for that specific column. Rather than trusting
+ * the LLM's guess unconditionally, reconcile same-category detections by
+ * keeping whichever confidence is actually higher, then re-sort by
+ * confidence — so the strongest signal wins the top slot regardless of
+ * which source produced it.
  */
 function mergeLlmResults(schemaColumns, llmColumns) {
   if (!llmColumns || llmColumns.length === 0) return schemaColumns;
@@ -1199,17 +1209,29 @@ function mergeLlmResults(schemaColumns, llmColumns) {
     const llmCol = llmMap.get(col.rawHeader);
     if (!llmCol || !llmCol.mappedTo) return col;
 
-    // Add LLM detection as the top result
     const llmDet = {
       category: llmCol.mappedTo,
       confidence: llmCol.confidence,
       source: 'LLM semantic mapping',
     };
 
-    const existing = col.detections.filter((d) => d.category !== llmCol.mappedTo);
+    const merged = [];
+    let llmMerged = false;
+    for (const d of col.detections) {
+      if (d.category === llmDet.category) {
+        merged.push(d.confidence >= llmDet.confidence ? d : llmDet);
+        llmMerged = true;
+      } else {
+        merged.push(d);
+      }
+    }
+    if (!llmMerged) merged.push(llmDet);
+
+    merged.sort((a, b) => b.confidence - a.confidence);
+
     return {
       ...col,
-      detections: [llmDet, ...existing],
+      detections: merged,
     };
   });
 }

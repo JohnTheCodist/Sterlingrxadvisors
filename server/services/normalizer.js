@@ -12,7 +12,7 @@ const { resolveMapping, loadMapping, saveMapping, hasTransactionCapability } = r
 const { cleanData, CleaningReport, parseCurrency, serialToDate, parseYYYYMMDD, parseDateString, normalizePaymentMethod } = require('./dataCleaner');
 const { normalizeProductName, normalizeProductNames } = require('./productNormalizer');
 const { joinSheets } = require('./sheetJoiner');
-const { populateProductAttributes } = require('./database');
+const { populateProductAttributes } = require('./db');
 const { REQUIRED_FIELDS } = require('./dictionary');
 const { structuralValidate, businessValidate } = require('./dataQuality');
 const { resolveProductIdentities } = require('./productIdentityResolver');
@@ -575,8 +575,8 @@ function determineCostMode(cleanedRows, mapping) {
   return { costIsTotal: null, confidence: 0, source: `neither interpretation produces a plausible margin (per-unit=${marginPerUnit.toFixed(1)}%, total=${marginAsTotal.toFixed(1)}%)` };
 }
 
-function normalize(rows, options = {}) {
-  const { pharmacyId, userMapping, llmColumns } = options;
+async function normalize(rows, options = {}) {
+  const { organizationId, userMapping, llmColumns } = options;
 
   if (!Array.isArray(rows) || rows.length === 0) {
     return {
@@ -600,7 +600,7 @@ function normalize(rows, options = {}) {
 
   // Step 2: Check saved mapping
   let savedMapping = null;
-  if (pharmacyId) savedMapping = loadMapping(pharmacyId, rawHeaders);
+  if (organizationId) savedMapping = await loadMapping(organizationId, rawHeaders);
 
   // Step 3: Resolve mapping
   let { mapping, tiers, unmapped, unmappedRequired, unmappedOptional, priceFulfilled } = resolveMapping(schema);
@@ -665,7 +665,15 @@ function normalize(rows, options = {}) {
   // Step 6: Clean data
   const { records: cleanedRows, stats: cleaningStats, report: cleaningReport } = cleanData(rows, rawHeaders, { fileName: options.fileName });
 
-  // Step 6.5: Normalize product names (Phase 4 — pharmacy knowledge engine)
+  // Step 6.5: Classify product names against the pharmacy knowledge base
+  // (Phase 4) for ANALYSIS ONLY — recognition stats, canonical grouping IDs,
+  // therapeutic categorization. This must never rewrite the pharmacy's own
+  // uploaded product name: the uploaded text is the source of truth, and
+  // classification/NAFDAC lookups are a read-only reference layer on top of
+  // it, never a replacement for it. (Previously this overwrote the raw
+  // column with a KB-guessed canonical string — which is exactly how a
+  // KB default strength silently replaced real strengths the pharmacy had
+  // actually typed. Fixed by never writing back into cleanedRows here.)
   let productNormalizationStats = null;
   if (mapping['product_name']) {
     const rawHeader = mapping['product_name'].rawHeader;
@@ -676,7 +684,6 @@ function normalize(rows, options = {}) {
     for (let i = 0; i < cleanedRows.length; i++) {
       const raw = cleanedRows[i][rawHeader];
       const result = normalizeProductName(raw);
-      const normalized = result.normalized || raw || 'Unknown';
 
       if (result.recognized) {
         recognized++;
@@ -685,12 +692,6 @@ function normalize(rows, options = {}) {
         unknown++;
         if (result.normalized) unknownNames.add(result.normalized);
       }
-
-      if (normalized !== raw) {
-        cleaningReport.addTransformation(i, rawHeader, 'normalize_product',
-          raw, normalized, `Standardized product name`);
-      }
-      cleanedRows[i][rawHeader] = normalized;
     }
 
     productNormalizationStats = {
@@ -857,12 +858,12 @@ function normalize(rows, options = {}) {
   const needsConfirmation = requiredTiersIncomplete || missingRequired || costModeAmbiguous;
 
   // Step 9: Save mapping if auto-mapped
-  if (pharmacyId && !needsConfirmation) {
+  if (organizationId && !needsConfirmation) {
     const mappingToSave = {};
     for (const [category, info] of Object.entries(mapping)) {
       mappingToSave[info.rawHeader] = category;
     }
-    saveMapping(pharmacyId, rawHeaders, mappingToSave);
+    await saveMapping(organizationId, rawHeaders, mappingToSave);
   }
 
   return {
@@ -891,11 +892,12 @@ function normalize(rows, options = {}) {
 /**
  * Full pipeline entry point for multi-sheet workbooks.
  */
-function normalizeFromSheets(sheets, options = {}) {
+async function normalizeFromSheets(sheets, options = {}) {
+  const { organizationId } = options;
   const { rows, meta: joinMeta } = joinSheets(sheets);
 
   if (joinMeta.joined && joinMeta.joined.includes('product')) {
-    populateProductAttributes(rows);
+    await populateProductAttributes(organizationId, rows);
   }
 
   if (rows.length === 0) {
@@ -909,7 +911,7 @@ function normalizeFromSheets(sheets, options = {}) {
     };
   }
 
-  const result = normalize(rows, options);
+  const result = await normalize(rows, options);
   result.joinMeta = joinMeta;
   return result;
 }

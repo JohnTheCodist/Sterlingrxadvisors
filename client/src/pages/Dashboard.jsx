@@ -20,12 +20,15 @@ import KpiCard from '../components/KpiCard';
 import { makeDateFormatter } from '../utils/dateFormat';
 import { formatNaira, formatNairaDec, formatNumber, formatPercent } from '../utils/format';
 import DatasetSummary from '../components/overview/DatasetSummary';
+import SettingsPanel from '../components/SettingsPanel';
 import DynamicKpiGrid from '../components/overview/DynamicKpiGrid';
 import BusinessHealthCard from '../components/overview/BusinessHealthCard';
 import ExecutiveBrief from '../components/overview/ExecutiveBrief';
 import TopPriorities from '../components/overview/TopPriorities';
 import AlertsPanel from '../components/overview/AlertsPanel';
 import AdvisorChat from '../components/overview/AdvisorChat';
+import { useAuth } from '../context/AuthContext.jsx';
+import { apiFetch } from '../lib/apiClient.js';
 
 // Widget ids (from server/services/widgetRegistry.js) that are product-centric
 // within the 'sales' dashboard category — used to give the "Products" nav tab
@@ -770,6 +773,7 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
 export default function Dashboard() {
   const location = useLocation();
   const state = location.state || {};
+  const { user, organization, signOut } = useAuth();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [widgetManifest, setWidgetManifest] = useState(state.widgetManifest || null);
@@ -782,7 +786,7 @@ export default function Dashboard() {
 
   const loadAllWidgets = async () => {
     try {
-      const res = await fetch('/api/widgets', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}' });
+      const res = await apiFetch('/api/widgets', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}' });
       const data = await res.json();
       setWidgetManifest(data);
     } catch (_) {}
@@ -807,7 +811,7 @@ export default function Dashboard() {
       return;
     }
     let cancelled = false;
-    fetch('/api/business-health')
+    apiFetch('/api/business-health')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!cancelled && data && data.health) setBizHealth(data);
@@ -1063,11 +1067,21 @@ export default function Dashboard() {
         {/* Bottom: user area */}
         <div className="px-4 py-4 border-t border-white/8">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-bold text-primary-foreground">A</div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-[var(--sidebar-ink-hover)] truncate">Admin</p>
-              <p className="text-[10px] text-[var(--sidebar-ink-dim)]">Pharmacy Owner</p>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-bold text-primary-foreground">
+              {(user?.email || '?')[0].toUpperCase()}
             </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium text-[var(--sidebar-ink-hover)] truncate">{organization?.name || user?.email || 'Loading…'}</p>
+              <p className="text-[10px] text-[var(--sidebar-ink-dim)] capitalize">{organization?.role || user?.email || ''}</p>
+            </div>
+            <button
+              type="button"
+              onClick={signOut}
+              className="text-[10px] font-medium text-[var(--sidebar-ink-dim)] hover:text-[var(--sidebar-ink-hover)] shrink-0"
+              title="Sign out"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </aside>
@@ -1402,11 +1416,16 @@ export default function Dashboard() {
         )}
 
         {/* Non-overview tabs with no widget manifest yet (legacy flow, edge case) */}
-        {activeNav !== 'overview' && activeNav !== 'advisor' && activeNav !== 'reports' && !widgetManifest && (
+        {activeNav !== 'overview' && activeNav !== 'advisor' && activeNav !== 'reports' && activeNav !== 'settings' && !widgetManifest && (
           <p className="text-sm text-[var(--color-ink-faint)]">
             Detailed drill-downs need the full widget data. Switch to Overview and click "Load All Data", then come back.
           </p>
         )}
+
+        {/* ================================================================ */}
+        {/*   Settings — pharmacy profile (state, for weather insights)       */}
+        {/* ================================================================ */}
+        {activeNav === 'settings' && <SettingsPanel />}
 
         {/* ================================================================ */}
         {/*   Reports — data health / pipeline diagnostics + export           */}

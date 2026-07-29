@@ -167,20 +167,20 @@ function evaluate(records, options = {}) {
  * This enables multi-file intelligence — activating widgets whenever
  * required data exists across any registered dataset.
  */
-function evaluateFromStore(options = {}) {
+async function evaluateFromStore(organizationId, options = {}) {
   const factStore = require('./factStore');
   // Purge stale FactSales records from datasets that are not sales-capable
-  factStore.purgeStaleFactSales();
-  const records = factStore.queryAll();
+  await factStore.purgeStaleFactSales(organizationId);
+  const records = await factStore.queryAll(organizationId);
   return evaluate(records, options);
 }
 
 /**
  * Evaluate widgets from the Fact Store, filtered by dataset ID(s).
  */
-function evaluateFromDatasets(datasetIds, options = {}) {
+async function evaluateFromDatasets(organizationId, datasetIds, options = {}) {
   const factStore = require('./factStore');
-  const allRecords = factStore.queryAll();
+  const allRecords = await factStore.queryAll(organizationId);
   if (!Array.isArray(datasetIds) || datasetIds.length === 0) return evaluate(allRecords, options);
   const records = allRecords.filter((r) => datasetIds.includes(r.assetId));
   return evaluate(records, options);

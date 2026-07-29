@@ -1,88 +1,95 @@
 /**
  * Business Health Data Bridge — computes inventory and customer statistics
  * from the database to feed the Business Health scoring engine.
+ *
+ * Note: the Postgres schema drops the old "default walk-in customer id=1"
+ * convention from the SQLite version — a sale with no named customer now
+ * simply has customer_id IS NULL (see db.js's loadFactRecords). Every query
+ * below that used to filter `customer_id != 1` now filters
+ * `customer_id IS NOT NULL`, which is the more direct way to say the same
+ * thing.
  */
 
-const { getDb } = require('./database');
+const { getSql, assertOrgId } = require('./db');
 
 const roundTo = (n, d = 1) => {
   const m = 10 ** d;
-  return Math.round(n * m) / m;
+  return Math.round(Number(n) * m) / m;
 };
 
 // ---- inventory stats ---------------------------------------------------
 
-function computeInventoryStats() {
-  const db = getDb();
+async function computeInventoryStats(organizationId) {
+  assertOrgId(organizationId);
+  const db = getSql();
 
-  // Total distinct products that have sales (exclude master-list only products)
-  const activeRow = db.prepare('SELECT COUNT(DISTINCT product_id) AS cnt FROM fact_sales').get();
-  const activeProducts = activeRow ? activeRow.cnt : 0;
+  const [activeRow] = await db`
+    select count(distinct product_id) as cnt from sale where organization_id = ${organizationId}
+  `;
+  const activeProducts = activeRow ? Number(activeRow.cnt) : 0;
 
-  // Total products in the dimension table
-  const totalProducts = db.prepare('SELECT COUNT(*) AS cnt FROM dim_product').get().cnt;
+  const [totalProductsRow] = await db`
+    select count(*) as cnt from product where organization_id = ${organizationId}
+  `;
+  const totalProducts = Number(totalProductsRow.cnt);
 
-  // Total months of data for turnover calculation
-  const monthRow = db.prepare(
-    "SELECT COUNT(DISTINCT year || '-' || month) AS cnt FROM dim_calendar WHERE id IN (SELECT DISTINCT calendar_id FROM fact_sales)"
-  ).get();
-  const totalMonths = monthRow ? Math.max(monthRow.cnt, 1) : 1;
+  const [monthRow] = await db`
+    select count(distinct c.year || '-' || c.month) as cnt
+    from calendar c
+    where c.id in (select distinct calendar_id from sale where organization_id = ${organizationId})
+  `;
+  const totalMonths = monthRow ? Math.max(Number(monthRow.cnt), 1) : 1;
 
-  // Sales per product — compute velocity (units per month)
-  const turnoverRows = db.prepare(`
-    SELECT p.id, p.name,
-      COALESCE(SUM(f.quantity), 0) AS unitsSold,
-      ROUND(COALESCE(SUM(f.quantity), 0) * 1.0 / ?, 2) AS unitsPerMonth,
-      COALESCE(p.standard_cost, 0) AS standardCost
-    FROM dim_product p
-    LEFT JOIN fact_sales f ON f.product_id = p.id
-    GROUP BY p.id
-    ORDER BY unitsSold DESC
-  `).all(totalMonths);
+  const turnoverRows = await db`
+    select p.id, p.name,
+      coalesce(sum(s.quantity), 0) as "unitsSold",
+      round((coalesce(sum(s.quantity), 0) / ${totalMonths})::numeric, 2) as "unitsPerMonth",
+      coalesce(p.standard_cost, 0) as "standardCost"
+    from product p
+    left join sale s on s.product_id = p.id and s.organization_id = ${organizationId}
+    where p.organization_id = ${organizationId}
+    group by p.id, p.name, p.standard_cost
+    order by "unitsSold" desc
+  `;
+  const parsed = turnoverRows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    unitsSold: Number(r.unitsSold),
+    unitsPerMonth: Number(r.unitsPerMonth),
+    standardCost: Number(r.standardCost),
+  }));
 
-  // Median turnover: units per month per product (only products with sales)
-  const velocities = turnoverRows
+  const velocities = parsed
     .filter((r) => r.unitsSold > 0)
     .map((r) => r.unitsPerMonth)
     .sort((a, b) => a - b);
 
-  const medianTurnover = velocities.length > 0
-    ? velocities[Math.floor(velocities.length / 2)]
-    : 0;
+  const medianTurnover = velocities.length > 0 ? velocities[Math.floor(velocities.length / 2)] : 0;
 
-  // Dead stock: products with zero units sold (only meaningful if they're in the active set)
-  const deadStockRows = turnoverRows.filter((r) => !r.unitsSold || r.unitsSold === 0);
+  const deadStockRows = parsed.filter((r) => !r.unitsSold || r.unitsSold === 0);
   const deadStockCount = deadStockRows.length;
   const deadStockPct = totalProducts > 0 ? (deadStockCount / totalProducts) * 100 : 0;
 
-  // Near expiry: products discontinued or approaching discontinuation
   const now = new Date();
   const ninetyDaysFromNow = new Date(now.getTime() + 90 * 86400000);
   const ninetyStr = ninetyDaysFromNow.toISOString().substring(0, 10);
 
-  const expiryProducts = db.prepare(`
-    SELECT id, name, is_discontinued, discontinued_date
-    FROM dim_product
-    WHERE is_discontinued = 1 OR is_discontinued = 'Yes'
-       OR (discontinued_date IS NOT NULL AND discontinued_date <= ?)
-  `).all(ninetyStr);
-
+  const expiryProducts = await db`
+    select id, name, is_discontinued, discontinued_date
+    from product
+    where organization_id = ${organizationId}
+      and (is_discontinued = 'Yes'
+        or (discontinued_date is not null and discontinued_date <= ${ninetyStr}))
+  `;
   const nearExpiryCount = expiryProducts.length;
   const nearExpiryPct = totalProducts > 0 ? (nearExpiryCount / totalProducts) * 100 : 0;
 
-  // Low stock: fast-moving products (top 25% by velocity) that sold well but might run out
-  const salesProducts = turnoverRows.filter((r) => r.unitsSold > 0);
-  const fastMoverThreshold = velocities.length > 0
-    ? velocities[Math.floor(velocities.length * 0.75)]
-    : 0;
+  const salesProducts = parsed.filter((r) => r.unitsSold > 0);
+  const fastMoverThreshold = velocities.length > 0 ? velocities[Math.floor(velocities.length * 0.75)] : 0;
   const fastMovers = salesProducts.filter((r) => r.unitsPerMonth >= fastMoverThreshold);
-  // Low stock risk: fast movers with low or zero standard_cost (no cost data = potential stock issue)
   const lowStockCount = fastMovers.filter((r) => r.standardCost <= 0).length;
 
-  // Overstock: slow-moving products relative to active products
-  const slowThreshold = velocities.length > 0
-    ? velocities[Math.floor(velocities.length * 0.25)]
-    : 0;
+  const slowThreshold = velocities.length > 0 ? velocities[Math.floor(velocities.length * 0.25)] : 0;
   const slowMovers = salesProducts.filter((r) => r.unitsPerMonth <= slowThreshold && r.unitsPerMonth > 0);
   const overstockCount = slowMovers.length;
   const overstockPct = activeProducts > 0 ? (overstockCount / activeProducts) * 100 : 0;
@@ -104,66 +111,62 @@ function computeInventoryStats() {
 
 // ---- customer stats ----------------------------------------------------
 
-function computeCustomerStats() {
-  const db = getDb();
+async function computeCustomerStats(organizationId) {
+  assertOrgId(organizationId);
+  const db = getSql();
 
-  // Total distinct customers
-  const totalRow = db.prepare('SELECT COUNT(*) AS cnt FROM dim_customer').get();
-  const totalCustomers = totalRow ? totalRow.cnt : 0;
+  const [totalRow] = await db`
+    select count(*) as cnt from customer where organization_id = ${organizationId}
+  `;
+  const totalCustomers = totalRow ? Number(totalRow.cnt) : 0;
   if (totalCustomers === 0) return null;
 
-  // Check if customer data is meaningful (more than just walk-in)
-  const nonWalkIn = db.prepare(
-    "SELECT COUNT(*) AS cnt FROM dim_customer WHERE id != 1"
-  ).get();
-  const hasCustomerData = nonWalkIn && nonWalkIn.cnt > 0;
+  // Rows existing in `customer` aren't enough on their own — a dataset can
+  // have non-walk-in customer *labels* (e.g. channel types like "HMO" or
+  // "Clinics" mis-imported as customers) with zero actual sales linked to
+  // them. Require at least one real sale row tied to a named customer
+  // before treating customer data as meaningful.
+  const [activeRow] = await db`
+    select count(distinct customer_id) as cnt
+    from sale
+    where organization_id = ${organizationId} and customer_id is not null
+  `;
+  const activeCustomers = activeRow ? Number(activeRow.cnt) : 0;
+  const hasCustomerData = activeCustomers > 0;
 
   if (!hasCustomerData) {
     return { hasCustomerData: false };
   }
 
-  // Returning customers: customers with >1 transaction
-  const returningRow = db.prepare(`
-    SELECT COUNT(*) AS cnt FROM (
-      SELECT customer_id, COUNT(*) AS txCount
-      FROM fact_sales
-      WHERE customer_id != 1
-      GROUP BY customer_id
-      HAVING txCount > 1
-    )
-  `).get();
-  const returningCustomers = returningRow ? returningRow.cnt : 0;
+  const [returningRow] = await db`
+    select count(*) as cnt from (
+      select customer_id, count(*) as "txCount"
+      from sale
+      where organization_id = ${organizationId} and customer_id is not null
+      group by customer_id
+      having count(*) > 1
+    ) t
+  `;
+  const returningCustomers = returningRow ? Number(returningRow.cnt) : 0;
 
-  // Total customers with transactions
-  const activeRow = db.prepare(`
-    SELECT COUNT(DISTINCT customer_id) AS cnt
-    FROM fact_sales
-    WHERE customer_id != 1
-  `).get();
-  const activeCustomers = activeRow ? activeRow.cnt : 0;
+  const repeatCustomerRate = activeCustomers > 0 ? (returningCustomers / activeCustomers) * 100 : 0;
 
-  const repeatCustomerRate = activeCustomers > 0
-    ? (returningCustomers / activeCustomers) * 100
-    : 0;
-
-  // Customer growth: compare distinct customers per month
-  const monthlyCustomers = db.prepare(`
-    SELECT
-      c.year || '-' || c.month AS yearMonth,
-      COUNT(DISTINCT f.customer_id) AS customerCount
-    FROM fact_sales f
-    JOIN dim_calendar c ON f.calendar_id = c.id
-    WHERE f.customer_id != 1
-    GROUP BY c.year, c.month
-    ORDER BY c.year, c.month
-  `).all();
+  const monthlyCustomers = await db`
+    select c.year || '-' || c.month as "yearMonth",
+           count(distinct s.customer_id) as "customerCount"
+    from sale s
+    join calendar c on s.calendar_id = c.id
+    where s.organization_id = ${organizationId} and s.customer_id is not null
+    group by c.year, c.month
+    order by c.year, c.month
+  `;
 
   let customerGrowthRate = 0;
   if (monthlyCustomers.length >= 2) {
     const growthRates = [];
     for (let i = 1; i < monthlyCustomers.length; i++) {
-      const prev = monthlyCustomers[i - 1].customerCount;
-      const curr = monthlyCustomers[i].customerCount;
+      const prev = Number(monthlyCustomers[i - 1].customerCount);
+      const curr = Number(monthlyCustomers[i].customerCount);
       if (prev > 0) growthRates.push(((curr - prev) / prev) * 100);
     }
     customerGrowthRate = growthRates.length > 0
@@ -171,27 +174,25 @@ function computeCustomerStats() {
       : 0;
   }
 
-  // Average customer spend
-  const spendRow = db.prepare(`
-    SELECT AVG(custTotal) AS avgSpend FROM (
-      SELECT SUM(f.unit_price * f.quantity) AS custTotal
-      FROM fact_sales f
-      WHERE f.customer_id != 1
-      GROUP BY f.customer_id
-    )
-  `).get();
-  const avgCustomerSpend = spendRow && spendRow.avgSpend ? Math.round(spendRow.avgSpend) : 0;
+  const [spendRow] = await db`
+    select avg("custTotal") as "avgSpend" from (
+      select sum(unit_price * quantity) as "custTotal"
+      from sale
+      where organization_id = ${organizationId} and customer_id is not null
+      group by customer_id
+    ) t
+  `;
+  const avgCustomerSpend = spendRow && spendRow.avgSpend ? Math.round(Number(spendRow.avgSpend)) : 0;
 
-  // Average purchase frequency
-  const freqRow = db.prepare(`
-    SELECT AVG(txCount * 1.0) AS avgFreq FROM (
-      SELECT COUNT(*) AS txCount
-      FROM fact_sales
-      WHERE customer_id != 1
-      GROUP BY customer_id
-    )
-  `).get();
-  const avgPurchaseFrequency = freqRow && freqRow.avgFreq ? Math.round(freqRow.avgFreq * 10) / 10 : 0;
+  const [freqRow] = await db`
+    select avg("txCount") as "avgFreq" from (
+      select count(*) as "txCount"
+      from sale
+      where organization_id = ${organizationId} and customer_id is not null
+      group by customer_id
+    ) t
+  `;
+  const avgPurchaseFrequency = freqRow && freqRow.avgFreq ? Math.round(Number(freqRow.avgFreq) * 10) / 10 : 0;
 
   return {
     hasCustomerData: true,
@@ -210,10 +211,11 @@ function computeCustomerStats() {
 /**
  * Compute all supplemental stats needed by the Business Health scoring engine.
  */
-function computeHealthStats() {
-  const inventoryStats = computeInventoryStats();
-  const customerStats = computeCustomerStats();
-
+async function computeHealthStats(organizationId) {
+  const [inventoryStats, customerStats] = await Promise.all([
+    computeInventoryStats(organizationId),
+    computeCustomerStats(organizationId),
+  ]);
   return { inventoryStats, customerStats };
 }
 

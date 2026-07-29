@@ -1,4 +1,13 @@
 node_modules
-.env 
+.env
 .env.example
 server/.env
+server/rxnaija.db
+server/rxnaija.db-shm
+server/rxnaija.db-wal
+
+# Runtime state, not source. These are leftovers from the pre-Postgres
+# JSON-file era (fact-store.json alone is ~28 MB) plus downloaded NCDC
+# report PDFs — all regenerated at runtime and read by no code today.
+server/data/
+server/storage/

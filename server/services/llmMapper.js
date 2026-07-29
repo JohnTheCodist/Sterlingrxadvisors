@@ -695,6 +695,104 @@ function buildColumnsFromMapping(headers, mapping, confidence, sampleValues, sou
   });
 }
 
+// ---- single-column re-interpretation (user-supplied hint) ---------------
+
+/**
+ * Builds the prompt for re-interpreting one column when the user says
+ * neither of the top-2 guesses was right and types what it actually means.
+ */
+function buildReinterpretPrompt(rawHeader, sampleValues, hint) {
+  const schemaDesc = Object.entries(CANONICAL_SCHEMA)
+    .map(([name, info]) => `  - "${name}": ${info.description}`)
+    .join('\n');
+  const samples = (sampleValues || [])
+    .filter((v) => v != null && v !== '')
+    .slice(0, 5)
+    .map((v) => JSON.stringify(v))
+    .join(', ');
+
+  const system = `You are a pharmacy data mapping expert. A column's automatic guesses were both wrong. The user has described what the column actually means, in their own words. Map it to the single best canonical field, using the user's description as the strongest signal.
+
+## Canonical Fields
+${schemaDesc}
+
+## Rules
+1. Trust the user's description over the header text or sample values when they conflict.
+2. If the user's description doesn't clearly correspond to any canonical field, return null — do not force a weak match.
+3. Be conservative: if genuinely unsure, lower the confidence score or return null.
+4. Return ONLY valid JSON: {"category": "<field or null>", "confidence": 0.0-1.0}. No markdown, no explanation.`;
+
+  const user = `Column header: "${rawHeader}"
+Sample values: [${samples}]
+User's description of what this column means: "${hint}"
+
+Return the JSON object.`;
+
+  return { system, user };
+}
+
+/**
+ * Re-interprets a single column using a user-supplied free-text hint —
+ * the escape hatch for when neither algorithmic guess was correct. Never
+ * exposes the full field list to the user; instead the LLM reads their
+ * plain-language description and either finds a real match or returns
+ * null, in which case the caller should skip the column rather than
+ * force a low-confidence guess.
+ *
+ * @returns {Promise<{category: string|null, confidence: number}>}
+ */
+async function reinterpretColumn(rawHeader, sampleValues, hint) {
+  if (!LLM_API_KEY || !hint || !hint.trim()) {
+    return { category: null, confidence: 0 };
+  }
+
+  const { system, user } = buildReinterpretPrompt(rawHeader, sampleValues, hint.trim());
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(LLM_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${LLM_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: LLM_MODEL,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+        max_tokens: 200,
+        temperature: LLM_TEMPERATURE,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      console.warn(`[llmMapper] reinterpretColumn: LLM API returned ${response.status}`);
+      return { category: null, confidence: 0 };
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    const parsed = parseLlmResponse(content);
+    if (!parsed || !parsed.category || !CANONICAL_SCHEMA[parsed.category]) {
+      return { category: null, confidence: 0 };
+    }
+
+    return {
+      category: parsed.category,
+      confidence: typeof parsed.confidence === 'number' ? Math.max(0, Math.min(1, parsed.confidence)) : 0.6,
+    };
+  } catch (err) {
+    console.warn(`[llmMapper] reinterpretColumn failed: ${err.message}`);
+    return { category: null, confidence: 0 };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 /**
  * Check if LLM mode is available.
  */
@@ -722,5 +820,6 @@ module.exports = {
   parseLlmResponse,
   validateLlmMapping,
   localMap,
+  reinterpretColumn,
   CANONICAL_SCHEMA,
 };

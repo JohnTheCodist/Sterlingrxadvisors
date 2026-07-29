@@ -9,33 +9,32 @@
  *   5. Expiry / Discontinuation Summary
  */
 
-function getDb() {
-  return require('./database').getDb();
-}
+const { getSql, assertOrgId } = require('./db');
 
 // ────────────────────────────────────────────
 // 1. Gross Profit by Category
 // ────────────────────────────────────────────
 
-function profitByCategory() {
-  const db = getDb();
-  return db.prepare(`
-    SELECT
-      COALESCE(p.category, 'Uncategorised') AS category,
-      COUNT(DISTINCT p.id)                   AS productCount,
-      SUM(f.unit_price * f.quantity)         AS revenue,
-      SUM(f.unit_cost * f.quantity)          AS cost,
-      SUM((f.unit_price - f.unit_cost) * f.quantity) AS profit,
-      CASE WHEN SUM(f.unit_price * f.quantity) > 0
-           THEN ROUND(SUM((f.unit_price - f.unit_cost) * f.quantity)
-                      / SUM(f.unit_price * f.quantity) * 100, 1)
-           ELSE 0 END                         AS marginPct,
-      SUM(f.quantity)                         AS unitsSold
-    FROM fact_sales f
-    JOIN dim_product p ON f.product_id = p.id
-    GROUP BY p.category
-    ORDER BY profit DESC
-  `).all();
+async function profitByCategory(organizationId) {
+  assertOrgId(organizationId);
+  const db = getSql();
+  return db`
+    select
+      coalesce(p.category, 'Uncategorised') as category,
+      count(distinct p.id) as "productCount",
+      sum(s.unit_price * s.quantity) as revenue,
+      sum(s.unit_cost * s.quantity) as cost,
+      sum((s.unit_price - s.unit_cost) * s.quantity) as profit,
+      case when sum(s.unit_price * s.quantity) > 0
+           then round((sum((s.unit_price - s.unit_cost) * s.quantity) / sum(s.unit_price * s.quantity) * 100)::numeric, 1)
+           else 0 end as "marginPct",
+      sum(s.quantity) as "unitsSold"
+    from sale s
+    join product p on s.product_id = p.id
+    where s.organization_id = ${organizationId}
+    group by p.category
+    order by profit desc
+  `;
 }
 
 // ────────────────────────────────────────────
@@ -45,37 +44,40 @@ function profitByCategory() {
 //    C = remainder
 // ────────────────────────────────────────────
 
-function abcAnalysis() {
-  const db = getDb();
+async function abcAnalysis(organizationId) {
+  assertOrgId(organizationId);
+  const db = getSql();
 
-  // Get all products with their revenue
-  const products = db.prepare(`
-    SELECT
+  const products = await db`
+    select
       p.id,
       p.name,
-      COALESCE(p.category, 'Uncategorised') AS category,
-      SUM(f.unit_price * f.quantity)         AS revenue,
-      SUM((f.unit_price - f.unit_cost) * f.quantity) AS profit,
-      SUM(f.quantity)                         AS unitsSold
-    FROM fact_sales f
-    JOIN dim_product p ON f.product_id = p.id
-    GROUP BY p.id
-    ORDER BY revenue DESC
-  `).all();
+      coalesce(p.category, 'Uncategorised') as category,
+      sum(s.unit_price * s.quantity) as revenue,
+      sum((s.unit_price - s.unit_cost) * s.quantity) as profit,
+      sum(s.quantity) as "unitsSold"
+    from sale s
+    join product p on s.product_id = p.id
+    where s.organization_id = ${organizationId}
+    group by p.id, p.name, p.category
+    order by revenue desc
+  `;
 
   if (products.length === 0) return [];
 
-  const totalRevenue = products.reduce((s, p) => s + p.revenue, 0);
-  const totalProfit = products.reduce((s, p) => s + (p.profit || 0), 0);
+  const totalRevenue = products.reduce((s, p) => s + Number(p.revenue), 0);
+  const totalProfit = products.reduce((s, p) => s + Number(p.profit || 0), 0);
 
   let cumRev = 0;
   let cumProfit = 0;
 
   return products.map((p) => {
-    cumRev += p.revenue;
-    cumProfit += (p.profit || 0);
-    const cumRevPct = totalRevenue > 0 ? cumRev / totalRevenue * 100 : 0;
-    const cumProfitPct = totalProfit > 0 ? cumProfit / totalProfit * 100 : 0;
+    const revenue = Number(p.revenue);
+    const profit = Number(p.profit || 0);
+    cumRev += revenue;
+    cumProfit += profit;
+    const cumRevPct = totalRevenue > 0 ? (cumRev / totalRevenue) * 100 : 0;
+    const cumProfitPct = totalProfit > 0 ? (cumProfit / totalProfit) * 100 : 0;
 
     let abcClass = 'C';
     if (cumRevPct <= 80) abcClass = 'A';
@@ -83,8 +85,11 @@ function abcAnalysis() {
 
     return {
       ...p,
-      revenuePct: totalRevenue > 0 ? Math.round(p.revenue / totalRevenue * 10000) / 100 : 0,
-      profitPct: totalProfit > 0 ? Math.round((p.profit || 0) / totalProfit * 10000) / 100 : 0,
+      revenue,
+      profit,
+      unitsSold: Number(p.unitsSold),
+      revenuePct: totalRevenue > 0 ? Math.round((revenue / totalRevenue) * 10000) / 100 : 0,
+      profitPct: totalProfit > 0 ? Math.round((profit / totalProfit) * 10000) / 100 : 0,
       cumulativeRevenuePct: Math.round(cumRevPct * 100) / 100,
       cumulativeProfitPct: Math.round(cumProfitPct * 100) / 100,
       abcClass,
@@ -95,20 +100,22 @@ function abcAnalysis() {
 /**
  * ABC summary: count and revenue share per class.
  */
-function abcSummary() {
-  const items = abcAnalysis();
-  const summary = { A: { count: 0, revenue: 0, profit: 0 },
-                    B: { count: 0, revenue: 0, profit: 0 },
-                    C: { count: 0, revenue: 0, profit: 0 } };
+async function abcSummary(organizationId) {
+  const items = await abcAnalysis(organizationId);
+  const summary = {
+    A: { count: 0, revenue: 0, profit: 0 },
+    B: { count: 0, revenue: 0, profit: 0 },
+    C: { count: 0, revenue: 0, profit: 0 },
+  };
   for (const p of items) {
     summary[p.abcClass].count++;
     summary[p.abcClass].revenue += p.revenue;
-    summary[p.abcClass].profit += (p.profit || 0);
+    summary[p.abcClass].profit += p.profit || 0;
   }
   const totalRev = summary.A.revenue + summary.B.revenue + summary.C.revenue;
   for (const cls of ['A', 'B', 'C']) {
     summary[cls].revenueShare = totalRev > 0
-      ? Math.round(summary[cls].revenue / totalRev * 10000) / 100
+      ? Math.round((summary[cls].revenue / totalRev) * 10000) / 100
       : 0;
   }
   return summary;
@@ -117,90 +124,107 @@ function abcSummary() {
 // ────────────────────────────────────────────
 // 3. Inventory Turnover
 //    Turnover = COGS / Average Inventory
-//    Average Inventory = (ListPriceEUR + StandardCostEUR) / 2
+//    Average Inventory = (ListPrice + StandardCost) / 2
 //    (Simplified from available data; in production this uses stock levels)
 // ────────────────────────────────────────────
 
-function inventoryTurnover() {
-  const db = getDb();
-  return db.prepare(`
-    WITH sales AS (
-      SELECT
-        f.product_id,
-        SUM(f.quantity)                        AS unitsSold,
-        SUM(f.unit_cost * f.quantity)          AS cogs,
-        SUM(f.unit_price * f.quantity)         AS revenue
-      FROM fact_sales f
-      GROUP BY f.product_id
+async function inventoryTurnover(organizationId) {
+  assertOrgId(organizationId);
+  const db = getSql();
+  const rows = await db`
+    with sales as (
+      select
+        s.product_id,
+        sum(s.quantity) as "unitsSold",
+        sum(s.unit_cost * s.quantity) as cogs,
+        sum(s.unit_price * s.quantity) as revenue
+      from sale s
+      where s.organization_id = ${organizationId}
+      group by s.product_id
     )
-    SELECT
+    select
       p.name,
-      COALESCE(p.category, 'Uncategorised') AS category,
-      s.unitsSold,
-      s.cogs,
-      s.revenue,
-      COALESCE(p.StandardCostEUR, p.ListPriceEUR, 0) AS unitCost,
-      -- Avg inventory: use standard cost as proxy
-      -- Turnover ratio: units sold per period / estimated average stock
-      CASE WHEN p.StandardCostEUR > 0
-           THEN ROUND(s.unitsSold * 1.0 / (p.StandardCostEUR + 1), 2)
-           ELSE 0
-      END AS turnoverRatio
-    FROM sales s
-    JOIN dim_product p ON s.product_id = p.id
-    ORDER BY s.unitsSold DESC
-  `).all();
+      coalesce(p.category, 'Uncategorised') as category,
+      sales."unitsSold",
+      sales.cogs,
+      sales.revenue,
+      coalesce(p.standard_cost, p.list_price, 0) as "unitCost",
+      case when p.standard_cost > 0
+           then round((sales."unitsSold" / (p.standard_cost + 1))::numeric, 2)
+           else 0
+      end as "turnoverRatio"
+    from sales
+    join product p on sales.product_id = p.id
+    order by sales."unitsSold" desc
+  `;
+  return rows.map((r) => ({
+    ...r,
+    unitsSold: Number(r.unitsSold),
+    cogs: r.cogs != null ? Number(r.cogs) : null,
+    revenue: r.revenue != null ? Number(r.revenue) : null,
+    unitCost: Number(r.unitCost),
+    turnoverRatio: Number(r.turnoverRatio),
+  }));
 }
 
 // ────────────────────────────────────────────
 // 4. Fast vs. Slow Movers
-//    Classifies products by sales velocity (units sold per unique calendar day)
+//    Classifies products by sales velocity (units sold per unique sale day)
 // ────────────────────────────────────────────
 
-function fastSlowMovers() {
-  const db = getDb();
-  const rows = db.prepare(`
-    WITH product_sales AS (
-      SELECT
-        f.product_id,
-        SUM(f.quantity)                     AS totalUnitsSold,
-        SUM(f.unit_price * f.quantity)      AS totalRevenue,
-        COUNT(DISTINCT f.calendar_id)       AS activeDays
-      FROM fact_sales f
-      GROUP BY f.product_id
+async function fastSlowMovers(organizationId) {
+  assertOrgId(organizationId);
+  const db = getSql();
+  const raw = await db`
+    with product_sales as (
+      select
+        s.product_id,
+        sum(s.quantity) as "totalUnitsSold",
+        sum(s.unit_price * s.quantity) as "totalRevenue",
+        count(distinct s.sale_date) as "activeDays"
+      from sale s
+      where s.organization_id = ${organizationId}
+      group by s.product_id
     )
-    SELECT
+    select
       p.name,
-      COALESCE(p.category, 'Uncategorised') AS category,
-      ps.totalUnitsSold,
-      ps.totalRevenue,
-      ps.activeDays,
-      ROUND(ps.totalUnitsSold * 1.0 / NULLIF(ps.activeDays, 0), 2) AS velocity,
-      ps.totalUnitsSold * 1.0 / NULLIF(ps.activeDays, 0)           AS rawVelocity
-    FROM product_sales ps
-    JOIN dim_product p ON ps.product_id = p.id
-    ORDER BY rawVelocity DESC
-  `).all();
+      coalesce(p.category, 'Uncategorised') as category,
+      ps."totalUnitsSold",
+      ps."totalRevenue",
+      ps."activeDays",
+      round((ps."totalUnitsSold" / nullif(ps."activeDays", 0))::numeric, 2) as velocity,
+      ps."totalUnitsSold" / nullif(ps."activeDays", 0) as "rawVelocity"
+    from product_sales ps
+    join product p on ps.product_id = p.id
+    order by "rawVelocity" desc
+  `;
+
+  const rows = raw.map((r) => ({
+    ...r,
+    totalUnitsSold: Number(r.totalUnitsSold),
+    totalRevenue: Number(r.totalRevenue),
+    activeDays: Number(r.activeDays),
+    velocity: r.velocity != null ? Number(r.velocity) : null,
+    rawVelocity: r.rawVelocity != null ? Number(r.rawVelocity) : 0,
+  }));
 
   if (rows.length === 0) return [];
 
-  // Classification thresholds (percentile-based)
-  const velocities = rows.map(r => r.rawVelocity).sort((a, b) => a - b);
+  const velocities = rows.map((r) => r.rawVelocity).sort((a, b) => a - b);
   const p70 = velocities[Math.floor(velocities.length * 0.7)];
   const p30 = velocities[Math.floor(velocities.length * 0.3)];
 
-  return rows.map(r => ({
+  return rows.map((r) => ({
     ...r,
-    classification: r.rawVelocity >= p70 ? 'Fast' :
-                    r.rawVelocity >= p30 ? 'Medium' : 'Slow',
+    classification: r.rawVelocity >= p70 ? 'Fast' : r.rawVelocity >= p30 ? 'Medium' : 'Slow',
   }));
 }
 
 /**
  * Summary counts for fast / medium / slow.
  */
-function fastSlowSummary() {
-  const items = fastSlowMovers();
+async function fastSlowSummary(organizationId) {
+  const items = await fastSlowMovers(organizationId);
   const summary = { Fast: 0, Medium: 0, Slow: 0 };
   for (const item of items) {
     summary[item.classification]++;
@@ -210,36 +234,39 @@ function fastSlowSummary() {
 
 // ────────────────────────────────────────────
 // 5. Expiry / Discontinuation Summary
-//    Products marked IsDiscontinued or approaching DiscontinuedDate
+//    Products marked is_discontinued or approaching discontinued_date
 // ────────────────────────────────────────────
 
-function expirySummary() {
-  const db = getDb();
+async function expirySummary(organizationId) {
+  assertOrgId(organizationId);
+  const db = getSql();
 
-  // Get all products with their discontinuation status
-  const products = db.prepare(`
-    SELECT
-      id, name, category, LaunchDate, IsDiscontinued, DiscontinuedDate
-    FROM dim_product
-    ORDER BY
-      CASE WHEN IsDiscontinued = 'Yes' THEN 0 ELSE 1 END,
-      DiscontinuedDate ASC
-  `).all();
+  const products = await db`
+    select
+      id, name, category, launch_date as "LaunchDate",
+      is_discontinued as "IsDiscontinued", discontinued_date as "DiscontinuedDate"
+    from product
+    where organization_id = ${organizationId}
+    order by
+      case when is_discontinued = 'Yes' then 0 else 1 end,
+      discontinued_date asc
+  `;
 
   const now = new Date();
   const ninetyDaysFromNow = new Date(now.getTime() + 90 * 86400000);
   const todayStr = now.toISOString().substring(0, 10);
   const ninetyStr = ninetyDaysFromNow.toISOString().substring(0, 10);
 
-  return products.map(p => {
+  return products.map((p) => {
     let status = 'Active';
     let riskLevel = 'none';
+    const discontinuedDateStr = p.DiscontinuedDate ? new Date(p.DiscontinuedDate).toISOString().substring(0, 10) : null;
 
-    if (p.IsDiscontinued === 'Yes' && p.DiscontinuedDate) {
-      if (p.DiscontinuedDate <= todayStr) {
+    if (p.IsDiscontinued === 'Yes' && discontinuedDateStr) {
+      if (discontinuedDateStr <= todayStr) {
         status = 'Discontinued';
         riskLevel = 'high';
-      } else if (p.DiscontinuedDate <= ninetyStr) {
+      } else if (discontinuedDateStr <= ninetyStr) {
         status = 'Discontinuing Soon';
         riskLevel = 'medium';
       } else {
@@ -259,15 +286,33 @@ function expirySummary() {
 // Combined report
 // ────────────────────────────────────────────
 
-function fullInsights() {
+async function fullInsights(organizationId) {
+  const [
+    profitByCategoryResult,
+    abcSummaryResult,
+    abcItems,
+    inventoryTurnoverResult,
+    fastSlowSummaryResult,
+    fastSlowMoversResult,
+    expirySummaryResult,
+  ] = await Promise.all([
+    profitByCategory(organizationId),
+    abcSummary(organizationId),
+    abcAnalysis(organizationId),
+    inventoryTurnover(organizationId),
+    fastSlowSummary(organizationId),
+    fastSlowMovers(organizationId),
+    expirySummary(organizationId),
+  ]);
+
   return {
-    profitByCategory: profitByCategory(),
-    abcSummary: abcSummary(),
-    abcTopA: abcAnalysis().filter(p => p.abcClass === 'A').slice(0, 20),
-    inventoryTurnover: inventoryTurnover().slice(0, 20),
-    fastSlowSummary: fastSlowSummary(),
-    fastSlowMovers: fastSlowMovers().slice(0, 20),
-    expirySummary: expirySummary(),
+    profitByCategory: profitByCategoryResult,
+    abcSummary: abcSummaryResult,
+    abcTopA: abcItems.filter((p) => p.abcClass === 'A').slice(0, 20),
+    inventoryTurnover: inventoryTurnoverResult.slice(0, 20),
+    fastSlowSummary: fastSlowSummaryResult,
+    fastSlowMovers: fastSlowMoversResult.slice(0, 20),
+    expirySummary: expirySummaryResult,
   };
 }
 

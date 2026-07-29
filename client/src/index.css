@@ -356,11 +356,27 @@ p { margin: 0; }
   background: var(--background);
 }
 
-.mobile-menu a {
+/* The sign-out control is a <button>, not a link — it performs an action
+   rather than navigating — but it sits in the same list and must look
+   identical, so the button resets bring it back to the anchor's baseline. */
+.mobile-menu a,
+.mobile-menu button {
   padding: 12px 0;
   font-weight: 500;
   color: var(--muted-foreground);
   border-bottom: 1px solid var(--border);
+}
+
+.mobile-menu button {
+  background: none;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  text-align: left;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
 }
 
 @media (max-width: 860px) {
@@ -1168,6 +1184,41 @@ p { margin: 0; }
   box-shadow: var(--shadow-card);
 }
 
+/* Legal pages (Privacy/Terms) — plain prose, long-form reading */
+.legal-content {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.legal-content h2 {
+  font-size: 1.4rem;
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+}
+.legal-content h2:first-child { margin-top: 0; }
+.legal-content p {
+  margin-bottom: 1rem;
+  line-height: 1.7;
+  color: var(--foreground);
+}
+.legal-content ul, .legal-content ol {
+  margin: 0 0 1rem 1.25rem;
+  line-height: 1.7;
+}
+.legal-content li { margin-bottom: 0.4rem; }
+.legal-content .legal-updated {
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+.legal-content .legal-notice {
+  background: var(--muted);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  font-size: 0.9rem;
+  color: var(--muted-foreground);
+  margin-bottom: 2rem;
+}
+
 .field {
   margin-bottom: 18px;
 }
@@ -1309,3 +1360,289 @@ p { margin: 0; }
 /* ---- Generic --------------------------------------------------------- */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
 @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* ============================================================
+   Column Mapping — Premium Review Cards
+   Reuses existing tokens only (no new palette/fonts). Motion is
+   transform/opacity-only, three primitives total: stagger reveal,
+   button hover-lift, accordion expand. Respects prefers-reduced-motion
+   via the global rule above.
+   ============================================================ */
+
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+}
+
+/* Overall progress bar */
+.map-progress-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--muted);
+  overflow: hidden;
+}
+.map-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+  transition: transform var(--dur-long) var(--ease-out);
+}
+
+/* Card shell — one-shot stagger reveal on mount */
+.map-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 20px 22px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: map-card-reveal var(--dur-long) var(--ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes map-card-reveal {
+  to { opacity: 1; transform: none; }
+}
+
+.map-card--review { border-left-color: var(--warning); }
+.map-card--confirm { border-left-color: var(--destructive); }
+.map-card--resolved {
+  border-left-color: var(--success);
+  padding: 14px 22px;
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
+.map-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.map-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.map-badge .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+.map-badge--review { background: var(--gold-muted); color: oklch(0.5 0.12 80); }
+.map-badge--review .dot { background: var(--warning); }
+.map-badge--confirm { background: var(--color-danger-tint); color: var(--destructive); }
+.map-badge--confirm .dot { background: var(--destructive); }
+
+.map-confidence {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.map-question {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--foreground);
+}
+.map-question strong { font-weight: 600; }
+
+.map-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.map-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform var(--dur-short) var(--ease-out),
+              background var(--dur-short) var(--ease-out),
+              border-color var(--dur-short) var(--ease-out),
+              box-shadow var(--dur-short) var(--ease-out);
+}
+.map-btn:hover { transform: translateY(-1.5px); }
+.map-btn:active { transform: translateY(0); transition-duration: var(--dur-micro); }
+.map-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.map-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.map-btn--primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 6px 16px -8px oklch(0.52 0.088 194 / 0.5);
+}
+.map-btn--primary:hover { background: var(--color-primary-dark); }
+
+.map-btn--secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--foreground);
+}
+.map-btn--secondary:hover { border-color: var(--primary); background: var(--color-primary-tint); }
+
+.map-btn--skip {
+  background: transparent;
+  color: var(--muted-foreground);
+}
+.map-btn--skip:hover { background: var(--muted); color: var(--foreground); }
+
+.map-fineprint {
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.map-resolved-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  animation: map-card-reveal var(--dur-short) var(--ease-out) forwards;
+}
+.map-resolved-row .check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-primary-tint);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* Accordion (auto-accepted panel) — grid-rows technique, no height/layout animation */
+.map-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur-short) var(--ease-in-out);
+}
+.map-accordion.is-open { grid-template-rows: 1fr; }
+.map-accordion > div { overflow: hidden; min-height: 0; }
+
+.map-chevron {
+  transition: transform var(--dur-short) var(--ease-out);
+}
+.map-chevron.is-open { transform: rotate(180deg); }
+
+/* Single-card queue — swipe-left-to-advance. Overrides the stacked-list
+   reveal above with a horizontal slide, since only one card is ever on
+   screen at a time. */
+.map-card-single {
+  animation: map-card-slide-in var(--dur-long) var(--ease-out) forwards;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+}
+.map-card-single:active { cursor: grabbing; }
+
+@keyframes map-card-slide-in {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.map-card-single.is-exiting {
+  animation: map-card-slide-out var(--dur-short) var(--ease-in) forwards;
+}
+@keyframes map-card-slide-out {
+  to { opacity: 0; transform: translateX(-70px) rotate(-4deg); }
+}
+
+.map-col-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 6px;
+}
+
+.map-hint-row {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 2px;
+}
+.map-hint-input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  font-size: 0.85rem;
+  color: var(--foreground);
+  font-family: inherit;
+  transition: border-color var(--dur-short) var(--ease-out);
+}
+.map-hint-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.map-btn--find { flex-shrink: 0; }
+
+.map-spinner {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  animation: map-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes map-spin { to { transform: rotate(360deg); } }
+
+.map-card-footer {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.map-card-footer .map-fineprint { margin-top: 0; }
+
+.map-skip-link {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 2px;
+  flex-shrink: 0;
+  transition: color var(--dur-short) var(--ease-out);
+}
+.map-skip-link:hover { color: var(--foreground); }
+.map-skip-link:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .map-card, .map-resolved-row, .map-card-single, .map-card-single.is-exiting {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .map-btn:hover, .map-btn:active { transform: none; }
+}

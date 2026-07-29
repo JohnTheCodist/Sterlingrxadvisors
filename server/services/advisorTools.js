@@ -178,6 +178,38 @@ const TOOLS = [
       parameters: { type: 'object', properties: {} },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'getWeatherOutlook',
+      description: 'Current weather risk signals (rainfall, humidity, heatwave, harmattan/dust, cold) for the pharmacy\'s set location, and which seasonal-demand rules currently qualify — each labelled with whether this pharmacy\'s own sales history confirms it. Use for weather/seasonal questions ("is it going to rain", "should I stock up for harmattan", "why did you recommend more antihistamines"). Returns available:false if no state is set (direct the user to Settings) or the weather provider isn\'t configured.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getDecisionOpportunities',
+      description: 'Ranked business opportunities and risks (Sales, Inventory, Profitability, Customer, Operations pillars), each with a priority (Critical/High/Medium/Low), a finding, supporting evidence, confidence, and financial impact where estimable. Combines internal analytics with external weather/calendar/disease intelligence. Findings only — no recommended actions attached (use getRecommendations for those). Use for "what are my biggest opportunities/risks" questions.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getRecommendations',
+      description: 'Concrete recommended actions (e.g. "increase X purchase by Y%", "address Z risk"), each with its reasoning (traceable to a specific decision opportunity), estimated stockout risk where computable, and confidence. Every number here is derived from real evidence, never invented. Use for "what should I do" / "what should I do next" questions.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getExecutiveBrief',
+      description: 'The single consolidated executive summary: business health score/rating, an overall assessment, key supporting evidence, total estimated financial opportunity, the single highest-priority action, and confidence. Use for broad "how is my business doing" / "give me a summary" / "give me an overview" questions — prefer this over manually combining several other tools when the user wants a general summary.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
 ];
 
 const IMPLEMENTATIONS = {
@@ -198,13 +230,17 @@ const IMPLEMENTATIONS = {
   getBusinessHealth: queries.getBusinessHealth,
   getTopPriorities: queries.getTopPriorities,
   getRevenueTrendDrivers: queries.getRevenueTrendDrivers,
+  getWeatherOutlook: queries.getWeatherOutlook,
+  getDecisionOpportunities: queries.getDecisionOpportunities,
+  getRecommendations: queries.getRecommendations,
+  getExecutiveBrief: queries.getExecutiveBrief,
 };
 
-function runTool(name, args) {
+async function runTool(organizationId, name, args) {
   const fn = IMPLEMENTATIONS[name];
   if (!fn) return { error: `Unknown tool: ${name}` };
   try {
-    return fn(args || {});
+    return await fn(organizationId, args || {});
   } catch (err) {
     return { error: `${name} failed: ${err.message}` };
   }

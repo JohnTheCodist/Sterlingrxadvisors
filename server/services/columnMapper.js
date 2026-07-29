@@ -12,9 +12,6 @@
  *   6. Persist and recall mappings per pharmacy/template.
  */
 
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
 const {
   canonicalize, REQUIRED_FIELDS, PRICE_FIELDS,
   SEMANTIC_REGISTRY, PRODUCT_IDENTITY_FIELDS,
@@ -22,30 +19,11 @@ const {
   getClassification, resolveCanonical, CANONICAL_TO_SEMANTIC,
 } = require('./dictionary');
 
-const mappingStore = new Map();
-
 function fingerprintHeaders(rawHeaders) {
   return rawHeaders
     .map((h) => String(h).toLowerCase().trim())
     .sort()
     .join('|');
-}
-
-/**
- * Generate a filesystem-safe filename segment from the header fingerprint.
- * When headers produce a long fingerprint (> 80 chars sanitized), the
- * resulting path would exceed OS limits, so we SHA1-hash it instead.
- * Short fingerprints (< 80 chars) are kept verbatim for backward
- * compatibility with existing mapping files.
- */
-function fingerprintFilename(pharmacyId, rawHeaders) {
-  const fp = fingerprintHeaders(rawHeaders);
-  const sanitized = fp.replace(/[^a-zA-Z0-9_-]/g, '_');
-  const safeId = pharmacyId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  const fpPart = sanitized.length <= 80
-    ? sanitized
-    : 'h_' + crypto.createHash('sha1').update(fp).digest('hex').slice(0, 20);
-  return `${safeId}__${fpPart}.json`;
 }
 
 // ---- resolution --------------------------------------------------------
@@ -247,56 +225,39 @@ function resolveMapping(schemaColumns) {
 }
 
 // ---- persistence --------------------------------------------------------
+//
+// Was per-header-fingerprint JSON files under server/mappings/, keyed by a
+// caller-supplied pharmacyId that was always the literal string 'default'
+// in practice. Now Postgres's column_mapping table, keyed by the real
+// organizationId — no in-memory cache layer, Postgres round-trips are fast
+// enough that a stale-cache class of bugs isn't worth the complexity.
 
-const MAPPINGS_DIR = path.join(__dirname, '..', 'mappings');
+async function saveMapping(organizationId, rawHeaders, mapping) {
+  const { getSql, assertOrgId } = require('./db');
+  assertOrgId(organizationId);
+  const db = getSql();
+  const fingerprint = fingerprintHeaders(rawHeaders);
 
-function ensureMappingsDir() {
-  if (!fs.existsSync(MAPPINGS_DIR)) {
-    fs.mkdirSync(MAPPINGS_DIR, { recursive: true });
-  }
+  await db`
+    insert into column_mapping (organization_id, fingerprint, mapping, saved_at)
+    values (${organizationId}, ${fingerprint}, ${db.json(mapping)}, now())
+    on conflict (organization_id, fingerprint) do update set
+      mapping = excluded.mapping,
+      saved_at = excluded.saved_at
+  `;
 }
 
-function saveMapping(pharmacyId, rawHeaders, mapping) {
-  ensureMappingsDir();
-  const fp = fingerprintHeaders(rawHeaders);
-  const key = `${pharmacyId}::${fp}`;
-  const record = { pharmacyId, fingerprint: fp, mapping, savedAt: new Date().toISOString() };
-  mappingStore.set(key, mapping);
-  const filename = fingerprintFilename(pharmacyId, rawHeaders);
-  fs.writeFileSync(
-    path.join(MAPPINGS_DIR, filename),
-    JSON.stringify(record, null, 2)
-  );
-}
+async function loadMapping(organizationId, rawHeaders) {
+  const { getSql, assertOrgId } = require('./db');
+  assertOrgId(organizationId);
+  const db = getSql();
+  const fingerprint = fingerprintHeaders(rawHeaders);
 
-function loadMapping(pharmacyId, rawHeaders) {
-  const fp = fingerprintHeaders(rawHeaders);
-  const key = `${pharmacyId}::${fp}`;
-
-  if (mappingStore.has(key)) {
-    const stored = mappingStore.get(key);
-    return canonicalizeMapping(stored);
-  }
-
-  ensureMappingsDir();
-  const filename = fingerprintFilename(pharmacyId, rawHeaders);
-  let filePath = path.join(MAPPINGS_DIR, filename);
-  // Backward compat: if the hash-based file doesn't exist, try the
-  // old long-name scheme (files saved before the fingerprint-hash fix).
-  if (!fs.existsSync(filePath)) {
-    const legacyFilename = key.replace(/[^a-zA-Z0-9_-]/g, '_') + '.json';
-    const legacyPath = path.join(MAPPINGS_DIR, legacyFilename);
-    if (fs.existsSync(legacyPath)) filePath = legacyPath;
-  }
-  if (fs.existsSync(filePath)) {
-    try {
-      const record = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-      const canon = canonicalizeMapping(record.mapping);
-      mappingStore.set(key, canon);
-      return canon;
-    } catch (_) { return null; }
-  }
-  return null;
+  const [row] = await db`
+    select mapping from column_mapping where organization_id = ${organizationId} and fingerprint = ${fingerprint}
+  `;
+  if (!row) return null;
+  return canonicalizeMapping(row.mapping);
 }
 
 function canonicalizeMapping(mapping) {
@@ -307,21 +268,19 @@ function canonicalizeMapping(mapping) {
   return out;
 }
 
-function loadPharmacyMappings(pharmacyId) {
-  ensureMappingsDir();
-  const results = [];
-  const files = fs.readdirSync(MAPPINGS_DIR);
-  for (const file of files) {
-    if (file.startsWith(pharmacyId) && file.endsWith('.json')) {
-      try {
-        const record = JSON.parse(
-          fs.readFileSync(path.join(MAPPINGS_DIR, file), 'utf-8')
-        );
-        results.push(record);
-      } catch (_) {}
-    }
-  }
-  return results;
+async function loadPharmacyMappings(organizationId) {
+  const { getSql, assertOrgId } = require('./db');
+  assertOrgId(organizationId);
+  const db = getSql();
+  const rows = await db`
+    select fingerprint, mapping, saved_at from column_mapping where organization_id = ${organizationId}
+  `;
+  return rows.map((r) => ({
+    pharmacyId: organizationId,
+    fingerprint: r.fingerprint,
+    mapping: r.mapping,
+    savedAt: r.saved_at ? r.saved_at.toISOString() : null,
+  }));
 }
 
 module.exports = {

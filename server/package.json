@@ -9,10 +9,14 @@
     "dev": "node index.js"
   },
   "dependencies": {
-    "better-sqlite3": "^12.11.1",
+    "@supabase/supabase-js": "^2.110.8",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "multer": "^2.2.0",
+    "pdfjs-dist": "^6.1.200",
+    "pdfkit": "^0.19.1",
+    "postgres": "^3.4.9",
+    "twilio": "^6.0.2",
     "xlsx": "^0.18.5"
   }
 }

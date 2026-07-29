@@ -1,6 +1,7 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
+import { apiFetch } from '../lib/apiClient.js';
 
 const ACCEPTED_TYPES = {
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
@@ -226,209 +227,207 @@ function FileDropZone({ file, onDrop, onRemove }) {
 function AutoAcceptedPanel({ columns, expanded, onToggle }) {
   const count = columns.length;
   return (
-    <div className="border-b border-[var(--color-line)]">
+    <div className="mb-4 rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)]">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between py-3 text-sm"
+        className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-sm"
       >
-        <span className="text-[var(--color-ink-faint)]">
-          {count} column{count !== 1 ? 's' : ''} auto-mapped
+        <span className="flex items-center gap-2 text-[var(--color-ink-soft)]">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary-tint)] text-[var(--color-primary)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          </span>
+          {count} column{count !== 1 ? 's' : ''} auto-mapped with high confidence
         </span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          className={`shrink-0 text-[var(--color-ink-faint)] transition ${expanded ? 'rotate-180' : ''}`}
+          className={`map-chevron shrink-0 text-[var(--color-ink-faint)] ${expanded ? 'is-open' : ''}`}
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
-      {expanded && (
-        <div className="pb-3">
+      <div className={`map-accordion ${expanded ? 'is-open' : ''}`}>
+        <div>
           <table className="w-full text-xs">
             <thead>
               <tr className="text-[var(--color-ink-faint)]">
-                <th className="text-left font-medium py-1">Column</th>
+                <th className="text-left font-medium py-1 px-5">Column</th>
                 <th className="text-left font-medium py-1">Mapped To</th>
-                <th className="text-right font-medium py-1">Confidence</th>
+                <th className="text-right font-medium py-1 px-5">Confidence</th>
               </tr>
             </thead>
             <tbody>
               {columns.map((col) => (
                 <tr key={col.rawHeader} className="border-t border-[var(--color-line)]">
-                  <td className="py-1.5 font-medium text-[var(--color-ink)]">{col.rawHeader}</td>
+                  <td className="py-1.5 px-5 font-medium text-[var(--color-ink)]">{col.rawHeader}</td>
                   <td className="py-1.5 text-[var(--color-ink-soft)]">{FIELD_LABEL_MAP[col.mappedTo] || formatCategoryLabel(col.mappedTo)}</td>
-                  <td className="py-1.5 text-right text-[var(--color-ink-faint)]">{formatPercent(col.bestGuess?.confidence || col.detections[0]?.confidence || 0)}</td>
+                  <td className="py-1.5 px-5 text-right font-mono text-[var(--color-ink-faint)]">{formatPercent(col.bestGuess?.confidence || col.detections[0]?.confidence || 0)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <div className="h-2" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Single-card review queue — one column at a time, swipe (or button) to
+// advance. Only ever offers the top 2 algorithmic guesses; a third path,
+// "Something else", lets the user describe the column in their own words
+// and asks the LLM to re-read it with that hint. No full field list is
+// ever shown — if the hint doesn't land on a confident match, the column
+// is skipped rather than forcing a guess.
+function MappingCard({ column, index, total, onResolve }) {
+  const [exiting, setExiting] = useState(false);
+  const [mode, setMode] = useState('idle'); // idle | loading | match | nomatch
+  const [hint, setHint] = useState('');
+  const [matchResult, setMatchResult] = useState(null);
+  const cardRef = useRef(null);
+  const dragRef = useRef({ startX: 0, dx: 0, dragging: false });
+
+  const tier = column.tier === 'review' ? 'review' : 'confirm';
+  const confidence = column.bestGuess?.confidence || column.detections?.[0]?.confidence || 0;
+  const bestLabel = column.mappedTo ? (FIELD_LABEL_MAP[column.mappedTo] || formatCategoryLabel(column.mappedTo)) : null;
+  const secondBest = column.alternatives && column.alternatives.length > 0 ? column.alternatives[0] : null;
+  const secondLabel = secondBest ? (FIELD_LABEL_MAP[secondBest.category] || formatCategoryLabel(secondBest.category)) : null;
+
+  const commit = (category) => {
+    setExiting(true);
+    setTimeout(() => onResolve(column.rawHeader, category), 200);
+  };
+
+  const onPointerDown = (e) => {
+    // Don't hijack clicks on real controls (buttons, the hint input) —
+    // only the card's own surface (title, question text, padding) starts
+    // a swipe-to-skip gesture.
+    if (e.target.closest('button, input, textarea')) return;
+    dragRef.current = { startX: e.clientX, dx: 0, dragging: true };
+    cardRef.current?.setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e) => {
+    if (!dragRef.current.dragging) return;
+    const dx = e.clientX - dragRef.current.startX;
+    dragRef.current.dx = dx;
+    if (cardRef.current) cardRef.current.style.transform = `translateX(${dx}px) rotate(${dx / 45}deg)`;
+  };
+  const endDrag = () => {
+    if (!dragRef.current.dragging) return;
+    const dx = dragRef.current.dx;
+    dragRef.current.dragging = false;
+    if (cardRef.current) cardRef.current.style.transform = '';
+    if (dx < -90) commit('');
+  };
+
+  const submitHint = async () => {
+    if (!hint.trim()) return;
+    setMode('loading');
+    try {
+      const res = await apiFetch('/api/reinterpret-column', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rawHeader: column.rawHeader, sampleValues: column.sampleValues || [], hint }),
+      });
+      const data = await res.json();
+      if (data.matched) {
+        setMatchResult({ category: data.category });
+        setMode('match');
+      } else {
+        setMode('nomatch');
+        setTimeout(() => commit(''), 1000);
+      }
+    } catch (_) {
+      setMode('nomatch');
+      setTimeout(() => commit(''), 1000);
+    }
+  };
+
+  return (
+    <div
+      ref={cardRef}
+      className={`map-card map-card--${tier} map-card-single ${exiting ? 'is-exiting' : ''}`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+    >
+      <div className="map-card-head">
+        <span className={`map-badge map-badge--${tier}`}>
+          <span className="dot" />{tier === 'review' ? `Review · ${formatPercent(confidence)}` : 'Uncertain'}
+        </span>
+        <span className="map-confidence">{index + 1} of {total}</span>
+      </div>
+
+      <p className="map-col-title">&ldquo;{column.rawHeader}&rdquo;</p>
+
+      {mode === 'idle' && (
+        <>
+          <p className="map-question">
+            {bestLabel ? 'Which field is this?' : "I couldn't find a match — describe it below, or skip."}
+          </p>
+          {(bestLabel || secondLabel) && (
+            <div className="map-actions">
+              {bestLabel && (
+                <button type="button" onClick={() => commit(column.mappedTo)} className="map-btn map-btn--primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  {bestLabel}
+                </button>
+              )}
+              {secondLabel && (
+                <button type="button" onClick={() => commit(secondBest.category)} className="map-btn map-btn--secondary">
+                  {secondLabel}
+                </button>
+              )}
+            </div>
+          )}
+          <div className="map-hint-row">
+            <input
+              type="text"
+              value={hint}
+              onChange={(e) => setHint(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') submitHint(); }}
+              placeholder="Or describe what this column actually is…"
+              className="map-hint-input"
+            />
+            <button type="button" onClick={submitHint} disabled={!hint.trim()} className="map-btn map-btn--primary map-btn--find">
+              Find match
+            </button>
+          </div>
+        </>
       )}
-    </div>
-  );
-}
 
-// A single review-tier column card with accept / change / skip
-// A single review-tier column card (confidence < 95%).
-// Shows a conversational question with only the top 2 predictions + Skip.
-// Never exposes the full system field list — the user sees a focused choice.
-function ReviewCard({ column, userMapping, onAccept, onChange, onSkip }) {
-  const confidence = column.bestGuess?.confidence || column.detections[0]?.confidence || 0;
-  const mappedLabel = FIELD_LABEL_MAP[column.mappedTo] || formatCategoryLabel(column.mappedTo);
-  const resolved = userMapping[column.rawHeader] !== undefined;
-
-  // Top alternative (second-best match) for the third button
-  const secondBest = column.alternatives && column.alternatives.length > 0
-    ? column.alternatives[0]
-    : null;
-  const secondLabel = secondBest
-    ? (FIELD_LABEL_MAP[secondBest.category] || formatCategoryLabel(secondBest.category))
-    : null;
-
-  const colName = `"${column.rawHeader}"`;
-
-  if (resolved) {
-    return (
-      <div className="border-b border-[var(--color-line)] py-4">
-        <p className="text-sm text-[var(--color-ink-faint)]">
-          {colName} mapped as <strong>{userMapping[column.rawHeader] || 'skipped'}</strong>
+      {mode === 'loading' && (
+        <p className="map-question flex items-center gap-2">
+          <span className="map-spinner" /> Reading &ldquo;{hint}&rdquo;&hellip;
         </p>
+      )}
+
+      {mode === 'match' && matchResult && (
+        <>
+          <p className="map-question">That matches:</p>
+          <div className="map-actions">
+            <button type="button" onClick={() => commit(matchResult.category)} className="map-btn map-btn--primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              {FIELD_LABEL_MAP[matchResult.category] || formatCategoryLabel(matchResult.category)}
+            </button>
+            <button type="button" onClick={() => setMode('idle')} className="map-btn map-btn--skip">
+              Try again
+            </button>
+          </div>
+        </>
+      )}
+
+      {mode === 'nomatch' && (
+        <p className="map-question">Couldn&apos;t find a clear match — skipping this column.</p>
+      )}
+
+      <div className="map-card-footer">
+        <p className="map-fineprint">Incorrect mapping may affect analysis accuracy.</p>
+        <button type="button" onClick={() => commit('')} className="map-skip-link">Skip</button>
       </div>
-    );
-  }
-
-  return (
-    <div className="border-b border-[var(--color-line)] py-5">
-      {/* Conversational question */}
-      <p className="text-sm text-[var(--color-ink)] leading-relaxed">
-        I noticed your column{' '}
-        <strong className="text-[var(--color-ink)]">{colName}</strong>.
-        {secondLabel
-          ? <> Did you mean{' '}<strong>{mappedLabel}</strong>,{' '}<strong>{secondLabel}</strong>, or Skip?</>
-          : <> Did you mean{' '}<strong>{mappedLabel}</strong> or Skip?</>
-        }
-      </p>
-
-      {/* Action buttons: best match · second-best · skip */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {/* Best match */}
-        <button
-          type="button"
-          onClick={() => onAccept(column.rawHeader)}
-          className="inline-flex items-center gap-1.5 bg-[var(--color-primary)] px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-[var(--color-primary-dark)]"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-          {mappedLabel}
-        </button>
-
-        {/* Second-best match */}
-        {secondLabel && (
-          <button
-            type="button"
-            onClick={() => onChange(column.rawHeader, secondBest.category)}
-            className="inline-flex items-center gap-1.5 border border-[var(--color-line)] px-4 py-2 text-xs font-semibold text-[var(--color-ink-soft)] transition hover:bg-[var(--color-bg-alt)]"
-          >
-            {secondLabel}
-          </button>
-        )}
-
-        {/* Skip */}
-        <button
-          type="button"
-          onClick={() => onSkip(column.rawHeader)}
-          className="inline-flex items-center gap-1.5 border border-[var(--color-line)] px-4 py-2 text-xs font-semibold text-[var(--color-ink-faint)] transition hover:bg-[var(--color-bg-alt)]"
-        >
-          Skip
-        </button>
-      </div>
-
-      {/* Confidence hint */}
-      <p className="mt-1.5 text-[11px] text-[var(--color-ink-faint)]">
-        {formatPercent(confidence)} confidence
-      </p>
-
-      {/* Warning */}
-      <p className="mt-2 text-xs text-[var(--color-ink-faint)] leading-relaxed">
-        Please choose carefully. If you&apos;re unsure, verify or skip this column, as incorrect mapping may affect the accuracy of your analysis.
-      </p>
-    </div>
-  );
-}
-
-// An unresolved (confirm-tier) column card — conversational prompt.
-// Same principle: only 2 guesses + Skip, no full field list.
-function UnresolvedCard({ column, userMapping, onMappingChange, onSkip }) {
-  const confidence = column.bestGuess?.confidence || column.detections[0]?.confidence || 0;
-  const mappedLabel = FIELD_LABEL_MAP[column.mappedTo] || formatCategoryLabel(column.mappedTo);
-  const resolved = userMapping[column.rawHeader] !== undefined;
-
-  const secondBest = column.alternatives && column.alternatives.length > 0
-    ? column.alternatives[0]
-    : null;
-  const secondLabel = secondBest
-    ? (FIELD_LABEL_MAP[secondBest.category] || formatCategoryLabel(secondBest.category))
-    : null;
-
-  const colName = `"${column.rawHeader}"`;
-
-  if (resolved) {
-    return (
-      <div className="border-b border-[var(--color-line)] py-4">
-        <p className="text-sm text-[var(--color-ink-faint)]">
-          {colName} mapped as <strong>{userMapping[column.rawHeader] || 'skipped'}</strong>
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="border-b border-[var(--color-line)] py-5">
-      {/* Conversational question */}
-      <p className="text-sm text-[var(--color-ink)] leading-relaxed">
-        {mappedLabel
-          ? <>I wasn&apos;t sure about your column{' '}<strong>{colName}</strong>.{secondLabel ? <> It could be{' '}<strong>{mappedLabel}</strong>,{' '}<strong>{secondLabel}</strong>, or Skip?</> : <> Could it be{' '}<strong>{mappedLabel}</strong> or Skip?</>}</>
-          : <>I couldn&apos;t figure out your column{' '}<strong>{colName}</strong>. Would you like to choose a field or Skip?</>
-        }
-      </p>
-
-      {/* Action buttons */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {mappedLabel && (
-          <button
-            type="button"
-            onClick={() => onMappingChange(column.rawHeader, column.mappedTo)}
-            className="inline-flex items-center gap-1.5 bg-[var(--color-primary)] px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-[var(--color-primary-dark)]"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-            {mappedLabel}
-          </button>
-        )}
-
-        {secondLabel && (
-          <button
-            type="button"
-            onClick={() => onMappingChange(column.rawHeader, secondBest.category)}
-            className="inline-flex items-center gap-1.5 border border-[var(--color-line)] px-4 py-2 text-xs font-semibold text-[var(--color-ink-soft)] transition hover:bg-[var(--color-bg-alt)]"
-          >
-            {secondLabel}
-          </button>
-        )}
-
-        <button
-          type="button"
-          onClick={() => onSkip(column.rawHeader)}
-          className="inline-flex items-center gap-1.5 border border-[var(--color-line)] px-4 py-2 text-xs font-semibold text-[var(--color-ink-faint)] transition hover:bg-[var(--color-bg-alt)]"
-        >
-          Skip
-        </button>
-      </div>
-
-      {/* Warning */}
-      <p className="mt-3 text-xs text-[var(--color-ink-faint)] leading-relaxed">
-        Please choose carefully. If you&apos;re unsure, verify or skip this column, as incorrect mapping may affect the accuracy of your analysis.
-      </p>
     </div>
   );
 }
@@ -493,7 +492,7 @@ export default function Upload() {
   const [processingResult, setProcessingResult] = useState(null);
 
   useEffect(() => {
-    fetch('/api/llm-status')
+    apiFetch('/api/llm-status')
       .then((r) => r.json())
       .then((data) => setLlmStatus(data))
       .catch(() => {});
@@ -517,7 +516,7 @@ export default function Upload() {
       try {
         const classifyForm = new FormData();
         classifyForm.append('file', f);
-        const res = await fetch('/api/classify-dataset', { method: 'POST', body: classifyForm });
+        const res = await apiFetch('/api/classify-dataset', { method: 'POST', body: classifyForm });
         const data = await res.json();
         if (res.ok) newEntries[f.name] = data;
       } catch (_) { /* individual file failure is non-blocking */ }
@@ -572,7 +571,7 @@ export default function Upload() {
       const classifyForm = new FormData();
       classifyForm.append('file', file[0]);
 
-      const classifyRes = await fetch('/api/classify-dataset', { method: 'POST', body: classifyForm });
+      const classifyRes = await apiFetch('/api/classify-dataset', { method: 'POST', body: classifyForm });
       const classifyData = await classifyRes.json();
 
       if (!classifyRes.ok) {
@@ -608,7 +607,7 @@ export default function Upload() {
     try {
       const schemaForm = new FormData();
       schemaForm.append('file', f);
-      const res = await fetch('/api/detect-schema', { method: 'POST', body: schemaForm });
+      const res = await apiFetch('/api/detect-schema', { method: 'POST', body: schemaForm });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Schema detection failed.'); setLoading(false); return; }
 
@@ -669,7 +668,7 @@ export default function Upload() {
       formData.append('file', f);
       formData.append('mapping', JSON.stringify(userMapping));
 
-      const res = await fetch('/api/confirm-mapping', { method: 'POST', body: formData });
+      const res = await apiFetch('/api/confirm-mapping', { method: 'POST', body: formData });
       const data = await res.json();
 
       if (!res.ok) {
@@ -776,10 +775,7 @@ export default function Upload() {
     return ca - cb;
   });
 
-  // Counts for batch actions and summary
-  const pendingReviewCount = reviewColumns.filter(
-    c => reviewStatuses[c.rawHeader] === 'review_pending'
-  ).length;
+  // Counts for progress bar and summary
   const confirmedCount = [
     ...reviewColumns, ...confirmColumns
   ].filter(c => {
@@ -817,17 +813,22 @@ export default function Upload() {
       return s === 'user_confirmed' || s === 'skipped';
     });
 
-  const handleConfirmAllRemaining = () => {
-    const newMappings = { ...userMapping };
-    const newStatuses = { ...reviewStatuses };
-    for (const col of reviewColumns) {
-      if (reviewStatuses[col.rawHeader] === 'review_pending' && col.mappedTo) {
-        newMappings[col.rawHeader] = col.mappedTo;
-        newStatuses[col.rawHeader] = 'user_confirmed';
-      }
-    }
-    setUserMapping(newMappings);
-    setReviewStatuses(newStatuses);
+  // Single-card queue: one column at a time, in the same ascending-confidence
+  // order as before. A column drops out of the queue the moment it's resolved
+  // (accepted / overridden / matched via hint / skipped) — no separate index
+  // bookkeeping needed, the next card is just whatever's now first.
+  const mappingQueue = [...sortedReviewColumns, ...confirmColumns].filter(
+    (c) => userMapping[c.rawHeader] === undefined
+  );
+  const totalQueueCount = reviewColumns.length + confirmColumns.length;
+  const currentCard = mappingQueue[0] || null;
+  const resolvedQueueCount = totalQueueCount - mappingQueue.length;
+
+  const handleCardResolve = (rawHeader, category) => {
+    handleMappingChange(rawHeader, category);
+    const col = columns.find((c) => c.rawHeader === rawHeader);
+    const status = category === '' ? 'skipped' : (category === col?.mappedTo ? 'user_confirmed' : 'user_overridden');
+    setReviewStatuses((prev) => ({ ...prev, [rawHeader]: status }));
   };
 
   return (
@@ -1115,15 +1116,33 @@ export default function Upload() {
             </div>
 
             {/* File info */}
-            <div className="mb-8 flex flex-wrap items-center gap-4 text-sm font-mono">
+            <div className="mb-4 flex flex-wrap items-center gap-4 text-sm font-mono">
               <span className="font-semibold text-[var(--color-ink)]">{schemaData.fileName}</span>
               <span className="text-[var(--color-ink-faint)]">{schemaData.rowCount} rows</span>
               <span className="text-[var(--color-ink-faint)]">Sheet: {schemaData.sheetName}</span>
             </div>
 
-            {/* ---- Tiered Column Review ---- */}
-            <div className="max-w-2xl space-y-0">
-              {/* 1. Auto-accepted columns (collapsed summary) */}
+            {/* Progress — columns needing your input */}
+            {(reviewColumns.length + confirmColumns.length) > 0 && (
+              <div className="mb-8 max-w-2xl">
+                <div className="mb-2 flex items-center justify-between text-xs font-medium text-[var(--color-ink-faint)]">
+                  <span>
+                    {confirmedCount + skippedCount} of {reviewColumns.length + confirmColumns.length} resolved
+                  </span>
+                  {autoColumns.length > 0 && <span>{autoColumns.length} auto-mapped separately</span>}
+                </div>
+                <div className="map-progress-track">
+                  <div
+                    className="map-progress-fill"
+                    style={{ '--progress': (confirmedCount + skippedCount) / (reviewColumns.length + confirmColumns.length) }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ---- Column Review — one card at a time ---- */}
+            <div className="max-w-xl">
+              {/* Auto-accepted columns (collapsed summary) */}
               {autoColumns.length > 0 && (
                 <AutoAcceptedPanel
                   columns={autoColumns}
@@ -1132,64 +1151,25 @@ export default function Upload() {
                 />
               )}
 
-              {/* 2. Review queue (sorted by ascending confidence — least certain first) */}
-              {sortedReviewColumns.map((col) => (
-                <ReviewCard
-                  key={col.rawHeader}
-                  column={col}
-                  userMapping={userMapping}
-                  onAccept={(rawHeader) => {
-                    if (col.mappedTo) handleMappingChange(rawHeader, col.mappedTo);
-                    setReviewStatuses((prev) => ({ ...prev, [rawHeader]: 'user_confirmed' }));
-                  }}
-                  onChange={(rawHeader, v) => {
-                    handleMappingChange(rawHeader, v);
-                    setReviewStatuses((prev) => ({ ...prev, [rawHeader]: 'user_overridden' }));
-                  }}
-                  onSkip={(rawHeader) => {
-                    handleMappingChange(rawHeader, '');
-                    setReviewStatuses((prev) => ({ ...prev, [rawHeader]: 'skipped' }));
-                  }}
+              {currentCard ? (
+                <MappingCard
+                  key={currentCard.rawHeader}
+                  column={currentCard}
+                  index={resolvedQueueCount}
+                  total={totalQueueCount}
+                  onResolve={handleCardResolve}
                 />
-              ))}
-
-              {/* 3. Unresolved columns (user must map or skip) */}
-              {confirmColumns.map((col) => (
-                <UnresolvedCard
-                  key={col.rawHeader}
-                  column={col}
-                  userMapping={userMapping}
-                  onMappingChange={(rawHeader, v) => {
-                    handleMappingChange(rawHeader, v);
-                    setReviewStatuses((prev) => ({ ...prev, [rawHeader]: 'user_confirmed' }));
-                  }}
-                  onSkip={(rawHeader) => {
-                    handleMappingChange(rawHeader, '');
-                    setReviewStatuses((prev) => ({ ...prev, [rawHeader]: 'skipped' }));
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* 4. Batch actions & summary */}
-            {(pendingReviewCount > 0 || allResolved) && (
-              <div className="mt-6 max-w-2xl flex flex-wrap items-center gap-3">
-                {pendingReviewCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleConfirmAllRemaining}
-                    className="border border-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-tint)]"
-                  >
-                    Confirm all {pendingReviewCount} remaining
-                  </button>
-                )}
-                {allResolved && (
-                  <div className="border border-[var(--color-line)] px-4 py-1.5 text-xs text-[var(--color-ink-soft)]">
-                    {autoColumns.length} auto-mapped &middot; {confirmedCount} confirmed by you &middot; {skippedCount} skipped
+              ) : totalQueueCount > 0 ? (
+                <div className="map-card map-card--resolved">
+                  <div className="map-resolved-row">
+                    <span className="check">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    </span>
+                    <span>All columns reviewed — {confirmedCount} confirmed, {skippedCount} skipped.</span>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              ) : null}
+            </div>
 
             {/* Phase 1: Ignored columns */}
             {schemaData.ignored && schemaData.ignored.length > 0 && (

@@ -369,7 +369,7 @@ const WIDGETS = [
   },
 
   {
-    id: 'revenue-by-category',
+    id: 'category-revenue-breakdown',
     title: 'Revenue by Category',
     description: 'Revenue distribution across product categories. Highlights which categories drive the most sales.',
     dashboard: 'sales',

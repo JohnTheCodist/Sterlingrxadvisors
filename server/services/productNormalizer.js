@@ -261,8 +261,23 @@ function normalizeProductText(raw) {
     }
   }
 
-  // Step 6: Unit normalization — standardize space-number-unit format to compact
-  // e.g., "500 MG" → "500mg", "10 ML" → "10ml", "5 G" → "5g"
+  // Step 6a: Gram -> milligram conversion, BEFORE compact formatting. Without
+  // this, "1g" and "1000mg" are the same real dose but different text
+  // forever — no amount of brand/generic matching downstream fixes that,
+  // since they'd already be two different strings by the time anything
+  // else runs.
+  //
+  // No leading \b before the digit — real pharmacy data glues the number
+  // straight onto the brand name ("Augmentin1g", "ceftriaxone2 G"), so a
+  // digit directly after a letter is the common case, not the exception.
+  // Still safe against misreading "500mg": \s*g requires the digits to be
+  // followed (after optional whitespace) by a literal "g" — in "500mg" the
+  // "m" sits directly between the digits and the "g", so \s* (whitespace
+  // only) can't bridge that gap and the match never fires there.
+  text = text.replace(/(\d+(?:\.\d+)?)\s*g\b/g, (_, num) => `${Math.round(parseFloat(num) * 1000)}mg`);
+
+  // Step 6b: Unit normalization — standardize space-number-unit format to compact
+  // e.g., "500 MG" → "500mg", "10 ML" → "10ml"
   text = text.replace(/\b(\d+(?:\.\d+)?)\s*(mg|g|ml|mcg|iu)\b/gi, '$1$2');
 
   // Final whitespace cleanup after all replacements
@@ -670,13 +685,22 @@ function normalizeProductName(raw) {
   }
 
   // Step 2: Build canonical name (business identity)
-  // When the source is a brand KB match, use the brand name the pharmacy actually
-  // uploaded — that's their business terminology. KB-inferred strength/form defaults
-  // are NOT injected into the business identity.
-  // Pattern-inferred strength/form came from the original text, so include them.
+  // When the source is a brand KB match, lead with the brand name — that's
+  // the pharmacy's business terminology. But the KB's strength/form are just
+  // a default for the most common variant (e.g. the bare "augmentin" entry
+  // assumes 625mg) — if the pharmacy's own text actually specifies a
+  // strength ("augmentin 1g"), that real value must win, or it gets
+  // silently deleted and two genuinely different strengths collapse into
+  // one identity. Only fall back to the KB default when the text truly
+  // doesn't say.
   let canonical;
   if (id.source === 'brand_knowledge_base' || id.source === 'fuzzy_brand_match') {
-    canonical = id.brandName || id.generic;
+    const actualStrength = extractStrength(name) || id.strength || null;
+    const actualForm = extractForm(name) || id.form || null;
+    const parts = [id.brandName || id.generic];
+    if (actualStrength) parts.push(actualStrength);
+    if (actualForm) parts.push(actualForm.charAt(0).toUpperCase() + actualForm.slice(1));
+    canonical = parts.join(' ');
   } else {
     const parts = [];
     if (id.generic) parts.push(id.generic);

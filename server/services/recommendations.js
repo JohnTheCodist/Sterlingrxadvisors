@@ -453,7 +453,7 @@ function generateInsights(healthResult, metrics, opts = {}) {
         `Average: ${avgTxMonth} per month (${round(avgTxMonth / 30, 1)} per day).`,
         `Average transaction value: ${fmtNaira(overview.averageTransactionValue)}.`,
       ],
-      businessImpact: `At ${round(avgTxMonth / 30, 1)} daily customers, even a 20% increase in footfall (just ${round(avgTxMonth / 30 * 0.2, 0)} more people per day) would add ${fmtNaira(round(overview.totalRevenue * 0.2, 0))} in revenue.`,
+      businessImpact: `At ${round(avgTxMonth / 30, 1)} daily customers, even a 20% increase in footfall (about ${round(avgTxMonth * 0.2, 0)} more customers a month) would add ${fmtNaira(round(overview.totalRevenue * 0.2, 0))} in revenue.`,
       recommendedAction: `Run a community health screening day offering free blood pressure and blood sugar checks. Place a sandwich board outside with daily health tips. Launch a WhatsApp broadcast list for health reminders — each message can bring customers in.`,
       expectedOutcome: `20% increase in daily transactions through community visibility and engagement.`,
       confidence: txCount > 200 ? confidenceBase : confidenceBase - 10,
@@ -562,9 +562,100 @@ function generateInsights(healthResult, metrics, opts = {}) {
     });
   }
 
+  // ── Weather-driven demand (fully optional — absent by default) ──
+  // opts.weatherSignals.demandRules is only set when a caller explicitly
+  // fetched it (see weatherCache.getOrFetch + weatherDecisionRules
+  // .evaluateWeatherDemandRules in index.js) — already the top 0-2
+  // qualifying rules against live weather + this pharmacy's own category
+  // keywords. Without it, this block never runs and generateInsights()
+  // behaves exactly as it always has.
+  const demandRules = opts.weatherSignals?.demandRules || [];
+  for (const { rule, numericConfidence, evidence } of demandRules) {
+    const w = opts.weatherSignals;
+    const hasEvidence = evidence.available;
+    // The rule's expectedDemand is a clinical HYPOTHESIS. Only treat it as
+    // confirmed when this pharmacy's own data actually moves the same
+    // direction — otherwise say so plainly rather than recommending action
+    // "ahead of an increase" the data doesn't support.
+    const confirms = hasEvidence && evidence.pctIncrease > 0;
+    const contradicts = hasEvidence && evidence.pctIncrease <= 0;
+    const periodLabel = evidence.comparedAs === 'season-vs-season'
+      ? { in: 'in-season', out: 'off-season' }
+      : { in: 'recent (last 30 days)', out: 'prior 30-day period' };
+
+    const observation = hasEvidence
+      ? `${w.state || 'Your area'} is showing ${rule.weatherSignal} (risk: HIGH). ${rule.category} sales ran ${fmtPct(Math.abs(evidence.pctIncrease))} ${evidence.pctIncrease >= 0 ? 'higher' : 'lower'} in the ${periodLabel.in} period than the ${periodLabel.out}${contradicts ? ' — the opposite of the usual clinical pattern for this weather condition' : ' in your own data'}.`
+      : `${w.state || 'Your area'} is showing ${rule.weatherSignal} (risk: HIGH). ${rule.rationale}`;
+
+    const projectedRevenue = confirms ? Math.max(0, evidence.avgInPeriodRevenue - evidence.avgOutPeriodRevenue) : null;
+
+    push({
+      observation,
+      evidence: [
+        `Weather signal: ${rule.weatherSignal} — HIGH (live reading for ${w.state}).`,
+        hasEvidence
+          ? `${periodLabel.in} average revenue: ${fmtNaira(evidence.avgInPeriodRevenue)} vs. ${periodLabel.out} average: ${fmtNaira(evidence.avgOutPeriodRevenue)}.`
+          : evidence.reason,
+        `Clinical rationale: ${rule.rationale}`,
+      ],
+      businessImpact: confirms
+        ? `${rule.category} revenue could run ${fmtNaira(projectedRevenue)} above a typical period if this pattern holds.`
+        : contradicts
+          ? `Your own sales history doesn't show the usual weather-driven pattern for ${rule.category} — this may not be worth prioritising right now despite the current weather signal.`
+          : `Expected demand direction: ${rule.expectedDemand} for ${rule.category} — no historical pattern in your data yet to size the ₦ impact.`,
+      recommendedAction: confirms
+        ? `Review ${rule.category} stock levels ahead of the expected ${rule.expectedDemand.toLowerCase()} in demand.`
+        : contradicts
+          ? `Monitor ${rule.category} stock as usual — your own data doesn't confirm a weather-driven demand jump here.`
+          : `Review ${rule.category} stock levels ahead of the expected ${rule.expectedDemand.toLowerCase()} in demand — a clinical pattern, not yet confirmed by your own sales history.`,
+      expectedOutcome: `Avoided stockouts on ${rule.category} products during this weather-driven demand window.`,
+      confidence: confirms ? numericConfidence : contradicts ? Math.max(20, numericConfidence - 40) : Math.max(30, numericConfidence - 20),
+      priorityScore: (confirms ? numericConfidence : contradicts ? numericConfidence - 40 : numericConfidence - 20) * (rule.expectedDemand === 'Increase' ? 0.7 : 0.5),
+      impact: rule.expectedDemand === 'Increase' ? 2 : 1,
+      urgency: hasEvidence && evidence.pctIncrease > 25 ? 3 : 2,
+      pillar: 'Inventory',
+      metric: `Seasonal Demand — ${rule.category}`,
+    });
+  }
+
+  // Phase 2 (Calendar Intelligence integration): collect weather + calendar
+  // signals into one flat list for future recommendation logic. This does
+  // NOT feed into insight generation above — that block already ran and is
+  // untouched. Not merged, not ranked, not filtered — see getExternalSignals().
+  opts.externalSignals = getExternalSignals(opts);
+
   // Final sort: highest priority first, ensure we have at most 8 insights
   insights.sort((a, b) => b.priorityScore - a.priorityScore);
   return insights.slice(0, 8);
 }
 
-module.exports = { generateInsights };
+/**
+ * Collects Weather Intelligence and Calendar Intelligence demand signals
+ * into a single flat array — externalSignals = [...weatherSignals,
+ * ...calendarSignals]. Deliberately does no deduplication, ranking, or
+ * filtering; this is scaffolding for future recommendation logic, not a
+ * new recommendation engine. Calendar Intelligence itself is treated as
+ * read-only — this function only reads its output via getCalendarSignals(),
+ * defined in services/calendar/calendarService.js, which this function
+ * does not modify.
+ *
+ * @param {Object} opts
+ * @param {Object} [opts.weatherSignals] - from weatherCache.getOrFetch() + weatherDecisionRules.evaluateWeatherDemandRules()
+ * @param {Array}  [opts.calendarSignals] - from calendarService.getCalendarSignals()
+ */
+function getExternalSignals(opts = {}) {
+  const weatherSignals = (opts.weatherSignals?.demandRules || []).map(({ rule, evidence }) => ({
+    source: 'weather',
+    event: rule.weatherSignal,
+    category: rule.category,
+    expectedDemand: rule.expectedDemand,
+    evidenceStrength: rule.confidence,
+    rationale: rule.rationale,
+    confirmedByOwnData: evidence.available ? evidence.pctIncrease > 0 : null,
+  }));
+  const calendarSignals = (opts.calendarSignals || []).map((s) => ({ source: 'calendar', ...s }));
+
+  return [...weatherSignals, ...calendarSignals];
+}
+
+module.exports = { generateInsights, getExternalSignals };

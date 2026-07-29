@@ -5,12 +5,11 @@ const cors = require('cors');
 
 const fs = require('fs');
 const multer = require('multer');
-const xlsx = require('xlsx');
 const { normalize, normalizeFromSheets } = require('./services/normalizer');
 const { analyze } = require('./services/analytics');
 const { detectSchema, mergeLlmResults } = require('./services/schemaDetector');
 const { resolveMapping, saveMapping, loadMapping, loadPharmacyMappings } = require('./services/columnMapper');
-const { loadFactRecords, queryAnalytics, populateProductAttributes } = require('./services/database');
+const { loadFactRecords, queryAnalytics, populateProductAttributes, getSql, computeProductNaturalKey, getActiveConversationId, startNewConversation, getConversationMessages, appendAdvisorMessage, getMembershipsForUser } = require('./services/db');
 const { validate } = require('./services/validator');
 const { joinSheets } = require('./services/sheetJoiner');
 const { profitByCategory, abcAnalysis, abcSummary, fastSlowMovers, fastSlowSummary, expirySummary, inventoryTurnover } = require('./services/insights');
@@ -26,7 +25,12 @@ const datasetRegistry = require('./services/datasetRegistry');
 const { evaluate: evaluateWidgets } = require('./services/widgetEngine');
 const { hasTransactionCapability } = require('./services/columnMapper');
 const factStore = require('./services/factStore');
-const { chat: advisorChat } = require('./services/advisorAgent');
+const { chatStream: advisorChatStream } = require('./services/advisorAgent');
+const advisorQueries = require('./services/advisorQueries');
+const { requireAuth, requireAuthOnly } = require('./middleware/auth');
+const { ALLOWED_MIMES, ALLOWED_EXTS, parseSheet } = require('./services/fileUpload');
+const { verifyTwilioSignature } = require('./services/whatsapp/twilioSignature');
+const { handleIncomingWhatsapp, servePdfExport } = require('./services/whatsapp/webhookHandler');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -35,15 +39,6 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 // ---------- Multer config ----------
-
-const ALLOWED_MIMES = [
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'text/csv',
-  'application/vnd.ms-excel',
-  'text/plain',
-  'application/octet-stream',
-];
-const ALLOWED_EXTS = ['.xlsx', '.csv'];
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
@@ -67,17 +62,6 @@ const uploadFields = upload.fields([
 const uploadSingle = upload.single('file');
 const uploadBatch = upload.array('files', 20);
 
-// ---------- Helpers ----------
-
-function parseSheet(buffer) {
-  const workbook = xlsx.read(buffer, { type: 'buffer' });
-  const sheets = {};
-  workbook.SheetNames.forEach((name) => {
-    sheets[name] = xlsx.utils.sheet_to_json(workbook.Sheets[name], { defval: null });
-  });
-  return sheets;
-}
-
 // In-memory store for contact form submissions
 const submissions = [];
 
@@ -85,22 +69,90 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
 });
 
-// ---------- Dataset Registry (metadata for every uploaded dataset) ----------
-
-app.get('/api/datasets', (req, res) => {
-  const status = req.query.status || null;
-  const limit = parseInt(req.query.limit) || 50;
-  return res.json(datasetRegistry.list({ status, limit }));
+// ---------- Auth gate ----------
+//
+// Everything under /api/* requires a verified Supabase session and a real
+// organization membership, EXCEPT: health (above, already handled before
+// this middleware runs), contact (public marketing form), and organization
+// creation (a brand-new user has no membership yet — that's the point of
+// this endpoint).
+const PUBLIC_API_PATHS = new Set(['/contact']);
+app.use('/api', (req, res, next) => {
+  if (PUBLIC_API_PATHS.has(req.path)) return next();
+  if (req.path === '/organizations' && req.method === 'POST') return requireAuthOnly(req, res, next);
+  return requireAuth(req, res, next);
 });
 
-app.get('/api/datasets/:id', (req, res) => {
-  const entry = datasetRegistry.get(req.params.id);
+// ---------- WhatsApp (Twilio) — outside /api, not subject to requireAuth ----------
+//
+// An incoming WhatsApp message carries no Supabase bearer token, so it can't
+// pass through the auth gate above. verifyTwilioSignature is the real
+// security boundary for these two public routes instead.
+app.post('/webhooks/whatsapp', express.urlencoded({ extended: false }), verifyTwilioSignature, handleIncomingWhatsapp);
+app.get('/pdf/whatsapp/:id', servePdfExport);
+
+// ---------- Organizations ----------
+
+app.post('/api/organizations', async (req, res) => {
+  const { name } = req.body || {};
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'name is required.' });
+  }
+  try {
+    const db = getSql();
+
+    // Idempotency backstop. This route used to create an organization
+    // unconditionally, so anything that sent a user back to /onboarding
+    // when they already had a pharmacy — most commonly a transient
+    // /api/organizations/me failure being read as "no organization" —
+    // silently minted a duplicate, empty organization and stranded the
+    // user's real data in the old one. A user has exactly one
+    // organization in v1, so return the existing one instead of ever
+    // creating a second.
+    const existing = await getMembershipsForUser(req.user.id);
+    if (existing.length > 0) {
+      const membership = existing[0];
+      const [org] = await db`select id, name from organizations where id = ${membership.organization_id}`;
+      return res.status(200).json({ organizationId: org.id, name: org.name, role: membership.role });
+    }
+
+    const [org] = await db`insert into organizations (name) values (${name.trim()}) returning id, name`;
+    await db`insert into organization_members (organization_id, user_id, role) values (${org.id}, ${req.user.id}, 'owner')`;
+    return res.status(201).json({ organizationId: org.id, name: org.name, role: 'owner' });
+  } catch (err) {
+    return res.status(500).json({ error: `Failed to create organization: ${err.message}` });
+  }
+});
+
+// requireAuth already resolved req.organizationId/req.organizationRole from
+// real membership — this just returns the org's name for display, since
+// the frontend has no other way to learn "what organization am I in."
+app.get('/api/organizations/me', async (req, res) => {
+  try {
+    const db = getSql();
+    const [org] = await db`select id, name from organizations where id = ${req.organizationId}`;
+    return res.json({ organizationId: req.organizationId, name: org?.name || null, role: req.organizationRole });
+  } catch (err) {
+    return res.status(500).json({ error: `Failed to load organization: ${err.message}` });
+  }
+});
+
+// ---------- Dataset Registry (metadata for every uploaded dataset) ----------
+
+app.get('/api/datasets', async (req, res) => {
+  const status = req.query.status || null;
+  const limit = parseInt(req.query.limit) || 50;
+  return res.json(await datasetRegistry.list(req.organizationId, { status, limit }));
+});
+
+app.get('/api/datasets/:id', async (req, res) => {
+  const entry = await datasetRegistry.get(req.organizationId, req.params.id);
   if (!entry) return res.status(404).json({ error: 'Dataset not found.' });
   return res.json(entry);
 });
 
-app.get('/api/datasets/latest', (req, res) => {
-  const entry = datasetRegistry.getLatest();
+app.get('/api/datasets/latest', async (req, res) => {
+  const entry = await datasetRegistry.getLatest(req.organizationId);
   if (!entry) return res.status(404).json({ error: 'No datasets registered.' });
   return res.json(entry);
 });
@@ -108,21 +160,21 @@ app.get('/api/datasets/latest', (req, res) => {
 // ---------- Widget Engine --------------------------------------------------
 
 // Accept raw records OR read from fact store for multi-dataset evaluation.
-app.post('/api/widgets', (req, res) => {
+app.post('/api/widgets', async (req, res) => {
   const records = req.body?.records;
-  // If explicit records passed, use them directly
+  // If explicit records passed, use them directly — no DB access needed.
   if (Array.isArray(records) && records.length > 0) {
     return res.json(evaluateWidgets(records));
   }
   // Otherwise, evaluate ALL fact tables (multi-dataset intelligence)
   const { evaluateFromStore } = require('./services/widgetEngine');
-  return res.json(evaluateFromStore());
+  return res.json(await evaluateFromStore(req.organizationId));
 });
 
 // ---------- Dataset Classification (runs before schema detection) ----------
 
 app.post('/api/classify-dataset', (req, res) => {
-  uploadSingle(req, res, (err) => {
+  uploadSingle(req, res, async (err) => {
     if (err) {
       if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({ error: 'File exceeds the 50 MB limit.' });
@@ -137,8 +189,7 @@ app.post('/api/classify-dataset', (req, res) => {
 
     try {
       // Store for later use by inventory/supplier/expiry dashboards
-      lastUploadedBuffer = file.buffer;
-      lastUploadedMime = file.mimetype;
+      setLastUpload(req.organizationId, file.buffer, file.mimetype);
 
       const sheets = parseSheet(file.buffer);
       const sheetKeys = Object.keys(sheets);
@@ -161,13 +212,13 @@ app.post('/api/classify-dataset', (req, res) => {
       const classification = classifyDataset(rows);
 
       // Register in the Dataset Registry (dedup-aware)
-      const reg = datasetRegistry.register({
+      const reg = await datasetRegistry.register(req.organizationId, {
         buffer: file.buffer,
         filename: file.originalname,
         mimeType: file.mimetype,
       });
       if (!reg.isDuplicate) {
-        datasetRegistry.update(reg.datasetId, {
+        await datasetRegistry.update(req.organizationId, reg.datasetId, {
           processingStatus: 'classified',
           capabilities: classification.capabilities,
           recommended_dashboards: classification.recommended_dashboards,
@@ -213,13 +264,13 @@ app.post('/api/classify-batch', (req, res) => {
         const sheetKeys = Object.keys(sheets);
         const rows = sheetKeys.length > 0 ? sheets[sheetKeys[0]] : [];
         const classification = classifyDataset(rows);
-        const reg = datasetRegistry.register({
+        const reg = await datasetRegistry.register(req.organizationId, {
           buffer: file.buffer,
           filename: file.originalname,
           mimeType: file.mimetype,
         });
         if (!reg.isDuplicate) {
-          datasetRegistry.update(reg.datasetId, {
+          await datasetRegistry.update(req.organizationId, reg.datasetId, {
             processingStatus: 'classified',
             capabilities: classification.capabilities,
             recommended_dashboards: classification.recommended_dashboards,
@@ -249,24 +300,31 @@ app.post('/api/classify-batch', (req, res) => {
 
 // ---------- Inventory Analytics -------------------------------------------------
 
-// In-memory store for the last uploaded file (used by inventory dashboard).
-let lastUploadedBuffer = null;
-let lastUploadedMime = null;
+// In-memory store for the last uploaded file, per organization (a plain
+// module-global would leak one tenant's file into another tenant's
+// inventory-analytics call).
+const lastUploadByOrg = new Map();
+function setLastUpload(organizationId, buffer, mimeType) {
+  lastUploadByOrg.set(organizationId, { buffer, mimeType });
+}
+function getLastUpload(organizationId) {
+  return lastUploadByOrg.get(organizationId) || null;
+}
 
 app.post('/api/inventory-analytics', (req, res) => {
-  if (!lastUploadedBuffer) {
+  const existing = getLastUpload(req.organizationId);
+  if (!existing) {
     // If no file in memory, accept a new upload
     uploadSingle(req, res, (err) => {
       if (err) return res.status(400).json({ error: err.message });
       const file = req.file;
       if (!file) return res.status(400).json({ error: 'No file received.' });
-      lastUploadedBuffer = file.buffer;
-      lastUploadedMime = file.mimetype;
+      setLastUpload(req.organizationId, file.buffer, file.mimetype);
       return runInventoryAnalysis(file.buffer, res);
     });
     return;
   }
-  return runInventoryAnalysis(lastUploadedBuffer, res);
+  return runInventoryAnalysis(existing.buffer, res);
 });
 
 function runInventoryAnalysis(buffer, res) {
@@ -375,8 +433,6 @@ app.post('/api/detect-schema', async (req, res) => {
       return res.status(400).json({ error: 'No file received.' });
     }
 
-    const pharmacyId = req.body?.pharmacyId || 'default';
-
     try {
       const sheets = parseSheet(file.buffer);
 
@@ -421,7 +477,7 @@ app.post('/api/detect-schema', async (req, res) => {
       } = resolveMapping(schema);
 
       // Check for saved mapping
-      const savedMapping = loadMapping(pharmacyId, rawHeaders);
+      const savedMapping = await loadMapping(req.organizationId, rawHeaders);
 
       // Build response: for each column, show detections, current mapping, and classification
       const columns = schema.map((col) => {
@@ -436,6 +492,9 @@ app.post('/api/detect-schema', async (req, res) => {
           rawHeader: col.rawHeader,
           normalizedHeader: col.normalizedHeader,
           detections: col.detections,
+          // A few real sample values, sent back to /api/reinterpret-column
+          // if the user later describes this column in their own words.
+          sampleValues: rows.slice(0, 5).map((r) => r[col.rawHeader]).filter((v) => v != null && v !== ''),
           mappedTo: mappedCategory ? mappedCategory[0] : null,
           bestGuess: bestGuess ? { category: bestGuess.category, confidence: bestGuess.confidence } : null,
           alternatives: alternatives.map(a => ({ category: a.category, confidence: a.confidence })),
@@ -448,13 +507,14 @@ app.post('/api/detect-schema', async (req, res) => {
 
       // Update the Dataset Registry with schema detection results
       const fp = datasetRegistry.computeFingerprint(file.buffer, file.originalname);
-      const all = datasetRegistry.list({ limit: 500 });
-      const entry = all.find((d) => {
-        const full = datasetRegistry.get(d.datasetId);
-        return full && full.fingerprint === fp;
-      });
+      const all = await datasetRegistry.list(req.organizationId, { limit: 500 });
+      let entry = null;
+      for (const d of all) {
+        const full = await datasetRegistry.get(req.organizationId, d.datasetId);
+        if (full && full.fingerprint === fp) { entry = full; break; }
+      }
       if (entry) {
-        datasetRegistry.update(entry.datasetId, {
+        await datasetRegistry.update(req.organizationId, entry.datasetId, {
           processingStatus: 'schema_detected',
           sheetNames: Object.keys(sheets),
           rowCount: rows.length,
@@ -502,7 +562,49 @@ app.get('/api/llm-status', (req, res) => {
   });
 });
 
-// ---------- NAFDAC Database Status ----------
+// ---------- Column re-interpretation (user-supplied hint, escape hatch) ----------
+// Used when neither of a column's top-2 algorithmic guesses is correct. The
+// user describes the column in plain language instead of picking from a
+// full field list; the LLM re-reads the column with that hint as the
+// strongest signal. Below-threshold or unavailable LLM -> treated as no
+// match so the caller skips the column rather than force a weak guess.
+const REINTERPRET_MIN_CONFIDENCE = 0.55;
+
+app.post('/api/reinterpret-column', async (req, res) => {
+  const { rawHeader, sampleValues, hint } = req.body || {};
+  if (!rawHeader || !hint || !String(hint).trim()) {
+    return res.status(400).json({ error: 'rawHeader and hint are required.' });
+  }
+  try {
+    const { reinterpretColumn } = require('./services/llmMapper');
+    const result = await reinterpretColumn(rawHeader, Array.isArray(sampleValues) ? sampleValues : [], hint);
+    if (!result.category || result.confidence < REINTERPRET_MIN_CONFIDENCE) {
+      return res.json({ matched: false });
+    }
+    return res.json({ matched: true, category: result.category, confidence: result.confidence });
+  } catch (err) {
+    return res.status(500).json({ error: err.message || 'Re-interpretation failed.' });
+  }
+});
+
+// ---------- Pharmacy Profile (v1: single-location, used for weather lookups) ----------
+
+app.get('/api/pharmacy-profile', async (req, res) => {
+  res.json(await require('./services/pharmacyProfile').get(req.organizationId));
+});
+
+app.post('/api/pharmacy-profile', async (req, res) => {
+  const { state, city } = req.body || {};
+  if (state != null && typeof state !== 'string') {
+    return res.status(400).json({ error: 'state must be a string.' });
+  }
+  const fields = {};
+  if (state !== undefined) fields.state = state;
+  if (city !== undefined) fields.city = city;
+  res.json(await require('./services/pharmacyProfile').update(req.organizationId, fields));
+});
+
+// ---------- NAFDAC Database Status (shared reference data, not tenant-scoped) ----------
 
 app.get('/api/nafdac-status', (req, res) => {
   const { getNafdacStatus } = require('./services/nafdacLookup');
@@ -528,7 +630,7 @@ app.post('/api/reload-nafdac', (req, res) => {
 // ---------- Confirm Mapping (step 2: user confirms/overrides, then normalize) ----------
 
 app.post('/api/confirm-mapping', (req, res) => {
-  uploadSingle(req, res, (err) => {
+  uploadSingle(req, res, async (err) => {
     if (err) {
       if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({ error: 'File exceeds the 50 MB limit.' });
@@ -541,7 +643,7 @@ app.post('/api/confirm-mapping', (req, res) => {
       return res.status(400).json({ error: 'No file received.' });
     }
 
-    const pharmacyId = req.body?.pharmacyId || 'default';
+    const organizationId = req.organizationId;
 
     // Parse user mapping from body (comes as JSON string)
     let userMapping = {};
@@ -557,17 +659,30 @@ app.post('/api/confirm-mapping', (req, res) => {
       const sheets = parseSheet(file.buffer);
 
       // Auto-join dimension tables and normalize
-      const result = normalizeFromSheets(sheets, { pharmacyId, userMapping });
+      const result = await normalizeFromSheets(sheets, { organizationId, userMapping });
 
       if (result.normalized.length === 0) {
         return res.status(400).json({ error: 'The file contains no processable data rows.' });
       }
 
+      // Resolve the registry entry BEFORE persisting — loadFactRecords needs
+      // the dataset id to replace this file's own rows rather than stack a
+      // duplicate set on top of them when the same file is processed again.
+      const fp = datasetRegistry.computeFingerprint(file.buffer, file.originalname);
+      const all = await datasetRegistry.list(organizationId, { limit: 500 });
+      let regEntry = null;
+      for (const d of all) {
+        const full = await datasetRegistry.get(organizationId, d.datasetId);
+        if (full && full.fingerprint === fp) { regEntry = full; break; }
+      }
+
       // Persist into dimensional model
-      const inserted = loadFactRecords(result.normalized);
+      const inserted = await loadFactRecords(organizationId, result.normalized, {
+        datasetId: regEntry?.datasetId || null,
+      });
 
       // Query analytics from the star schema (same shape dashboard expects)
-      const analyticsResult = queryAnalytics();
+      const analyticsResult = await queryAnalytics(organizationId);
 
       // Compute verified metrics (Phase 5) — use valid records only
       const metrics = computeAllMetrics(result.validRecords || result.normalized, {
@@ -578,12 +693,38 @@ app.post('/api/confirm-mapping', (req, res) => {
       });
 
       // Business Health — computed from the same metrics the KPIs use
-      const { inventoryStats, customerStats } = computeHealthStats();
+      const { inventoryStats, customerStats } = await computeHealthStats(organizationId);
       const bizHealthOpts = {};
       if (inventoryStats) bizHealthOpts.inventoryStats = inventoryStats;
       if (customerStats) bizHealthOpts.customerStats = customerStats;
       // Pass raw records for product-level monthly attribution in insights
       bizHealthOpts.records = result.validRecords || result.normalized;
+
+      // Weather signal is fully optional — a fetch/config problem here must
+      // never break the upload flow, so it's isolated in its own try/catch
+      // and simply omitted (generateInsights runs unchanged without it).
+      try {
+        const { state } = await require('./services/pharmacyProfile').get(organizationId);
+        if (state) {
+          const weatherSignal = await require('./services/weather/weatherCache').getOrFetch(organizationId, state);
+          if (weatherSignal) {
+            const demandRules = await require('./services/weatherDecisionRules').evaluateWeatherDemandRules(organizationId, weatherSignal);
+            bizHealthOpts.weatherSignals = { ...weatherSignal, demandRules };
+          }
+        }
+      } catch (weatherErr) {
+        console.warn('[confirm-mapping] weather signal unavailable:', weatherErr.message);
+      }
+
+      // Calendar signal — Calendar Intelligence is read-only and has no
+      // external dependencies, so this can't meaningfully fail, but it's
+      // wrapped the same way for consistency.
+      try {
+        bizHealthOpts.calendarSignals = require('./services/calendar/calendarService').getCalendarSignals(new Date());
+      } catch (calendarErr) {
+        console.warn('[confirm-mapping] calendar signal unavailable:', calendarErr.message);
+      }
+
       const bizHealth = scoreBusinessHealth(metrics, bizHealthOpts);
       const bizInsights = generateInsights(bizHealth, metrics, bizHealthOpts);
 
@@ -591,20 +732,14 @@ app.post('/api/confirm-mapping', (req, res) => {
       // hasTransactionCapability gate — not a separate classifier check.
       const isSalesFile = hasTransactionCapability(result.mapping, result.tiers);
 
-      // Look up dataset classification for non-sales capabilities
-      const fp = datasetRegistry.computeFingerprint(file.buffer, file.originalname);
-      const all = datasetRegistry.list({ limit: 500 });
-      const regEntry = all.find((d) => {
-        const full = datasetRegistry.get(d.datasetId);
-        return full && full.fingerprint === fp;
-      });
-      const caps = regEntry ? datasetRegistry.get(regEntry.datasetId)?.capabilities : null;
+      // regEntry was resolved above, before persisting.
+      const caps = regEntry ? regEntry.capabilities : null;
 
       // Build effective dashboard list. Prefer recommended_dashboards from the
       // registry, but fall back to capabilities when it's not stored (e.g. old
       // entries from before this field was added). Never pass undefined to the
       // widget engine — that would evaluate ALL dashboards without gating.
-      const recDashboards = (regEntry ? datasetRegistry.get(regEntry.datasetId)?.recommended_dashboards : null) || [];
+      const recDashboards = regEntry?.recommended_dashboards || [];
       const dashFromCaps = caps ? Object.keys(caps).filter((k) => caps[k]) : [];
       const baseDashboards = recDashboards.length > 0 ? recDashboards : (dashFromCaps.length > 0 ? dashFromCaps : ['inventory', 'expiry']);
       const effectiveDashboards = baseDashboards.filter((d) => d !== 'sales');
@@ -616,13 +751,12 @@ app.post('/api/confirm-mapping', (req, res) => {
       });
 
       if (regEntry) {
-        datasetRegistry.update(regEntry.datasetId, {
+        await datasetRegistry.update(organizationId, regEntry.datasetId, {
           processingStatus: 'processed',
           mappedColumns: userMapping,
           normalizedSchema: result.schema || null,
           rowCount: result.normalized.length,
           sheetNames: Object.keys(sheets),
-          branch: result.normalized.length > 0 ? (result.normalized[0].branch || null) : null,
         });
       }
 
@@ -631,7 +765,7 @@ app.post('/api/confirm-mapping', (req, res) => {
       const records = result.validRecords || result.normalized;
 
       // Extract dimension data from normalized records
-      const _assetId = regEntry?.datasetId || 'unknown';
+      const _assetId = regEntry?.datasetId || null;
       const dimProducts = new Map();
       const dimCustomers = new Map();
       const dimSuppliers = new Map();
@@ -640,7 +774,10 @@ app.post('/api/confirm-mapping', (req, res) => {
       for (const rec of records) {
         const prodName = rec.product_name || rec.product;
         if (prodName) {
-          const key = String(prodName).toLowerCase().trim();
+          // Same key logic as upsertProduct's star-schema grouping (db.js) —
+          // otherwise DimProduct fragments on spacing/case/unit noise that
+          // the star schema's `product` table no longer does.
+          const key = computeProductNaturalKey(prodName);
           if (!dimProducts.has(key)) {
             dimProducts.set(key, { name: prodName, category: rec.category || null, sourceAssetId: _assetId });
           }
@@ -670,26 +807,42 @@ app.post('/api/confirm-mapping', (req, res) => {
         }
       }
 
-      for (const [key, dim] of dimProducts) factStore.upsertDimension('DimProduct', dim, key);
-      for (const [key, dim] of dimCustomers) factStore.upsertDimension('DimCustomer', dim, key);
-      for (const [key, dim] of dimSuppliers) factStore.upsertDimension('DimSupplier', dim, key);
-      for (const [key, dim] of dimDates) factStore.upsertDimension('DimDate', dim, key);
+      for (const [key, dim] of dimProducts) await factStore.upsertDimension(organizationId, 'DimProduct', dim, key);
+      for (const [key, dim] of dimCustomers) await factStore.upsertDimension(organizationId, 'DimCustomer', dim, key);
+      for (const [key, dim] of dimSuppliers) await factStore.upsertDimension(organizationId, 'DimSupplier', dim, key);
+      for (const [key, dim] of dimDates) await factStore.upsertDimension(organizationId, 'DimDate', dim, key);
 
-      if (isSalesFile) {
-        const insertedSales = factStore.append('FactSales', records, regEntry?.datasetId || 'unknown');
-        if (insertedSales > 0) console.log(`[factStore] +${insertedSales} FactSales records`);
+      // Write each dataset's rows into the fact store EXACTLY ONCE.
+      //
+      // Two bugs lived here. First, only sales- and inventory-capable files
+      // were stored at all, so an expiry-only or supplier-only file
+      // contributed nothing queryable — its widgets stayed empty and the
+      // Advisor answered "no expiry data uploaded" for a file full of expiry
+      // dates. Second, a file that was BOTH sales- and inventory-capable ran
+      // both branches over the same `records`, storing every row twice and
+      // double-counting it in every total.
+      //
+      // factStore.queryAll ignores table_name — the widget engine discovers
+      // what it can compute from the FIELDS present — so one row per record,
+      // filed under its primary capability, serves every dashboard.
+      const hasStockSideData = !!(caps?.inventory || caps?.expiry || caps?.supplier);
+      const factTable = isSalesFile ? 'FactSales' : (hasStockSideData ? 'FactInventory' : null);
+      if (factTable) {
+        const insertedFacts = await factStore.append(organizationId, factTable, records, _assetId);
+        if (insertedFacts > 0) console.log(`[factStore] +${insertedFacts} ${factTable} records`);
       }
-      if (caps?.inventory) {
-        const invInserted = factStore.append('FactInventory', records, regEntry?.datasetId || 'unknown');
-        if (invInserted > 0) console.log(`[factStore] +${invInserted} FactInventory records`);
-      }
+
+      // A fresh upload is a new analysis context — start a new Advisor
+      // conversation so questions about it aren't answered using context
+      // left over from a previous, unrelated file.
+      await startNewConversation(organizationId).catch((e) => console.error('[advisor-chat] failed to start new conversation:', e));
 
       return res.json({
         datasetId: regEntry ? regEntry.datasetId : null,
         fileName: file.originalname,
         sheetName: Object.keys(sheets)[0] || null,
         widgetManifest,
-        factStore: factStore.summary(),
+        factStore: await factStore.summary(organizationId),
         analytics: analyticsResult,
         metrics,
         bizHealth: { health: bizHealth, insights: bizInsights, topPriorities: bizInsights.slice(0, 3) },
@@ -713,7 +866,7 @@ app.post('/api/confirm-mapping', (req, res) => {
 // ---------- Full Upload (legacy: auto-normalize + analyze in one shot) ----------
 
 app.post('/api/upload', (req, res) => {
-  uploadFields(req, res, (err) => {
+  uploadFields(req, res, async (err) => {
     if (err) {
       if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({ error: 'File exceeds the 50 MB limit.' });
@@ -723,6 +876,7 @@ app.post('/api/upload', (req, res) => {
 
     const salesFile = req.files?.sales?.[0];
     const inventoryFile = req.files?.inventory?.[0];
+    const organizationId = req.organizationId;
 
     if (!salesFile && !inventoryFile) {
       return res.status(400).json({
@@ -736,12 +890,11 @@ app.post('/api/upload', (req, res) => {
       if (salesFile) {
         const sheets = parseSheet(salesFile.buffer);
         const sheetKeys = Object.keys(sheets);
-        const rows = sheetKeys.length > 0 ? sheets[sheetKeys[0]] : [];
 
         // Full pipeline: normalize → persist → query
-        const normalized = normalizeFromSheets(sheets, { pharmacyId: 'default' });
-        loadFactRecords(normalized.normalized);
-        const analyticsResult = queryAnalytics();
+        const normalized = await normalizeFromSheets(sheets, { organizationId });
+        await loadFactRecords(organizationId, normalized.normalized);
+        const analyticsResult = await queryAnalytics(organizationId);
 
         result.sales = {
           fileName: salesFile.originalname,
@@ -757,11 +910,10 @@ app.post('/api/upload', (req, res) => {
       if (inventoryFile) {
         const sheets = parseSheet(inventoryFile.buffer);
         const sheetKeys = Object.keys(sheets);
-        const rows = sheetKeys.length > 0 ? sheets[sheetKeys[0]] : [];
 
-        const normalized = normalizeFromSheets(sheets, { pharmacyId: 'default' });
-        loadFactRecords(normalized.normalized);
-        const analyticsResult = queryAnalytics();
+        const normalized = await normalizeFromSheets(sheets, { organizationId });
+        await loadFactRecords(organizationId, normalized.normalized);
+        const analyticsResult = await queryAnalytics(organizationId);
 
         result.inventory = {
           fileName: inventoryFile.originalname,
@@ -774,7 +926,7 @@ app.post('/api/upload', (req, res) => {
         };
 
         // Register inventory file in the Dataset Registry
-        datasetRegistry.register({
+        await datasetRegistry.register(organizationId, {
           buffer: inventoryFile.buffer,
           filename: inventoryFile.originalname,
           mimeType: inventoryFile.mimetype,
@@ -785,15 +937,21 @@ app.post('/api/upload', (req, res) => {
       const files = [salesFile, inventoryFile].filter(Boolean);
       for (const f of files) {
         const fp = datasetRegistry.computeFingerprint(f.buffer, f.originalname);
-        const all = datasetRegistry.list({ limit: 500 });
-        const entry = all.find((d) => {
-          const full = datasetRegistry.get(d.datasetId);
-          return full && full.fingerprint === fp;
-        });
+        const all = await datasetRegistry.list(organizationId, { limit: 500 });
+        let entry = null;
+        for (const d of all) {
+          const full = await datasetRegistry.get(organizationId, d.datasetId);
+          if (full && full.fingerprint === fp) { entry = full; break; }
+        }
         if (entry) {
-          datasetRegistry.update(entry.datasetId, { processingStatus: 'processed' });
+          await datasetRegistry.update(organizationId, entry.datasetId, { processingStatus: 'processed' });
         }
       }
+
+      // A fresh upload is a new analysis context — start a new Advisor
+      // conversation so questions about it aren't answered using context
+      // left over from a previous, unrelated file.
+      await startNewConversation(organizationId).catch((e) => console.error('[advisor-chat] failed to start new conversation:', e));
 
       return res.json(result);
     } catch (parseErr) {
@@ -804,144 +962,59 @@ app.post('/api/upload', (req, res) => {
 
 // ---------- Analytics from DB ----------
 
-app.get('/api/analytics', (req, res) => {
+app.get('/api/analytics', async (req, res) => {
   const { startDate, endDate, branchId } = req.query;
-  const analytics = queryAnalytics({ startDate, endDate, branchId: branchId ? Number(branchId) : undefined });
+  const analytics = await queryAnalytics(req.organizationId, { startDate, endDate, branchId: branchId ? Number(branchId) : undefined });
   res.json(analytics);
 });
 
 // ---------- Dimension summaries ----------
 
-app.get('/api/dimensions/products', (req, res) => {
-  const db = require('./services/database').getDb();
-  const products = db.prepare('SELECT id, name, category FROM dim_product ORDER BY name').all();
+app.get('/api/dimensions/products', async (req, res) => {
+  const db = getSql();
+  const products = await db`select id, name, category from product where organization_id = ${req.organizationId} order by name`;
   res.json(products);
 });
 
-app.get('/api/dimensions/branches', (req, res) => {
-  const db = require('./services/database').getDb();
-  const branches = db.prepare('SELECT id, name, location FROM dim_branch ORDER BY name').all();
+app.get('/api/dimensions/branches', async (req, res) => {
+  const db = getSql();
+  const branches = await db`select id, name, location from branch where organization_id = ${req.organizationId} order by name`;
   res.json(branches);
 });
 
 // ---------- Advanced Analytics Insights ----------
 
-app.get('/api/insights/profit-by-category', (req, res) => {
-  res.json(profitByCategory());
+app.get('/api/insights/profit-by-category', async (req, res) => {
+  res.json(await profitByCategory(req.organizationId));
 });
 
-app.get('/api/insights/abc-analysis', (req, res) => {
-  res.json({ items: abcAnalysis(), summary: abcSummary() });
+app.get('/api/insights/abc-analysis', async (req, res) => {
+  res.json({ items: await abcAnalysis(req.organizationId), summary: await abcSummary(req.organizationId) });
 });
 
-app.get('/api/insights/fast-slow-movers', (req, res) => {
-  res.json({ items: fastSlowMovers(), summary: fastSlowSummary() });
+app.get('/api/insights/fast-slow-movers', async (req, res) => {
+  res.json({ items: await fastSlowMovers(req.organizationId), summary: await fastSlowSummary(req.organizationId) });
 });
 
-app.get('/api/insights/expiry-summary', (req, res) => {
-  res.json(expirySummary());
+app.get('/api/insights/expiry-summary', async (req, res) => {
+  res.json(await expirySummary(req.organizationId));
 });
 
-app.get('/api/insights/inventory-turnover', (req, res) => {
-  res.json(inventoryTurnover());
+app.get('/api/insights/inventory-turnover', async (req, res) => {
+  res.json(await inventoryTurnover(req.organizationId));
 });
 
-// ---------- Business Health (Phase 6) ----------
-
-app.get('/api/business-health', (req, res) => {
+// ---------- Business Health ----------
+//
+// Delegates to advisorQueries.getBusinessHealthBundle — the AI Advisor's
+// data layer already rebuilds this exact bundle (same metrics/health/
+// insights shape); duplicating the ~120-line Postgres translation of this
+// route's original inline SQL a second time in this file would just be two
+// near-identical code paths that could silently drift apart over time.
+app.get('/api/business-health', async (req, res) => {
   try {
-    const analytics = queryAnalytics();
-    const db = require('./services/database').getDb();
-
-    // Compute supplemental stats from the database
-    const { inventoryStats, customerStats } = computeHealthStats();
-
-    // --- Build metrics object from queryAnalytics output ---
-    const a = analytics.metrics || {};
-
-    // Trends: merge monthly revenue + profit + transaction counts
-    const monthlyTxs = db.prepare(`
-      SELECT strftime('%Y-%m', c.date) AS month, COUNT(*) AS transactions
-      FROM fact_sales f JOIN dim_calendar c ON f.calendar_id = c.id
-      GROUP BY strftime('%Y-%m', c.date) ORDER BY month
-    `).all();
-
-    const txMap = {};
-    monthlyTxs.forEach((r) => { txMap[r.month] = r.transactions; });
-
-    const months = (analytics.monthlyProfit || analytics.monthlyRevenue || []).map((m) => ({
-      month: m.month,
-      revenue: m.revenue || 0,
-      transactions: txMap[m.month] || 0,
-      profit: m.profit != null ? m.profit : null,
-    }));
-
-    // Products
-    const totalDistinct = db.prepare('SELECT COUNT(DISTINCT product_id) AS cnt FROM fact_sales').get().cnt;
-    const topProducts = (analytics.topProducts || []).map((p) => ({
-      name: p.name,
-      revenue: p.revenue,
-      margin: p.margin,
-    }));
-
-    // Revenue concentration
-    const allProductRevs = db.prepare(`
-      SELECT SUM(f.unit_price * f.quantity) AS revenue
-      FROM fact_sales f GROUP BY f.product_id ORDER BY revenue DESC
-    `).all();
-
-    const totalRev = allProductRevs.reduce((s, r) => s + (r.revenue || 0), 0);
-    let top1 = 0;
-    if (totalRev > 0 && allProductRevs.length > 0) {
-      top1 = (allProductRevs[0].revenue / totalRev) * 100;
-    }
-
-    // Health: compute from pipeline stages if available, else use DB record counts
-    const totalFacts = db.prepare('SELECT COUNT(*) AS cnt FROM fact_sales').get().cnt;
-    const productsWithSales = db.prepare('SELECT COUNT(DISTINCT product_id) AS cnt FROM fact_sales').get().cnt;
-    const totalProducts = db.prepare('SELECT COUNT(*) AS cnt FROM dim_product').get().cnt;
-
-    const metrics = {
-      overview: {
-        totalRevenue: a.totalRevenue || 0,
-        totalQuantitySold: a.totalQuantitySold || 0,
-        transactionCount: a.recordCount || 0,
-        averageTransactionValue: a.averageTransactionValue || 0,
-        averageSellingPrice: a.averageSellingPrice || 0,
-        grossProfit: a.grossProfit,
-        grossMargin: a.grossMargin,
-        hasCostData: a.grossProfit != null,
-      },
-      trends: { months, monthCount: months.length },
-      products: {
-        totalDistinctProducts: totalDistinct,
-        revenueConcentration: { top1: Math.round(top1) },
-        allProducts: topProducts,
-      },
-      health: {
-        dataCompleteness: { productName: 100, quantity: 100, revenue: 100, date: 100 },
-        qualityDistribution: { excellent: totalFacts, good: 0, fair: 0, poor: 0 },
-        pipelineStages: { uploadedRows: totalFacts, structurallyValidRows: totalFacts },
-        productRecognition: {
-          recognizedCount: productsWithSales,
-          unknownCount: Math.max(0, totalProducts - productsWithSales),
-          recognitionRate: totalProducts > 0 ? (productsWithSales / totalProducts) * 100 : 100,
-        },
-      },
-    };
-
-    const opts = {};
-    if (inventoryStats) opts.inventoryStats = inventoryStats;
-    if (customerStats) opts.customerStats = customerStats;
-
-    const healthResult = scoreBusinessHealth(metrics, opts);
-    const insights = generateInsights(healthResult, metrics, opts);
-
-    return res.json({
-      health: healthResult,
-      insights,
-      topPriorities: insights.slice(0, 3),
-    });
+    const { health, insights, topPriorities } = await advisorQueries.getBusinessHealthBundle(req.organizationId);
+    return res.json({ health, insights, topPriorities });
   } catch (err) {
     console.error('[business-health]', err);
     return res.status(500).json({ error: `Failed to compute business health: ${err.message}` });
@@ -950,28 +1023,74 @@ app.get('/api/business-health', (req, res) => {
 
 // ---------- AI Advisor (conversational, tool-calling) ----------
 
-app.post('/api/advisor-chat', async (req, res) => {
+// Lets the client repopulate the conversation on mount/reload instead of
+// the AI Advisor starting empty every time — it used to live only in React
+// state and vanish on refresh or navigating away.
+app.get('/api/advisor-chat/history', async (req, res) => {
   try {
-    const messages = Array.isArray(req.body?.messages) ? req.body.messages : [];
-    if (messages.length === 0) return res.status(400).json({ error: 'messages array is required' });
-    const result = await advisorChat(messages);
-    return res.json(result);
+    const conversationId = await getActiveConversationId(req.organizationId);
+    const messages = await getConversationMessages(conversationId);
+    return res.json({ messages });
+  } catch (err) {
+    return res.status(500).json({ error: `Failed to load advisor history: ${err.message}` });
+  }
+});
+
+// Explicitly starts a fresh conversation — the manual "New chat" equivalent
+// to the automatic reset that already happens after a new file upload.
+app.post('/api/advisor-chat/new', async (req, res) => {
+  try {
+    await startNewConversation(req.organizationId);
+    return res.json({ ok: true });
+  } catch (err) {
+    return res.status(500).json({ error: `Failed to start a new conversation: ${err.message}` });
+  }
+});
+
+// Server-Sent Events: streams the advisor's answer token-by-token as it's
+// generated, instead of making the client wait for the full reply. Each
+// event is one JSON-encoded line; the client reassembles them live.
+//
+// History is authoritative on the server (advisor_message, scoped to the
+// active conversation), not trusted from the client — the client only
+// sends the new question.
+app.post('/api/advisor-chat', async (req, res) => {
+  const question = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+  if (!question) return res.status(400).json({ error: 'message is required' });
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  const send = (event) => res.write(`data: ${JSON.stringify(event)}\n\n`);
+
+  try {
+    const conversationId = await getActiveConversationId(req.organizationId);
+    const priorHistory = await getConversationMessages(conversationId);
+    await appendAdvisorMessage(req.organizationId, conversationId, 'user', question);
+    const history = [...priorHistory, { role: 'user', content: question }];
+
+    const result = await advisorChatStream(req.organizationId, history, (token) => send({ type: 'token', token }));
+    await appendAdvisorMessage(req.organizationId, conversationId, 'assistant', result.reply);
+    send({ type: 'done', toolCalls: result.toolCalls });
   } catch (err) {
     console.error('[advisor-chat]', err);
-    return res.status(500).json({ error: `Advisor chat failed: ${err.message}` });
+    send({ type: 'error', error: `Advisor chat failed: ${err.message}` });
+  } finally {
+    res.end();
   }
 });
 
 // ---------- Pipeline Validation ----------
 
 app.post('/api/validate', (req, res) => {
-  uploadSingle(req, res, (err) => {
+  uploadSingle(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message });
 
     const file = req.file;
     if (!file) return res.status(400).json({ error: 'No file received.' });
 
-    const pharmacyId = req.body?.pharmacyId || 'default';
     let userMapping = {};
     try {
       userMapping = typeof req.body.mapping === 'string'
@@ -987,7 +1106,7 @@ app.post('/api/validate', (req, res) => {
         return res.status(400).json({ error: 'The file contains no data rows.' });
       }
 
-      const result = normalizeFromSheets(sheets, { pharmacyId, userMapping });
+      const result = await normalizeFromSheets(sheets, { organizationId: req.organizationId, userMapping });
       const analyticsResult = analyze(result.normalized);
       const validationReport = validate(rows, result, analyticsResult);
 
@@ -1003,10 +1122,12 @@ app.post('/api/validate', (req, res) => {
 });
 
 // ---------- Saved Mappings ----------
-
-app.get('/api/mappings/:pharmacyId', (req, res) => {
-  const { pharmacyId } = req.params;
-  const mappings = loadPharmacyMappings(pharmacyId);
+//
+// The pharmacyId URL param is accepted for backward-compatible routing but
+// never used for scoping — the real tenant is always the authenticated
+// session's organization, never a client-supplied value.
+app.get('/api/mappings/:pharmacyId', async (req, res) => {
+  const mappings = await loadPharmacyMappings(req.organizationId);
   res.json({ mappings });
 });
 
@@ -1061,14 +1182,14 @@ if (fs.existsSync(clientDist)) {
 // ----- Phase 5: Verified Metrics & AI Analysis -----
 
 app.post('/api/metrics', (req, res) => {
-  uploadSingle(req, res, (err) => {
+  uploadSingle(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message });
     const file = req.file;
     if (!file) return res.status(400).json({ error: 'No file received.' });
 
     try {
       const sheets = parseSheet(file.buffer);
-      const result = normalizeFromSheets(sheets);
+      const result = await normalizeFromSheets(sheets, { organizationId: req.organizationId });
 
       if (result.normalized.length === 0) {
         return res.status(400).json({ error: 'No processable data found.' });
@@ -1083,7 +1204,7 @@ app.post('/api/metrics', (req, res) => {
       });
 
       // Persist data
-      loadFactRecords(result.normalized);
+      await loadFactRecords(req.organizationId, result.normalized);
 
       return res.json({
         fileName: file.originalname,
@@ -1097,7 +1218,7 @@ app.post('/api/metrics', (req, res) => {
   });
 });
 
-app.post('/api/analysis', async (req, res) => {
+app.post('/api/analysis', (req, res) => {
   uploadSingle(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message });
     const file = req.file;
@@ -1105,7 +1226,7 @@ app.post('/api/analysis', async (req, res) => {
 
     try {
       const sheets = parseSheet(file.buffer);
-      const result = normalizeFromSheets(sheets);
+      const result = await normalizeFromSheets(sheets, { organizationId: req.organizationId });
 
       if (result.normalized.length === 0) {
         return res.status(400).json({ error: 'No processable data found.' });
@@ -1123,7 +1244,7 @@ app.post('/api/analysis', async (req, res) => {
       const analysis = await analyzeMetrics(metrics);
 
       // Persist data
-      loadFactRecords(result.normalized);
+      await loadFactRecords(req.organizationId, result.normalized);
 
       return res.json({
         fileName: file.originalname,
@@ -1140,6 +1261,7 @@ app.post('/api/analysis', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`RxNaija Analytics server listening on http://localhost:${PORT}`);
-  // Purge FactSales records from datasets classified as non-sales
-  factStore.purgeStaleFactSales();
+  // Stale-FactSales purging now happens per-organization inside
+  // evaluateFromStore() — there's no single "current org" at startup
+  // anymore, so the old blanket purge-on-boot call is gone.
 });

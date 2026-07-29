@@ -769,11 +769,11 @@ function scoreDataCompleteness(metrics, opts) {
   }
   const dc = health.dataCompleteness;
   // Average across the four core required fields
-  const avg = (dc.productName + dc.quantity + dc.revenue + dc.transaction_date) / 4;
+  const avg = (dc.productName + dc.quantity + dc.revenue + dc.date) / 4;
   const result = scoreFourTier(avg, t, { higherIsBetter: true });
   return {
     ...result,
-    detail: `Average field completeness of ${round(avg)}% across core fields (product: ${dc.productName}%, quantity: ${dc.quantity}%, revenue: ${dc.revenue}%, date: ${dc.transaction_date}%). ${avg >= 85 ? 'Data capture is strong.' : avg >= 70 ? 'Some fields are frequently missing — consider enforcing data entry standards.' : 'Many required fields are empty — data quality is hindering reliable analysis.'}`,
+    detail: `Average field completeness of ${round(avg)}% across core fields (product: ${dc.productName}%, quantity: ${dc.quantity}%, revenue: ${dc.revenue}%, date: ${dc.date}%). ${avg >= 85 ? 'Data capture is strong.' : avg >= 70 ? 'Some fields are frequently missing — consider enforcing data entry standards.' : 'Many required fields are empty — data quality is hindering reliable analysis.'}`,
   };
 }
 

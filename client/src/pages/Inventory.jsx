@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/apiClient.js';
 
 export default function Inventory() {
   const location = useLocation();
@@ -22,7 +23,7 @@ export default function Inventory() {
       const formData = new FormData();
       // Re-fetch from server — the file buffer isn't serializable through router state.
       // Instead, we tell the server to analyze the most recent upload.
-      const res = await fetch('/api/inventory-analytics', { method: 'POST' });
+      const res = await apiFetch('/api/inventory-analytics', { method: 'POST' });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Failed to load inventory data');
       setData(result);
