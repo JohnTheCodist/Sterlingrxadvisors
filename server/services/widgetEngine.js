@@ -186,4 +186,4 @@ async function evaluateFromDatasets(organizationId, datasetIds, options = {}) {
   return evaluate(records, options);
 }
 
-module.exports = { evaluate, evaluateFromStore, evaluateFromDatasets, detectAvailableFields };
+module.exports = { evaluate, evaluateFromStore, evaluateFromDatasets, detectAvailableFields, FIELD_ALIASES };

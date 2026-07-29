@@ -13,7 +13,6 @@ const { computeHealthStats } = require('./businessHealthData');
 const { scoreBusinessHealth } = require('./businessHealth');
 const { generateInsights } = require('./recommendations');
 const { profitByCategory, fastSlowMovers } = require('./insights');
-const { evaluateFromStore } = require('./widgetEngine');
 
 const round = (n, d = 2) => {
   if (n == null) return null;
@@ -459,72 +458,256 @@ async function getFrequentlyBoughtTogether(organizationId, { product, n = 10 } =
   return { available: true, pairs: pairs.map((p) => ({ ...p, timesTogether: Number(p.timesTogether) })) };
 }
 
-// ── Inventory (prefers real widget data, falls back to a labeled estimate) ─
+// ── Inventory / supplier / expiry ─────────────────────────────────────────
+//
+// These all answer questions about what the pharmacy HAS, which is only
+// meaningful relative to a particular upload. Uploads accumulate, so reading
+// org-wide (the old behaviour) meant a pharmacy that uploaded inventory data
+// once, months ago, kept getting inventory answers forever — even right after
+// uploading a sales-only file with no stock columns in it, and with no hint
+// that the answer described a different file. Default to the current upload,
+// and when it can't answer, say so and offer history rather than silently
+// substituting it.
 
-async function getWidgetResult(organizationId, dashboardKey, widgetId) {
-  try {
-    const manifest = await evaluateFromStore(organizationId);
-    const w = manifest.dashboards?.[dashboardKey]?.available?.find((x) => x.id === widgetId);
-    if (!w || w.result?.error) return null;
-    return w.result;
-  } catch (_) {
-    return null;
+/**
+ * Splits the fact store into "what the current upload contains" and "what the
+ * organization has ever uploaded", plus which canonical fields each covers.
+ * Field detection reuses widgetEngine's own detectAvailableFields, so
+ * "does this dataset have stock data" means exactly what it means to the
+ * widget that would render it — not a second, drifting definition.
+ */
+/**
+ * Reads a canonical field off a record via the same alias list
+ * detectAvailableFields matches on. Without this the two disagree: a dataset
+ * whose supplier column is empty but whose `manufacturer` column is full
+ * counts as having supplier data (manufacturer is a supplier alias), yet a
+ * plain rec.supplier read returns nothing — reporting "0 suppliers" for a
+ * dataset that demonstrably has them.
+ */
+function readField(rec, canonical) {
+  const { FIELD_ALIASES } = require('./widgetEngine');
+  const direct = rec[canonical];
+  if (direct != null && direct !== '') return direct;
+  for (const alias of FIELD_ALIASES[canonical] || []) {
+    const v = rec[alias];
+    if (v != null && v !== '') return v;
   }
+  return null;
 }
 
-async function getLowStock(organizationId) {
-  const real = await getWidgetResult(organizationId, 'inventory', 'low-stock-alert');
-  if (real) return { estimated: false, ...real };
-
-  const { inventoryStats } = await computeHealthStats(organizationId);
-  if (!inventoryStats) return { available: false, reason: 'No inventory data available.' };
-  return {
-    estimated: true,
-    note: 'No stock-level data uploaded — this is a sales-velocity estimate, not a real stock count.',
-    lowStockCount: inventoryStats.lowStockCount,
-    totalProducts: inventoryStats.totalProducts,
-  };
-}
-
-async function getOverstock(organizationId) {
+async function getScopedRecords(organizationId, scope = 'current') {
   assertOrgId(organizationId);
-  const { inventoryStats } = await computeHealthStats(organizationId);
-  if (!inventoryStats) return { available: false, reason: 'No inventory data available.' };
+  const factStore = require('./factStore');
+  const { detectAvailableFields } = require('./widgetEngine');
+  const datasetRegistry = require('./datasetRegistry');
 
-  const db = getSql();
-  const totalMonths = inventoryStats.totalMonths || 1;
-  const rows = await db`
-    select p.name, coalesce(sum(s.quantity), 0) as "unitsSold",
-           round((coalesce(sum(s.quantity), 0) / ${totalMonths})::numeric, 2) as "unitsPerMonth"
-    from product p
-    left join sale s on s.product_id = p.id and s.organization_id = ${organizationId}
-    where p.organization_id = ${organizationId}
-    group by p.id, p.name
-    having coalesce(sum(s.quantity), 0) > 0
-    order by "unitsPerMonth" asc
-  `;
+  const allRecords = await factStore.queryAll(organizationId);
+  const latest = await datasetRegistry.getLatest(organizationId);
 
-  const parsed = rows.map((r) => ({ name: r.name, unitsSold: Number(r.unitsSold), unitsPerMonth: Number(r.unitsPerMonth) }));
-  const velocities = parsed.map((r) => r.unitsPerMonth).sort((a, b) => a - b);
-  const slowThreshold = velocities.length > 0 ? velocities[Math.floor(velocities.length * 0.25)] : 0;
-  const overstocked = parsed.filter((r) => r.unitsPerMonth <= slowThreshold);
+  // No registry entry (nothing uploaded through the normal path) — there is
+  // no "current upload" to scope to, so org-wide is the only honest answer.
+  const currentRecords = latest
+    ? allRecords.filter((r) => r.assetId === latest.datasetId)
+    : allRecords;
 
   return {
-    estimated: true,
-    note: 'No stock-on-hand data uploaded — these are the slowest-moving products by sales velocity, a proxy for overstock risk.',
-    overstockCount: inventoryStats.overstockCount,
-    overstockPct: inventoryStats.overstockPct,
-    products: overstocked.slice(0, 15).map((r) => ({ name: r.name, unitsPerMonth: r.unitsPerMonth })),
+    allRecords,
+    currentRecords,
+    records: scope === 'all' ? allRecords : currentRecords,
+    currentFields: detectAvailableFields(currentRecords),
+    allFields: detectAvailableFields(allRecords),
+    currentFilename: latest?.filename || null,
+    scope,
   };
 }
 
-async function getExpirySummary(organizationId) {
-  const realRisk = (await getWidgetResult(organizationId, 'expiry', 'expiry-risk')) || (await getWidgetResult(organizationId, 'inventory', 'expiry-risk'));
-  const realTimeline = (await getWidgetResult(organizationId, 'expiry', 'expiry-timeline')) || (await getWidgetResult(organizationId, 'inventory', 'expiry-timeline'));
-  if (realRisk || realTimeline) {
-    return { estimated: false, risk: realRisk, timeline: realTimeline };
+/**
+ * Shared gate: does the requested scope actually carry the fields this
+ * question needs? Returns null when it does (caller proceeds), or the
+ * caller's whole response when it doesn't.
+ */
+function checkScopeCoverage(ctx, requiredFields, dataLabel) {
+  const has = (fields) => requiredFields.every((f) => fields.has(f));
+  if (ctx.scope === 'all') {
+    return has(ctx.allFields)
+      ? null
+      : { available: false, reason: `No ${dataLabel} data has been uploaded in any dataset.` };
   }
-  return { available: false, reason: 'No expiry-date data uploaded for this dataset.' };
+  if (has(ctx.currentFields)) return null;
+  if (has(ctx.allFields)) {
+    return {
+      availableInCurrentUpload: false,
+      availableHistorically: true,
+      currentUpload: ctx.currentFilename,
+      reason: `The current upload${ctx.currentFilename ? ` (${ctx.currentFilename})` : ''} does not include ${dataLabel} data. An earlier upload does — ask the user whether to check the organization's historical data before answering from it.`,
+    };
+  }
+  return { available: false, reason: `No ${dataLabel} data has been uploaded in any dataset.` };
+}
+
+async function getLowStock(organizationId, { scope = 'current' } = {}) {
+  const ctx = await getScopedRecords(organizationId, scope);
+  const gap = checkScopeCoverage(ctx, ['current_stock', 'reorder_level'], 'stock-level / reorder-level');
+  if (gap) return gap;
+
+  // Count and list come from ONE pass over the same rows, using the same
+  // stock <= reorder rule the low-stock-alert widget uses. Previously the
+  // count came from a KPI widget and any list came from a different, 20-row
+  // capped table widget — which is how "45 low stock" could be followed by a
+  // list of 20 and read as a contradiction.
+  const products = [];
+  let totalWithStock = 0;
+  for (const rec of ctx.records) {
+    const rawStock = readField(rec, 'current_stock');
+    if (rawStock == null) continue;
+    const stock = Number(rawStock);
+    const reorder = Number(readField(rec, 'reorder_level'));
+    if (!Number.isFinite(stock) || stock < 0) continue;
+    totalWithStock++;
+    if (Number.isFinite(reorder) && reorder >= 0 && stock <= reorder) {
+      products.push({
+        name: readField(rec, 'product_name') ? String(readField(rec, 'product_name')).trim() : 'Unknown',
+        stock,
+        reorderLevel: reorder,
+      });
+    }
+  }
+
+  products.sort((a, b) => a.stock - b.stock);
+  return {
+    estimated: false,
+    scope,
+    scopeNote: scope === 'all'
+      ? 'Covers all uploaded datasets combined.'
+      : `Covers the current upload${ctx.currentFilename ? ` (${ctx.currentFilename})` : ''} only.`,
+    lowStockCount: products.length,
+    totalProductsWithStockData: totalWithStock,
+    products,
+  };
+}
+
+async function getOverstock(organizationId, { scope = 'current' } = {}) {
+  const ctx = await getScopedRecords(organizationId, scope);
+  const gap = checkScopeCoverage(ctx, ['current_stock'], 'stock-level');
+  if (gap) return gap;
+
+  // Overstock needs stock on hand relative to how fast it sells. Quantity
+  // sold may not be in the same upload as stock levels, so it's optional
+  // here — without it, report stock on hand and say the velocity half is
+  // missing rather than inventing a turnover figure.
+  const byProduct = new Map();
+  for (const rec of ctx.records) {
+    const rawStock = readField(rec, 'current_stock');
+    if (rawStock == null) continue;
+    const stock = Number(rawStock);
+    if (!Number.isFinite(stock) || stock < 0) continue;
+    const rawName = readField(rec, 'product_name');
+    const name = rawName ? String(rawName).trim() : 'Unknown';
+    const entry = byProduct.get(name) || { name, stock: 0, unitsSold: 0 };
+    entry.stock = Math.max(entry.stock, stock);
+    const qty = Number(readField(rec, 'quantity'));
+    if (Number.isFinite(qty) && qty > 0) entry.unitsSold += qty;
+    byProduct.set(name, entry);
+  }
+
+  const parsed = [...byProduct.values()];
+  const hasSalesVelocity = parsed.some((p) => p.unitsSold > 0);
+  const withCoverage = parsed.map((p) => ({
+    name: p.name,
+    stock: p.stock,
+    unitsSold: p.unitsSold,
+    // Stock relative to what actually sold. High ratio = sitting stock.
+    stockToSalesRatio: p.unitsSold > 0 ? round(p.stock / p.unitsSold, 2) : null,
+  }));
+
+  const overstocked = hasSalesVelocity
+    ? withCoverage.filter((p) => p.stockToSalesRatio != null && p.stockToSalesRatio >= 3)
+        .sort((a, b) => b.stockToSalesRatio - a.stockToSalesRatio)
+    : withCoverage.filter((p) => p.stock > 0).sort((a, b) => b.stock - a.stock);
+
+  return {
+    estimated: !hasSalesVelocity,
+    scope,
+    scopeNote: scope === 'all'
+      ? 'Covers all uploaded datasets combined.'
+      : `Covers the current upload${ctx.currentFilename ? ` (${ctx.currentFilename})` : ''} only.`,
+    ...(hasSalesVelocity
+      ? { basis: 'Products holding at least 3x the stock of what actually sold in this data.' }
+      : { note: 'This upload has stock levels but no quantity-sold data, so these are simply the largest stock holdings — not confirmed overstock.' }),
+    overstockCount: overstocked.length,
+    products: overstocked,
+  };
+}
+
+async function getExpirySummary(organizationId, { scope = 'current' } = {}) {
+  const ctx = await getScopedRecords(organizationId, scope);
+  const gap = checkScopeCoverage(ctx, ['expiry_date'], 'expiry-date');
+  if (gap) return gap;
+
+  const today = new Date();
+  const items = [];
+  for (const rec of ctx.records) {
+    const rawExpiry = readField(rec, 'expiry_date');
+    if (!rawExpiry) continue;
+    const expiry = new Date(rawExpiry);
+    if (Number.isNaN(expiry.getTime())) continue;
+    const daysRemaining = Math.floor((expiry - today) / 86400000);
+    const rawName = readField(rec, 'product_name');
+    const rawStock = readField(rec, 'current_stock');
+    items.push({
+      name: rawName ? String(rawName).trim() : 'Unknown',
+      expiryDate: String(rawExpiry).substring(0, 10),
+      daysRemaining,
+      stock: rawStock != null && Number.isFinite(Number(rawStock)) ? Number(rawStock) : null,
+    });
+  }
+
+  items.sort((a, b) => a.daysRemaining - b.daysRemaining);
+  return {
+    estimated: false,
+    scope,
+    scopeNote: scope === 'all'
+      ? 'Covers all uploaded datasets combined.'
+      : `Covers the current upload${ctx.currentFilename ? ` (${ctx.currentFilename})` : ''} only.`,
+    expiredCount: items.filter((i) => i.daysRemaining < 0).length,
+    expiringWithin90DaysCount: items.filter((i) => i.daysRemaining >= 0 && i.daysRemaining <= 90).length,
+    totalWithExpiryData: items.length,
+    items,
+  };
+}
+
+async function getSupplierBreakdown(organizationId, { scope = 'current' } = {}) {
+  const ctx = await getScopedRecords(organizationId, scope);
+  const gap = checkScopeCoverage(ctx, ['supplier'], 'supplier');
+  if (gap) return gap;
+
+  const map = new Map();
+  for (const rec of ctx.records) {
+    const rawSupplier = readField(rec, 'supplier');
+    const supplier = rawSupplier ? String(rawSupplier).trim() : '';
+    if (!supplier) continue;
+    const entry = map.get(supplier) || { supplier, products: new Set(), stockTotal: 0, unitsSold: 0 };
+    const rawName = readField(rec, 'product_name');
+    if (rawName) entry.products.add(String(rawName).trim());
+    const stock = Number(readField(rec, 'current_stock'));
+    if (Number.isFinite(stock) && stock > 0) entry.stockTotal += stock;
+    const qty = Number(readField(rec, 'quantity'));
+    if (Number.isFinite(qty) && qty > 0) entry.unitsSold += qty;
+    map.set(supplier, entry);
+  }
+
+  const suppliers = [...map.values()]
+    .map((e) => ({ supplier: e.supplier, productCount: e.products.size, stockTotal: e.stockTotal, unitsSold: e.unitsSold }))
+    .sort((a, b) => b.productCount - a.productCount);
+
+  return {
+    scope,
+    scopeNote: scope === 'all'
+      ? 'Covers all uploaded datasets combined.'
+      : `Covers the current upload${ctx.currentFilename ? ` (${ctx.currentFilename})` : ''} only.`,
+    supplierCount: suppliers.length,
+    suppliers,
+  };
 }
 
 // ── Business health / priorities / risks / "why" ────────────────────────
@@ -786,6 +969,7 @@ module.exports = {
   getLowStock,
   getOverstock,
   getExpirySummary,
+  getSupplierBreakdown,
   getBusinessHealth,
   getTopPriorities,
   getRevenueTrendDrivers,

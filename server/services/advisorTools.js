@@ -134,24 +134,52 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'getLowStock',
-      description: 'Products running low on stock. Uses real stock-level data if an inventory dataset was uploaded (estimated:false); otherwise falls back to a sales-velocity estimate (estimated:true) — say so if estimated. Use for "which products are running low", "what should I reorder today".',
-      parameters: { type: 'object', properties: {} },
+      description: 'Products at or below their reorder level, returned as a full `products` list (name, stock, reorderLevel) with `lowStockCount` matching that list exactly — use the list to answer "which ones". Defaults to the current upload only. Use for "which products are running low", "what should I reorder today".',
+      parameters: {
+        type: 'object',
+        properties: {
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+      },
     },
   },
   {
     type: 'function',
     function: {
       name: 'getOverstock',
-      description: 'Products that are overstocked relative to how fast they sell (estimated:true — always a velocity-based proxy in this dataset). Use for "which products are overstocked".',
-      parameters: { type: 'object', properties: {} },
+      description: 'Products holding far more stock than they sell, as a full `products` list with `overstockCount` matching it. estimated:true means the upload had stock levels but no quantity-sold data, so these are largest holdings rather than confirmed overstock — say so. Defaults to the current upload only.',
+      parameters: {
+        type: 'object',
+        properties: {
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+      },
     },
   },
   {
     type: 'function',
     function: {
       name: 'getExpirySummary',
-      description: 'Products approaching or past expiry, if expiry-date data was uploaded. Returns available:false if not. Use for "which products are expiring soon".',
-      parameters: { type: 'object', properties: {} },
+      description: 'Products approaching or past expiry, as a full `items` list sorted soonest-first with daysRemaining (negative = already expired). Defaults to the current upload only. Use for "which products are expiring soon".',
+      parameters: {
+        type: 'object',
+        properties: {
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getSupplierBreakdown',
+      description: 'Suppliers in the data, with how many distinct products, total stock, and units sold each accounts for. Defaults to the current upload only. Use for "who are my suppliers", "which supplier do I depend on most".',
+      parameters: {
+        type: 'object',
+        properties: {
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+      },
     },
   },
   {
@@ -227,6 +255,7 @@ const IMPLEMENTATIONS = {
   getLowStock: queries.getLowStock,
   getOverstock: queries.getOverstock,
   getExpirySummary: queries.getExpirySummary,
+  getSupplierBreakdown: queries.getSupplierBreakdown,
   getBusinessHealth: queries.getBusinessHealth,
   getTopPriorities: queries.getTopPriorities,
   getRevenueTrendDrivers: queries.getRevenueTrendDrivers,
