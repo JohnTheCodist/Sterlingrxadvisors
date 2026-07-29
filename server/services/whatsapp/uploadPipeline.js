@@ -8,6 +8,7 @@
  */
 
 const { normalizeFromSheets } = require('../normalizer');
+const datasetRegistry = require('../datasetRegistry');
 const { loadFactRecords, queryAnalytics } = require('../db');
 const { computeAllMetrics } = require('../metrics');
 const { computeHealthStats } = require('../businessHealthData');
@@ -22,7 +23,7 @@ const { generateInsights } = require('../recommendations');
  *   bizHealth: object, bizInsights: object
  * }>}
  */
-async function processUpload(organizationId, fileBuffer) {
+async function processUpload(organizationId, fileBuffer, filename = 'whatsapp-upload.xlsx') {
   const xlsx = require('xlsx');
   const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
   const sheets = {};
@@ -37,7 +38,19 @@ async function processUpload(organizationId, fileBuffer) {
 
   const records = result.validRecords || result.normalized;
 
-  await loadFactRecords(organizationId, records);
+  // Register the dataset even though WhatsApp shows no registry UI — its id
+  // is what makes re-loading idempotent. register() keys on a fingerprint of
+  // the file contents, so sending the SAME file twice returns the SAME id and
+  // loadFactRecords replaces that dataset's rows instead of appending a
+  // duplicate copy. Without it every re-send silently doubled the pharmacy's
+  // totals.
+  const entry = await datasetRegistry.register(organizationId, {
+    buffer: fileBuffer,
+    filename,
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+
+  await loadFactRecords(organizationId, records, { datasetId: entry?.datasetId || null });
   const analytics = await queryAnalytics(organizationId);
 
   const metrics = computeAllMetrics(records, {

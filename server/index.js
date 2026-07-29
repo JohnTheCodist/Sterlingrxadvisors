@@ -891,9 +891,16 @@ app.post('/api/upload', (req, res) => {
         const sheets = parseSheet(salesFile.buffer);
         const sheetKeys = Object.keys(sheets);
 
-        // Full pipeline: normalize → persist → query
+        // Full pipeline: normalize → persist → query. Register first: the
+        // dataset id is what scopes the load, so re-uploading the same file
+        // replaces its rows instead of appending a duplicate copy.
         const normalized = await normalizeFromSheets(sheets, { organizationId });
-        await loadFactRecords(organizationId, normalized.normalized);
+        const salesEntry = await datasetRegistry.register(organizationId, {
+          buffer: salesFile.buffer,
+          filename: salesFile.originalname,
+          mimeType: salesFile.mimetype,
+        });
+        await loadFactRecords(organizationId, normalized.normalized, { datasetId: salesEntry?.datasetId || null });
         const analyticsResult = await queryAnalytics(organizationId);
 
         result.sales = {
@@ -912,7 +919,14 @@ app.post('/api/upload', (req, res) => {
         const sheetKeys = Object.keys(sheets);
 
         const normalized = await normalizeFromSheets(sheets, { organizationId });
-        await loadFactRecords(organizationId, normalized.normalized);
+        // Registered up here rather than after the load (where it used to
+        // live) so its id can scope the load and keep re-uploads idempotent.
+        const inventoryEntry = await datasetRegistry.register(organizationId, {
+          buffer: inventoryFile.buffer,
+          filename: inventoryFile.originalname,
+          mimeType: inventoryFile.mimetype,
+        });
+        await loadFactRecords(organizationId, normalized.normalized, { datasetId: inventoryEntry?.datasetId || null });
         const analyticsResult = await queryAnalytics(organizationId);
 
         result.inventory = {
@@ -924,13 +938,6 @@ app.post('/api/upload', (req, res) => {
           cleaningStats: normalized.cleaningStats,
           needsConfirmation: normalized.needsConfirmation,
         };
-
-        // Register inventory file in the Dataset Registry
-        await datasetRegistry.register(organizationId, {
-          buffer: inventoryFile.buffer,
-          filename: inventoryFile.originalname,
-          mimeType: inventoryFile.mimetype,
-        });
       }
 
       // Update registry entries for processed files
@@ -1203,8 +1210,16 @@ app.post('/api/metrics', (req, res) => {
         cleaningStats: result.cleaningStats,
       });
 
-      // Persist data
-      await loadFactRecords(req.organizationId, result.normalized);
+      // Persist data. Scoped to the dataset so re-posting the same file
+      // replaces its rows rather than stacking another copy — this endpoint
+      // persists as a side effect, so it inflated totals just as silently as
+      // the real upload routes did.
+      const entry = await datasetRegistry.register(req.organizationId, {
+        buffer: file.buffer,
+        filename: file.originalname,
+        mimeType: file.mimetype,
+      });
+      await loadFactRecords(req.organizationId, result.normalized, { datasetId: entry?.datasetId || null });
 
       return res.json({
         fileName: file.originalname,
@@ -1243,8 +1258,16 @@ app.post('/api/analysis', (req, res) => {
       // Generate AI analysis
       const analysis = await analyzeMetrics(metrics);
 
-      // Persist data
-      await loadFactRecords(req.organizationId, result.normalized);
+      // Persist data. Scoped to the dataset so re-posting the same file
+      // replaces its rows rather than stacking another copy — this endpoint
+      // persists as a side effect, so it inflated totals just as silently as
+      // the real upload routes did.
+      const entry = await datasetRegistry.register(req.organizationId, {
+        buffer: file.buffer,
+        filename: file.originalname,
+        mimeType: file.mimetype,
+      });
+      await loadFactRecords(req.organizationId, result.normalized, { datasetId: entry?.datasetId || null });
 
       return res.json({
         fileName: file.originalname,
