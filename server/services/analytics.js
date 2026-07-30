@@ -1060,16 +1060,38 @@ function profitLeakage(normalizedRecords, targetMargin = 25, highRevenuePercenti
 
   const totalRevenue = products.reduce((s, p) => s + p.revenue, 0);
   const totalGrossProfit = products.reduce((s, p) => s + p.grossProfit, 0);
-  const hasAnyCost = products.some(p => p.hasCost);
+  const productsWithCost = products.filter(p => p.hasCost);
+  const costCoverageRevenue = productsWithCost.reduce((s, p) => s + p.revenue, 0);
+  const costCoveragePct = totalRevenue > 0 ? Math.round((costCoverageRevenue / totalRevenue) * 1000) / 10 : 0;
 
   if (products.length < 2 || totalRevenue === 0) {
     return { error: 'Insufficient product data for profit leakage analysis.' };
   }
 
-  if (!hasAnyCost) {
+  // A handful of products carrying cost data isn't enough to characterize
+  // the whole catalog — below this floor, "average margin" would describe
+  // an arbitrary sliver, not the business. Requires BOTH a minimum product
+  // count and a minimum revenue share so neither a few high-revenue nor a
+  // long tail of low-revenue products alone can clear the bar.
+  const MIN_COST_COVERAGE_PRODUCTS_PCT = 20;
+  const MIN_COST_COVERAGE_REVENUE_PCT = 20;
+  const costCoverageProductsPct = Math.round((productsWithCost.length / products.length) * 1000) / 10;
+
+  if (productsWithCost.length === 0) {
     return {
       error: 'Profit Leakage Analysis cannot be performed because Cost Price is unavailable.',
       costUnavailable: true,
+    };
+  }
+
+  if (costCoverageProductsPct < MIN_COST_COVERAGE_PRODUCTS_PCT || costCoveragePct < MIN_COST_COVERAGE_REVENUE_PCT) {
+    return {
+      error: `Cost price is only available for ${productsWithCost.length} of ${products.length} products (${costCoveragePct}% of revenue) — not enough to reliably calculate profit leakage. Upload cost prices for more products.`,
+      costUnavailable: true,
+      partialCostData: true,
+      productsWithCost: productsWithCost.length,
+      totalProducts: products.length,
+      costCoveragePct,
     };
   }
 
@@ -1079,7 +1101,12 @@ function profitLeakage(normalizedRecords, targetMargin = 25, highRevenuePercenti
 
   // ---- Step 3: apply rules & severity --------------------------------
   const totalGP = products.reduce((s, p) => s + p.grossProfit, 0);
-  const totalMargin = totalRevenue > 0 ? Math.round((totalGP / totalRevenue) * 10000) / 100 : 0;
+  // Averaged only over products that HAVE cost data — dividing by
+  // totalRevenue (which includes cost-unknown products) would silently
+  // treat every product missing cost data as if it earned 0% margin,
+  // deflating the figure below what it actually is for the products it
+  // describes.
+  const totalMargin = costCoverageRevenue > 0 ? Math.round((totalGP / costCoverageRevenue) * 10000) / 100 : 0;
 
   const classified = products.map((p, i) => {
     const revenueRank = i + 1;
@@ -1232,11 +1259,21 @@ function profitLeakage(normalizedRecords, targetMargin = 25, highRevenuePercenti
       quantity: p.quantity,
     }));
 
-  // Confidence: based on cost data coverage
-  const productsWithCost = classified.filter(p => p.hasCost).length;
+  // Confidence: based on cost data coverage (product count, not revenue —
+  // costCoveragePct above is the revenue-weighted figure used for gating)
   const confidence = products.length > 0
-    ? Math.round((productsWithCost / products.length) * 100)
+    ? Math.round((productsWithCost.length / products.length) * 100)
     : 0;
+
+  // Surface partial coverage up front rather than leaving the reader to
+  // infer it from the confidence number — every downstream figure
+  // (summary.averageMargin, chartData, productsBelowCost) only describes
+  // the products that had cost data, not the full catalog.
+  if (costCoverageProductsPct < 100) {
+    insights.unshift(
+      `Cost price is available for ${productsWithCost.length} of ${products.length} products (${costCoveragePct}% of revenue) — this analysis covers only those products.`
+    );
+  }
 
   return {
     // Core output
@@ -1262,6 +1299,11 @@ function profitLeakage(normalizedRecords, targetMargin = 25, highRevenuePercenti
     expectedImpact,
     confidence,
     costAvailable: true,
+    costCoverage: {
+      productsWithCost: productsWithCost.length,
+      totalProducts: products.length,
+      coveragePct: costCoveragePct,
+    },
   };
 }
 

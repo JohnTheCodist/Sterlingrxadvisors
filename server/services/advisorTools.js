@@ -14,15 +14,20 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'getRevenueProfitSummary',
-      description: 'Total revenue, gross profit, gross margin, quantity sold, transaction count for all data on record. Use for "how much did I sell/make" style questions.',
-      parameters: { type: 'object', properties: {} },
+      description: 'Total revenue, gross profit, gross margin, quantity sold, transaction count. grossProfit/grossMargin/totalCost are null when cost-price data is missing OR too thin to trust (costCoverage states which, and the exact row/revenue coverage). Defaults to the current upload only — if it has no sales rows at all, returns availableInCurrentUpload:false/availableHistorically:true rather than silently answering from an older upload. Use for "how much did I sell/make" style questions.',
+      parameters: {
+        type: 'object',
+        properties: {
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+      },
     },
   },
   {
     type: 'function',
     function: {
       name: 'getWeeklyRevenue',
-      description: 'Revenue, profit, and transaction count broken down by week. Use for "this week" / "last week" style questions.',
+      description: 'Revenue, profit, and transaction count broken down by week. A week\'s profit is null when cost-price coverage for that specific week is missing or too thin to trust (costCoverage states the exact row/revenue coverage) — revenue and transaction count are unaffected either way. Use for "this week" / "last week" style questions.',
       parameters: {
         type: 'object',
         properties: { weeks: { type: 'integer', description: 'How many recent weeks to return, default 8' } },
@@ -55,8 +60,13 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'getCategoryPerformance',
-      description: 'Revenue, profit, and margin by product category, under `categories`. `hasCostData` is false when no cost prices were uploaded at all — in that case every category\'s profit/margin will be null, meaning not available, not zero. Use for "which category performs best".',
-      parameters: { type: 'object', properties: {} },
+      description: 'Revenue, profit, and margin by product category, under `categories`. `hasCostData` is false when no cost prices were uploaded at ALL. Even when true, an individual category\'s own cost/profit/marginPct can still be null if that specific category\'s cost-price coverage is too thin to trust — check that category\'s own `costCoverage` for the exact reason (revenue and unitsSold are always reliable regardless). Defaults to the current upload only — if it has no sales rows at all, returns availableInCurrentUpload:false/availableHistorically:true rather than silently answering from an older upload. Use for "which category performs best".',
+      parameters: {
+        type: 'object',
+        properties: {
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+      },
     },
   },
   {
@@ -71,12 +81,13 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'getProfitLeakage',
-      description: 'Products with margin below a threshold, under `products`, ordered by revenue (biggest naira impact first). Returns `available: false` if no cost-price data was uploaded at all — that means profit leakage cannot be determined, not that there is none. Use for "where am I losing profit".',
+      description: 'Products with margin below a threshold, under `products`, ordered by revenue (biggest naira impact first). Returns `available: false` if no cost-price data was uploaded at all — that means profit leakage cannot be determined, not that there is none. Defaults to the current upload only — if it has no sales rows at all, returns availableInCurrentUpload:false/availableHistorically:true rather than silently answering from an older upload. Use for "where am I losing profit".',
       parameters: {
         type: 'object',
         properties: {
           marginThreshold: { type: 'number', description: 'Margin percent below which a product counts as leaking profit, default 15' },
           n: { type: 'integer', description: 'Max products to return, default 10' },
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
         },
       },
     },
@@ -127,6 +138,58 @@ const TOOLS = [
           product: { type: 'string', description: 'Optional — scope results to pairs involving this product' },
           n: { type: 'integer', description: 'Max pairs to return, default 10' },
         },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getDataFields',
+      description: 'Every real field detected in the data, under `fields` — each with a label, how many records have it, and real sample values. This is the SOURCE OF TRUTH for "what data can you see / what columns do you have" style questions — it reports every recognized field with actual data, not just whatever a narrower tool like getLowStock or getSupplierBreakdown happens to expose (a dataset can have Category, Batch Number, or Branch correctly stored with no other tool ever mentioning it). Call this first whenever asked what data is available, rather than answering from memory of which other tools exist. Defaults to the current upload only.',
+      parameters: {
+        type: 'object',
+        properties: {
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getDatasetMetric',
+      description: 'Computes STOCK-shaped metrics from the current upload\'s own records — the only tool that can read an inventory/stock file, because inventory rows have no transaction date and therefore never reach the sales tables that every other metric tool queries. Use it for: potential revenue/cost/gross profit/margin on stock currently held, inventory value at cost or at retail, per-unit margins, highest/lowest margin product, and any ranking of those (top N, a position range via `offset`, or "everything below X%" via maxValue). Also use it when a question about the current upload comes back with no sales rows — an inventory file legitimately has none. DIVISION OF LABOUR: sales-transaction measures (revenue/quantity/profit over time, by payment method, by customer type) belong to getBusinessMetric and are deliberately NOT offered here — the two engines read different row sets, so asking each for the same named number could yield two different answers. Every figure is exact arithmetic over real records. Returns available:false naming the exact missing columns when a measure\'s inputs aren\'t present, and gates cost-derived measures when cost-price coverage is too thin to be reliable (stating the exact coverage). Grouped results report totalMatching — if it exceeds the rows returned, say the list is partial.',
+      parameters: {
+        type: 'object',
+        properties: {
+          measure: {
+            type: 'string',
+            enum: ['stock_units', 'product_count', 'inventory_value_at_cost', 'inventory_value_at_retail', 'potential_revenue', 'potential_cost', 'potential_gross_profit', 'potential_margin_pct', 'unit_margin', 'unit_margin_pct'],
+            description: 'potential_revenue = selling price x current stock. potential_cost = cost price x current stock. potential_gross_profit = (selling - cost) x current stock. potential_margin_pct = that profit over that revenue. inventory_value_at_cost/at_retail are the same holdings valued at cost or at retail. unit_margin/unit_margin_pct are per-unit price spreads — pair with groupBy:"product" for best/worst margin products. Any potential_*/inventory_value_* call also returns relatedFigures with revenue, cost, profit and margin together, so one call usually answers a "potential profit" question fully.',
+          },
+          groupBy: {
+            type: 'string',
+            enum: ['product', 'category', 'supplier', 'branch', 'batch_number'],
+            description: 'Optional — omit for a single overall total. Breaks the measure down by this dimension.',
+          },
+          filters: {
+            type: 'object',
+            description: 'Optional. Omit any key not needed. All partial, case-insensitive matches.',
+            properties: {
+              product: { type: 'string', description: 'Product name, partial match' },
+              category: { type: 'string', description: 'Category, partial match' },
+              supplier: { type: 'string', description: 'Supplier, partial match' },
+              branch: { type: 'string', description: 'Branch, partial match' },
+            },
+          },
+          sortDir: { type: 'string', enum: ['desc', 'asc'], description: "Ranking direction when groupBy is set, default 'desc' (highest first). Use 'asc' for lowest/worst." },
+          n: { type: 'integer', description: 'Max groups to return, default 20, max 200. Not a data limit — totalMatching always reports the true count.' },
+          offset: { type: 'integer', description: 'Skip this many groups before returning — use for "ranked 21 to 50" style asks (offset:20 with n:30).' },
+          minValue: { type: 'number', description: 'Only include groups whose value is at least this. Applies to groups; defaults groupBy to product if omitted.' },
+          maxValue: { type: 'number', description: 'Only include groups whose value is at most this — e.g. maxValue:15 with measure unit_margin_pct for "products below 15% margin".' },
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+        required: ['measure'],
       },
     },
   },
@@ -233,6 +296,48 @@ const TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'getBusinessMetric',
+      description: 'Computes a metric directly from sales data for a question none of the other tools above answer — e.g. "revenue by payment method", "average transaction value on weekends vs weekdays", "how many distinct customers bought in March", "items per transaction by branch". CHECK THE REST OF THIS CATALOG FIRST: if a named tool already covers the question (revenue/profit summaries, category performance, top products, low stock, etc.), call that instead — never use this to recompute something a dedicated tool already provides. Every number here is an exact SQL aggregate over real sale records, not an estimate. profit/margin_pct return available:false when cost-price coverage is too thin to be reliable (states exact coverage). Grouped results include totalGroups alongside the (possibly capped) rows — if totalGroups > rows.length, say so; never imply the list is complete when it is not. A text filter that matches no or very few rows returns availableValues with the real values on record — retry with a corrected value instead of concluding the data doesn\'t exist. Defaults to the current upload only — if it has no sales rows matching the question at all, returns availableInCurrentUpload:false/availableHistorically:true rather than silently answering from an older upload.',
+      parameters: {
+        type: 'object',
+        properties: {
+          measure: {
+            type: 'string',
+            enum: ['revenue', 'quantity', 'transaction_count', 'average_transaction_value', 'distinct_product_count', 'distinct_customer_count', 'profit', 'margin_pct', 'items_per_transaction'],
+            description: 'What to compute. profit/margin_pct require adequate cost-price coverage in the matched rows.',
+          },
+          groupBy: {
+            type: 'string',
+            enum: ['category', 'product', 'branch', 'customer_type', 'payment_method', 'day', 'week', 'month', 'quarter', 'day_of_week', 'is_weekend'],
+            description: 'Optional — omit for a single overall total. Breaks the measure down by this dimension.',
+          },
+          filters: {
+            type: 'object',
+            description: 'Optional. Omit any key not needed.',
+            properties: {
+              dateFrom: { type: 'string', description: 'ISO date, inclusive' },
+              dateTo: { type: 'string', description: 'ISO date, inclusive' },
+              category: { type: 'string', description: 'Product category, partial match' },
+              product: { type: 'string', description: 'Product name, partial match' },
+              branch: { type: 'string', description: 'Branch name, partial match' },
+              paymentMethod: { type: 'string', description: 'Cash, Transfer, POS, Insurance, or Credit' },
+              customerType: { type: 'string', description: 'walk-in, hmo, corporate, nhis, or family' },
+            },
+          },
+          n: { type: 'integer', description: 'Max groups to return when groupBy is set, default 20, max 100. Not a data limit — totalGroups always reports the true count.' },
+          offset: { type: 'integer', description: 'Skip this many groups before returning — use for "ranked 21 to 50" style asks (offset:20 with n:30).' },
+          sortDir: { type: 'string', enum: ['desc', 'asc'], description: "Ranking direction, default 'desc' (highest first). Use 'asc' for lowest/worst/bottom-N." },
+          minValue: { type: 'number', description: 'Only include groups whose value is at least this.' },
+          maxValue: { type: 'number', description: 'Only include groups whose value is at most this — e.g. maxValue:15 with measure margin_pct groupBy product for "products below 15% margin".' },
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+        required: ['measure'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'getExecutiveBrief',
       description: 'The single consolidated executive summary: business health score/rating, an overall assessment, key supporting evidence, total estimated financial opportunity, the single highest-priority action, and confidence. Use for broad "how is my business doing" / "give me a summary" / "give me an overview" questions — prefer this over manually combining several other tools when the user wants a general summary.',
       parameters: { type: 'object', properties: {} },
@@ -252,6 +357,8 @@ const IMPLEMENTATIONS = {
   simulatePriceChange: queries.simulatePriceChange,
   getTopCustomers: queries.getTopCustomers,
   getFrequentlyBoughtTogether: queries.getFrequentlyBoughtTogether,
+  getDataFields: queries.getDataFields,
+  getDatasetMetric: queries.getDatasetMetric,
   getLowStock: queries.getLowStock,
   getOverstock: queries.getOverstock,
   getExpirySummary: queries.getExpirySummary,
@@ -263,6 +370,7 @@ const IMPLEMENTATIONS = {
   getDecisionOpportunities: queries.getDecisionOpportunities,
   getRecommendations: queries.getRecommendations,
   getExecutiveBrief: queries.getExecutiveBrief,
+  getBusinessMetric: queries.getBusinessMetric,
 };
 
 async function runTool(organizationId, name, args) {

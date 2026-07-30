@@ -1237,16 +1237,36 @@ const WIDGETS = [
     priority: 17,
     chartType: 'hbar',
     format: 'currency',
-    requiredFields: ['product_name', 'selling_price', 'quantity'],
-    optionalFields: ['cost_price'],
+    requiredFields: ['product_name', 'selling_price', 'quantity', 'cost_price'],
     compute(records) {
       const products = analytics.topProducts(records, 50);
-      const topN = Math.min(7, products.length);
-      const withProfit = products.filter((p) => p.profit != null).sort((a, b) => b.profit - a.profit).slice(0, topN);
+      const withProfitAll = products.filter((p) => p.profit != null);
 
-      if (withProfit.length === 0) {
+      if (withProfitAll.length === 0) {
         return { error: 'Profit data unavailable. Upload a file with cost price information.' };
       }
+
+      // A handful of products carrying cost data can't rank "highest profit"
+      // across the catalog — below this floor the ranking would reflect
+      // which few products happened to have cost entered, not which
+      // products actually make the most.
+      const totalRevenueAll = products.reduce((s, p) => s + (p.revenue || 0), 0);
+      const revenueWithCost = withProfitAll.reduce((s, p) => s + (p.revenue || 0), 0);
+      const coverageProductsPct = Math.round((withProfitAll.length / products.length) * 1000) / 10;
+      const coverageRevenuePct = totalRevenueAll > 0 ? Math.round((revenueWithCost / totalRevenueAll) * 1000) / 10 : 0;
+
+      if (coverageProductsPct < 20 || coverageRevenuePct < 20) {
+        return {
+          error: `Cost price is only available for ${withProfitAll.length} of ${products.length} products (${coverageRevenuePct}% of revenue) — not enough to reliably rank profit by product. Upload cost prices for more products.`,
+          partialCostData: true,
+          productsWithCost: withProfitAll.length,
+          totalProducts: products.length,
+          costCoveragePct: coverageRevenuePct,
+        };
+      }
+
+      const topN = Math.min(7, withProfitAll.length);
+      const withProfit = [...withProfitAll].sort((a, b) => b.profit - a.profit).slice(0, topN);
 
       const totalProfit = withProfit.reduce((s, p) => s + p.profit, 0);
       const top = withProfit[0];
@@ -1258,12 +1278,16 @@ const WIDGETS = [
         ? ` ${losers.length} product${losers.length > 1 ? 's are' : ' is'} losing money — review pricing or discontinue.`
         : '';
 
+      const coverageNote = coverageProductsPct < 100
+        ? ` (Cost data covers ${withProfitAll.length} of ${products.length} products, ${coverageRevenuePct}% of revenue.)`
+        : '';
+
       let highlightCount = 1;
       if (topShare < 20) highlightCount = 3;
 
       const insight = {
         title: 'Focus on profitable products',
-        subtitle: `${top.name} generates ₦${Math.round(top.profit).toLocaleString()} in profit (${topShare}% of total).${loserNote}`,
+        subtitle: `${top.name} generates ₦${Math.round(top.profit).toLocaleString()} in profit (${topShare}% of total).${loserNote}${coverageNote}`,
       };
 
       return {
@@ -1288,14 +1312,35 @@ const WIDGETS = [
     category: 'Products',
     priority: 18,
     chartType: 'scatter',
-    requiredFields: ['product_name', 'selling_price'],
-    optionalFields: ['cost_price'],
+    requiredFields: ['product_name', 'selling_price', 'cost_price'],
     compute(records) {
       const products = analytics.topProducts(records, 50);
       const withMargin = products.filter((p) => p.margin != null && p.revenue > 0);
 
       if (withMargin.length === 0) {
         return { error: 'Margin data unavailable. Upload a file with cost price information.' };
+      }
+
+      // A handful of products carrying cost data can't characterize "which
+      // products have poor margins" across the catalog — below this floor
+      // the scatter would only ever show the few products that happened to
+      // have cost entered, not the business's actual margin picture.
+      const productsWithRevenue = products.filter((p) => p.revenue > 0);
+      const totalRevenueAll = productsWithRevenue.reduce((s, p) => s + (p.revenue || 0), 0);
+      const revenueWithMargin = withMargin.reduce((s, p) => s + (p.revenue || 0), 0);
+      const coverageProductsPct = productsWithRevenue.length > 0
+        ? Math.round((withMargin.length / productsWithRevenue.length) * 1000) / 10
+        : 0;
+      const coverageRevenuePct = totalRevenueAll > 0 ? Math.round((revenueWithMargin / totalRevenueAll) * 1000) / 10 : 0;
+
+      if (coverageProductsPct < 20 || coverageRevenuePct < 20) {
+        return {
+          error: `Cost price is only available for ${withMargin.length} of ${productsWithRevenue.length} products (${coverageRevenuePct}% of revenue) — not enough to reliably analyse margins. Upload cost prices for more products.`,
+          partialCostData: true,
+          productsWithCost: withMargin.length,
+          totalProducts: productsWithRevenue.length,
+          costCoveragePct: coverageRevenuePct,
+        };
       }
 
       // Scatter plot: each product = one bubble, sized by revenue
@@ -1315,16 +1360,20 @@ const WIDGETS = [
       const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
       const poorRevenueShare = totalRevenue > 0 ? Math.round((poorTotalRevenue / totalRevenue) * 100) : 0;
 
+      const coverageNote = coverageProductsPct < 100
+        ? ` (Cost data covers ${withMargin.length} of ${productsWithRevenue.length} products, ${coverageRevenuePct}% of revenue.)`
+        : '';
+
       let insight;
       if (poorCount === 0) {
         insight = {
           title: 'All products have healthy margins',
-          subtitle: 'Every product has a margin above 20%. Your pricing is on solid ground — keep monitoring as costs change.',
+          subtitle: `Every product with cost data has a margin above 20%. Your pricing is on solid ground — keep monitoring as costs change.${coverageNote}`,
         };
       } else {
         insight = {
           title: 'Review pricing or supplier costs',
-          subtitle: `${poorCount} products (${poorPct}%) have margins below 20%, representing ₦${poorTotalRevenue.toLocaleString()} (${poorRevenueShare}%) of revenue. Renegotiate supplier pricing or raise retail prices where the market allows.`,
+          subtitle: `${poorCount} products (${poorPct}%) have margins below 20%, representing ₦${poorTotalRevenue.toLocaleString()} (${poorRevenueShare}%) of revenue.${coverageNote} Renegotiate supplier pricing or raise retail prices where the market allows.`,
         };
       }
 
@@ -1735,8 +1784,7 @@ const WIDGETS = [
     category: 'Products',
     priority: 17,
     chartType: 'scatter',
-    requiredFields: ['product_name', 'selling_price', 'quantity'],
-    optionalFields: ['cost_price'],
+    requiredFields: ['product_name', 'selling_price', 'quantity', 'cost_price'],
     compute(records, options = {}) {
       const targetMargin = options.targetMargin || 25;
       const result = analytics.profitLeakage(records, targetMargin);
@@ -1744,7 +1792,16 @@ const WIDGETS = [
         return { error: 'Insufficient data for profit leakage analysis.' };
       }
       if (result.error && result.costUnavailable) {
-        return { error: result.error, costUnavailable: true };
+        return {
+          error: result.error,
+          costUnavailable: true,
+          ...(result.partialCostData ? {
+            partialCostData: true,
+            productsWithCost: result.productsWithCost,
+            totalProducts: result.totalProducts,
+            costCoveragePct: result.costCoveragePct,
+          } : {}),
+        };
       }
       return result;
     },
@@ -1793,18 +1850,38 @@ const WIDGETS = [
     optionalFields: [],
     format: 'currency',
     compute(records) {
+      // `Number(rec.cost_price) || 0` used to treat a MISSING cost price as
+      // free stock: those products added ₦0 to the total while still being
+      // counted in the "N products" label, so the headline understated the
+      // real inventory value with no disclosure. Count only products that
+      // actually have a cost price, and say how many were left out.
       let total = 0;
-      let count = 0;
+      let withCost = 0;
+      let withoutCost = 0;
       for (const rec of records) {
         const stock = Number(rec.current_stock);
-        const cost = Number(rec.cost_price) || Number(rec.cost) || 0;
-        if (Number.isFinite(stock) && stock > 0) {
-          total += stock * cost;
-          count++;
+        if (!Number.isFinite(stock) || stock <= 0) continue;
+        const rawCost = rec.cost_price != null && rec.cost_price !== '' ? rec.cost_price : rec.cost;
+        const cost = rawCost != null && rawCost !== '' ? Number(rawCost) : null;
+        if (cost == null || !Number.isFinite(cost)) {
+          withoutCost++;
+          continue;
         }
+        total += stock * cost;
+        withCost++;
       }
-      if (count === 0) return { error: 'No stock data with cost available' };
-      return { value: Math.round(total * 100) / 100, label: 'Stock Value', sublabel: `${count} products` };
+      if (withCost === 0) return { error: 'No stock data with cost available' };
+
+      const totalProducts = withCost + withoutCost;
+      const coveragePct = Math.round((withCost / totalProducts) * 1000) / 10;
+      return {
+        value: Math.round(total * 100) / 100,
+        label: 'Stock Value',
+        sublabel: withoutCost > 0
+          ? `${withCost} of ${totalProducts} products (${coveragePct}% have cost price)`
+          : `${withCost} products`,
+        ...(withoutCost > 0 ? { partialCostData: true, productsWithCost: withCost, totalProducts, costCoveragePct: coveragePct } : {}),
+      };
     },
   },
 

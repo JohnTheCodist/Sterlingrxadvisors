@@ -40,51 +40,130 @@ function levenshtein(a, b) {
 
 // ── Revenue / profit / growth ────────────────────────────────────────────
 
-async function getRevenueProfitSummary(organizationId) {
-  const a = await queryAnalytics(organizationId);
+/**
+ * How many datasets this organization has uploaded, the date range they
+ * span, and a per-file breakdown — the fact needed to disclose "this
+ * answer covers your full sales history, not just what you just uploaded."
+ * Sales-side tools (getRevenueProfitSummary and everything else that reads
+ * the `sale` table) are deliberately org-wide by design — uploads
+ * accumulate into one running history rather than replacing each other —
+ * but a bare total invites the owner to compare it against the dashboard's
+ * KPI cards, which show only the file they just uploaded, and conclude one
+ * of them is broken. Called once per conversation turn (advisorAgent.js)
+ * so the Advisor always has this fact on hand regardless of which tool it
+ * ends up calling, not just when getRevenueProfitSummary happens to run.
+ */
+async function getDataScope(organizationId, { datasetId } = {}) {
+  assertOrgId(organizationId);
   const db = getSql();
-
-  // These totals span EVERY dataset the pharmacy has uploaded, not just the
-  // most recent one — that's deliberate (uploads accumulate into sales
-  // history), but stating a bare total invites the owner to compare it
-  // against the dashboard's KPI cards, which show only the file they just
-  // uploaded, and conclude one of them is broken. Return the real coverage
-  // so the answer can say what it actually covers.
+  let where = db`organization_id = ${organizationId}`;
+  if (datasetId) where = db`${where} and dataset_id = ${datasetId}`;
   const [span] = await db`
     select min(sale_date)::text as "periodStart",
            max(sale_date)::text as "periodEnd",
            count(distinct dataset_id)::int as "datasetCount"
-    from sale where organization_id = ${organizationId}
+    from sale where ${where}
   `;
 
+  let whereS = db`s.organization_id = ${organizationId}`;
+  if (datasetId) whereS = db`${whereS} and s.dataset_id = ${datasetId}`;
   const sources = await db`
     select coalesce(d.filename, 'Unknown file') as filename,
            count(*)::int as "transactionCount",
            min(s.sale_date)::text as "from",
            max(s.sale_date)::text as "to"
     from sale s left join dataset_registry d on d.id = s.dataset_id
-    where s.organization_id = ${organizationId}
+    where ${whereS}
     group by d.filename
     order by count(*) desc
   `;
 
   return {
-    scope: 'All uploaded datasets combined — not a single file.',
-    totalRevenue: a.metrics.totalRevenue,
-    grossProfit: a.metrics.grossProfit,
-    grossMargin: a.metrics.grossMargin,
-    totalQuantitySold: a.metrics.totalQuantitySold,
-    transactionCount: a.metrics.recordCount,
-    averageTransactionValue: a.metrics.averageTransactionValue,
     periodStart: span?.periodStart || null,
     periodEnd: span?.periodEnd || null,
-    // Months that CONTAIN data — not necessarily consecutive. Reporting this
-    // as "N months of data" overstates coverage when the months are scattered.
-    monthsWithData: a.monthlyRevenue.length,
     datasetCount: span?.datasetCount || 0,
     sources,
   };
 }
+
+/**
+ * Sales-side counterpart to getScopedRecords (below, built for the
+ * fact-store-backed inventory tools) — resolves which dataset_id counts as
+ * "current" for the star-schema (sale table) tools. Uploads accumulate sale
+ * rows across files, so "current" means the rows from the most recently
+ * uploaded file specifically, not a time window.
+ */
+async function getSalesScopeContext(organizationId, scope) {
+  const datasetRegistry = require('./datasetRegistry');
+  const latest = await datasetRegistry.getLatest(organizationId);
+  const datasetId = scope === 'all' ? null : (latest?.datasetId || null);
+  return { datasetId, currentFilename: latest?.filename || null };
+}
+
+/**
+ * Shared gate for sales-side tools: if the current upload has zero sale
+ * rows (e.g. it's an inventory-only file with no transaction data), check
+ * whether the organization's history has any before deciding this is
+ * "no sales data at all" versus "not in this upload, but is elsewhere" —
+ * same asymmetry checkScopeCoverage applies to the inventory tools, so a
+ * profit/revenue question never silently answers from a different file
+ * than the one just given without saying so.
+ */
+async function checkSalesScopeCoverage(organizationId, scope, datasetId, currentFilename) {
+  if (scope === 'all' || !datasetId) return null;
+  const current = await queryAnalytics(organizationId, { datasetId });
+  if (current.metrics.recordCount > 0) return null;
+  const all = await queryAnalytics(organizationId);
+  if (all.metrics.recordCount > 0) {
+    return {
+      availableInCurrentUpload: false,
+      availableHistorically: true,
+      currentUpload: currentFilename,
+      reason: `The current upload${currentFilename ? ` (${currentFilename})` : ''} has no sales transaction data. An earlier upload does — ask the user whether to check the organization's historical data before answering from it.`,
+    };
+  }
+  return { available: false, reason: 'No sales transaction data has been uploaded in any dataset.' };
+}
+
+async function getRevenueProfitSummary(organizationId, { scope = 'current' } = {}) {
+  const { datasetId, currentFilename } = await getSalesScopeContext(organizationId, scope);
+  const gap = await checkSalesScopeCoverage(organizationId, scope, datasetId, currentFilename);
+  if (gap) return gap;
+
+  const a = await queryAnalytics(organizationId, datasetId ? { datasetId } : {});
+  const dataScope = await getDataScope(organizationId, datasetId ? { datasetId } : {});
+
+  return {
+    scope,
+    scopeNote: scope === 'all'
+      ? 'Covers all uploaded datasets combined — not a single file.'
+      : `Covers the current upload${currentFilename ? ` (${currentFilename})` : ''} only.`,
+    totalRevenue: a.metrics.totalRevenue,
+    grossProfit: a.metrics.grossProfit,
+    grossMargin: a.metrics.grossMargin,
+    totalCost: a.metrics.totalCost,
+    totalQuantitySold: a.metrics.totalQuantitySold,
+    transactionCount: a.metrics.recordCount,
+    averageTransactionValue: a.metrics.averageTransactionValue,
+    periodStart: dataScope.periodStart,
+    periodEnd: dataScope.periodEnd,
+    // Months that CONTAIN data — not necessarily consecutive. Reporting this
+    // as "N months of data" overstates coverage when the months are scattered.
+    monthsWithData: a.monthlyRevenue.length,
+    datasetCount: dataScope.datasetCount,
+    sources: dataScope.sources,
+    // grossProfit/grossMargin/totalCost are null both when no cost data
+    // exists at all AND when it's too thin to trust (below 20% of rows/
+    // revenue) — this says which, so the answer can name the exact
+    // shortfall instead of a bare "not available."
+    costCoverage: a.costCoverage,
+  };
+}
+
+// Same threshold and reasoning as analytics.js::profitLeakage and
+// db.js::queryAnalytics — a handful of cost-tagged rows within one week
+// shouldn't produce a confident-looking profit figure for that week.
+const MIN_WEEK_COST_COVERAGE_PCT = 20;
 
 async function getWeeklyRevenue(organizationId, { weeks = 8 } = {}) {
   assertOrgId(organizationId);
@@ -93,7 +172,10 @@ async function getWeeklyRevenue(organizationId, { weeks = 8 } = {}) {
     select c.year as year, c.week as week,
            min(c.date) as "weekStart", max(c.date) as "weekEnd",
            sum(s.unit_price * s.quantity) as revenue,
-           sum((s.unit_price - s.unit_cost) * s.quantity) as profit,
+           count(*)::int as "rowCount",
+           count(*) filter (where s.unit_cost is not null)::int as "rowsWithCost",
+           coalesce(sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null), 0) as "revenueWithCost",
+           sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null) as profit,
            count(*) as transactions
     from sale s
     join calendar c on s.calendar_id = c.id
@@ -102,15 +184,28 @@ async function getWeeklyRevenue(organizationId, { weeks = 8 } = {}) {
     order by c.year desc, c.week desc
     limit ${weeks}
   `;
-  return rows.reverse().map((r) => ({
-    year: r.year,
-    week: r.week,
-    weekStart: r.weekStart,
-    weekEnd: r.weekEnd,
-    revenue: round(r.revenue),
-    profit: r.profit != null ? round(r.profit) : null,
-    transactions: Number(r.transactions),
-  }));
+  return rows.reverse().map((r) => {
+    const revenue = Number(r.revenue) || 0;
+    const rowCount = Number(r.rowCount) || 0;
+    const rowsWithCost = Number(r.rowsWithCost) || 0;
+    const revenueWithCost = Number(r.revenueWithCost) || 0;
+    const rowsPct = rowCount > 0 ? Math.round((rowsWithCost / rowCount) * 1000) / 10 : 0;
+    const revenuePct = revenue > 0 ? Math.round((revenueWithCost / revenue) * 1000) / 10 : 0;
+    const hasReliableCostCoverage = rowsPct >= MIN_WEEK_COST_COVERAGE_PCT && revenuePct >= MIN_WEEK_COST_COVERAGE_PCT;
+    return {
+      year: r.year,
+      week: r.week,
+      weekStart: r.weekStart,
+      weekEnd: r.weekEnd,
+      revenue: round(revenue),
+      // Profit is only ever summed over cost-known rows (SQL SUM skips
+      // NULLs) — gating on coverage stops that partial figure from being
+      // presented as this week's real profit when most rows lack a cost price.
+      profit: hasReliableCostCoverage && r.profit != null ? round(r.profit) : null,
+      transactions: Number(r.transactions),
+      costCoverage: { hasReliableCostCoverage, rowsWithCost, rowCount, revenuePct, rowsPct },
+    };
+  });
 }
 
 async function getGrowthTrend(organizationId) {
@@ -150,9 +245,13 @@ async function getTopProducts(organizationId, { sortBy = 'revenue', n = 10 } = {
     .slice(0, n);
 }
 
-async function getCategoryPerformance(organizationId) {
+async function getCategoryPerformance(organizationId, { scope = 'current' } = {}) {
   assertOrgId(organizationId);
-  const categories = await profitByCategory(organizationId);
+  const { datasetId, currentFilename } = await getSalesScopeContext(organizationId, scope);
+  const gap = await checkSalesScopeCoverage(organizationId, scope, datasetId, currentFilename);
+  if (gap) return gap;
+
+  const categories = await profitByCategory(organizationId, datasetId ? { datasetId } : {});
 
   // profitByCategory correctly returns null profit/margin per category when
   // that category has no cost data — but a model reading a list where every
@@ -160,12 +259,21 @@ async function getCategoryPerformance(organizationId) {
   // happens to be exactly zero everywhere" rather than "no cost data was
   // uploaded at all." One org-wide flag removes the ambiguity.
   const db = getSql();
+  let costWhere = db`organization_id = ${organizationId}`;
+  if (datasetId) costWhere = db`${costWhere} and dataset_id = ${datasetId}`;
   const [costCheck] = await db`
     select count(*) filter (where unit_cost is not null)::int as "withCost"
-    from sale where organization_id = ${organizationId}
+    from sale where ${costWhere}
   `;
 
-  return { hasCostData: (costCheck?.withCost || 0) > 0, categories };
+  return {
+    scope,
+    scopeNote: scope === 'all'
+      ? 'Covers all uploaded datasets combined.'
+      : `Covers the current upload${currentFilename ? ` (${currentFilename})` : ''} only.`,
+    hasCostData: (costCheck?.withCost || 0) > 0,
+    categories,
+  };
 }
 
 async function getSlowMovers(organizationId, { n = 15 } = {}) {
@@ -173,18 +281,24 @@ async function getSlowMovers(organizationId, { n = 15 } = {}) {
   return items.filter((i) => i.classification === 'Slow').slice(0, n);
 }
 
-async function getProfitLeakage(organizationId, { marginThreshold = 15, n = 10 } = {}) {
+async function getProfitLeakage(organizationId, { marginThreshold = 15, n = 10, scope = 'current' } = {}) {
   assertOrgId(organizationId);
   const db = getSql();
+  const { datasetId, currentFilename } = await getSalesScopeContext(organizationId, scope);
+  const gap = await checkSalesScopeCoverage(organizationId, scope, datasetId, currentFilename);
+  if (gap) return gap;
+
+  let where = db`s.organization_id = ${organizationId}`;
+  if (datasetId) where = db`${where} and s.dataset_id = ${datasetId}`;
 
   // The query below filters on `unit_cost is not null` to compute real
-  // margins. If NO row in this org has cost data at all, that filter alone
+  // margins. If NO row in this scope has cost data at all, that filter alone
   // makes the query return zero rows — identical to "we checked every
   // product and none has a leaky margin." Those are opposite conclusions,
   // so they must be distinguished before running the real query.
   const [costCheck] = await db`
     select count(*) filter (where unit_cost is not null)::int as "withCost"
-    from sale where organization_id = ${organizationId}
+    from sale s where ${where}
   `;
   if (!costCheck || costCheck.withCost === 0) {
     return {
@@ -202,7 +316,7 @@ async function getProfitLeakage(organizationId, { marginThreshold = 15, n = 10 }
                 else null end as margin
     from sale s
     join product p on s.product_id = p.id
-    where s.organization_id = ${organizationId} and s.unit_cost is not null
+    where ${where} and s.unit_cost is not null
     group by p.id, p.name, p.category
     having (case when sum(s.unit_price * s.quantity) > 0
                  then round((sum((s.unit_price - s.unit_cost) * s.quantity) / sum(s.unit_price * s.quantity) * 100)::numeric, 2)
@@ -212,6 +326,10 @@ async function getProfitLeakage(organizationId, { marginThreshold = 15, n = 10 }
   `;
   return {
     available: true,
+    scope,
+    scopeNote: scope === 'all'
+      ? 'Covers all uploaded datasets combined.'
+      : `Covers the current upload${currentFilename ? ` (${currentFilename})` : ''} only.`,
     products: rows.map((r) => ({ ...r, revenue: round(r.revenue), profit: round(r.profit), margin: r.margin != null ? Number(r.margin) : null })),
   };
 }
@@ -543,6 +661,113 @@ function checkScopeCoverage(ctx, requiredFields, dataLabel) {
     };
   }
   return { available: false, reason: `No ${dataLabel} data has been uploaded in any dataset.` };
+}
+
+/**
+ * Computes stock-shaped metrics over the current upload's own records —
+ * potential revenue/cost/profit/margin, inventory value at cost or retail,
+ * per-unit margins, and any ranking of those (highest/lowest, top N, a
+ * position range, or a value threshold).
+ *
+ * Exists because the star-schema tools cannot see an inventory upload at
+ * all: loadFactRecords skips rows with no transaction date, so a stock
+ * snapshot contributes zero rows to `sale`. See advisorDatasetQuery.js for
+ * the measure definitions and the sales-vs-stock division of labour.
+ *
+ * Scope discipline and the missing-field gate are the SAME ones the other
+ * fact-store tools use (getScopedRecords + checkScopeCoverage), so this
+ * defaults to the current upload and, when the needed columns aren't in it,
+ * says so and offers history instead of silently reaching for it.
+ */
+async function getDatasetMetric(organizationId, params = {}) {
+  const { scope = 'current' } = params;
+  const { MEASURES } = require('./advisorDatasetQuery');
+  const { computeDatasetMetric } = require('./advisorDatasetQuery');
+
+  const def = MEASURES[params.measure];
+  if (!def) {
+    return { error: `Unknown measure '${params.measure}'. Supported: ${Object.keys(MEASURES).join(', ')}.` };
+  }
+
+  const ctx = await getScopedRecords(organizationId, scope);
+
+  // Name the exact columns this measure needs, so a refusal says "cost price
+  // is missing" rather than a bare "can't do that".
+  const { FIELD_METADATA } = require('./dictionary');
+  const label = def.requires.map((f) => FIELD_METADATA[f]?.label || f).join(' + ');
+  const gap = checkScopeCoverage(ctx, def.requires, label);
+  if (gap) return gap;
+
+  // The grouping column must be present too — otherwise every row would
+  // collapse into one "Unspecified" bucket and read as a real answer.
+  if (params.groupBy) {
+    const { DIMENSIONS } = require('./advisorDatasetQuery');
+    const dimField = DIMENSIONS[params.groupBy]?.field;
+    if (dimField) {
+      const dimLabel = FIELD_METADATA[dimField]?.label || dimField;
+      const dimGap = checkScopeCoverage(ctx, [dimField], dimLabel);
+      if (dimGap) return dimGap;
+    }
+  }
+
+  return computeDatasetMetric({
+    records: ctx.records,
+    fields: scope === 'all' ? ctx.allFields : ctx.currentFields,
+    currentFilename: ctx.currentFilename,
+    scope,
+  }, params);
+}
+
+/**
+ * Every canonical field the current upload (or the whole organization)
+ * actually has real data for, with a human label and real sample values —
+ * not the subset any single named tool happens to expose. getLowStock only
+ * ever reports stock/reorder, getSupplierBreakdown only supplier, etc.; a
+ * dataset can carry category, batch number, or branch correctly and have no
+ * tool that ever mentions it. This is what "what data can you see" should
+ * actually be answered from, not a hand-picked list of tool outputs.
+ */
+async function getDataFields(organizationId, { scope = 'current' } = {}) {
+  const ctx = await getScopedRecords(organizationId, scope);
+  const { FIELD_METADATA } = require('./dictionary');
+  const records = ctx.records;
+  const fields = ctx.currentFields && scope !== 'all' ? ctx.currentFields : ctx.allFields;
+
+  if (!fields || fields.size === 0) {
+    return { available: false, reason: 'No recognized data fields found in this upload.' };
+  }
+
+  const result = [];
+  for (const canonical of fields) {
+    const meta = FIELD_METADATA[canonical];
+    let recordsWithData = 0;
+    const sampleValues = [];
+    for (const rec of records) {
+      const v = readField(rec, canonical);
+      if (v == null || v === '') continue;
+      recordsWithData++;
+      const s = String(v).trim();
+      if (sampleValues.length < 3 && s && !sampleValues.includes(s)) sampleValues.push(s);
+    }
+    if (recordsWithData === 0) continue;
+    result.push({
+      field: canonical,
+      label: meta?.label || canonical,
+      recordsWithData,
+      sampleValues,
+    });
+  }
+
+  result.sort((a, b) => b.recordsWithData - a.recordsWithData);
+
+  return {
+    scope,
+    scopeNote: scope === 'all'
+      ? 'Covers all uploaded datasets combined.'
+      : `Covers the current upload${ctx.currentFilename ? ` (${ctx.currentFilename})` : ''} only.`,
+    totalRecords: records.length,
+    fields: result,
+  };
 }
 
 async function getLowStock(organizationId, { scope = 'current' } = {}) {
@@ -936,6 +1161,17 @@ async function getRecommendations(organizationId) {
  * overall assessment, key evidence, financial opportunity, and the
  * highest-priority action.
  */
+/**
+ * Answers business questions with no dedicated tool above by composing a
+ * bounded, whitelisted aggregation over the star schema — see
+ * advisorMetricQuery.js for the full safety model (enum-only inputs, no
+ * free-form SQL, cost-coverage gate, null-truncation discipline).
+ */
+async function getBusinessMetric(organizationId, params = {}) {
+  const { computeBusinessMetric } = require('./advisorMetricQuery');
+  return computeBusinessMetric(organizationId, params);
+}
+
 async function getExecutiveBrief(organizationId) {
   const { generateDecisionOpportunities } = require('./decision/decisionIntelligenceEngine');
   const { generateRecommendations } = require('./recommendation/recommendationEngine');
@@ -951,6 +1187,7 @@ async function getExecutiveBrief(organizationId) {
 }
 
 module.exports = {
+  getDataScope,
   getWeatherOutlook,
   getDecisionOpportunities,
   getRecommendations,
@@ -966,6 +1203,8 @@ module.exports = {
   simulatePriceChange,
   getTopCustomers,
   getFrequentlyBoughtTogether,
+  getDataFields,
+  getDatasetMetric,
   getLowStock,
   getOverstock,
   getExpirySummary,
@@ -975,4 +1214,5 @@ module.exports = {
   getRevenueTrendDrivers,
   findProduct,
   getBusinessHealthBundle,
+  getBusinessMetric,
 };

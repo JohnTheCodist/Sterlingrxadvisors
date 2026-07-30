@@ -30,6 +30,8 @@ const FIELD_ALIASES = {
   reorder_level: ['reorder_level', 'reorder', 'reorder_point', 'reorder point', 'minimum', 'min'],
   expiry_date: ['expiry_date', 'expiry', 'expiration', 'exp', 'best_before', 'use_by', 'expiry date'],
   category: ['category', 'product_category', 'productcategory', 'product category', 'subcategory', 'sub_category'],
+  batch_number: ['batch_number', 'batchnumber', 'batch number', 'batch', 'lot_number', 'lotnumber', 'lot number', 'lot'],
+  branch: ['branch', 'store', 'shop', 'outlet', 'location', 'site'],
 };
 
 /**

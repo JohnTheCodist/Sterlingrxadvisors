@@ -482,13 +482,14 @@ async function loadFactRecords(organizationId, records, options = {}) {
 async function queryAnalytics(organizationId, options = {}) {
   assertOrgId(organizationId);
   const db = getSql();
-  const { startDate, endDate, branchId } = options;
+  const { startDate, endDate, branchId, datasetId } = options;
 
   const dateConds = db`s.organization_id = ${organizationId}`;
   const extra = [];
   if (startDate) extra.push(db`s.sale_date >= ${startDate}`);
   if (endDate) extra.push(db`s.sale_date <= ${endDate}`);
   if (branchId) extra.push(db`s.branch_id = ${branchId}`);
+  if (datasetId) extra.push(db`s.dataset_id = ${datasetId}`);
   const whereClause = extra.reduce((acc, cond) => db`${acc} and ${cond}`, dateConds);
 
   const [metrics] = await db`
@@ -501,11 +502,29 @@ async function queryAnalytics(organizationId, options = {}) {
            then round((sum((s.unit_price - s.unit_cost) * s.quantity) / sum(s.unit_price * s.quantity)) * 100, 2)
            else null end as "grossMargin",
       coalesce(sum(s.unit_price * s.quantity) / nullif(count(*), 0), 0) as "averageTransactionValue",
-      coalesce(sum(s.unit_cost * s.quantity), 0) as "totalCost",
-      count(*) as "recordCount"
+      sum(s.unit_cost * s.quantity) as "totalCost",
+      count(*) as "recordCount",
+      count(*) filter (where s.unit_cost is not null)::int as "rowsWithCost",
+      coalesce(sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null), 0) as "revenueWithCost"
     from sale s
     where ${whereClause}
   `;
+
+  // A handful of cost-tagged rows out of hundreds shouldn't produce a
+  // confident-looking margin — grossProfit above is already only summed
+  // over rows that HAVE unit_cost, but the revenue it's divided against
+  // (grossMargin) and totalRevenue itself cover every row, so partial
+  // coverage silently deflates the figure with no disclosure. Require both
+  // a minimum share of rows AND of revenue to have cost data before trusting
+  // it — same floor and reasoning as analytics.js::profitLeakage.
+  const totalRevenueNum = Number(metrics.totalRevenue || 0);
+  const revenueWithCostNum = Number(metrics.revenueWithCost || 0);
+  const rowsWithCost = Number(metrics.rowsWithCost || 0);
+  const totalRows = Number(metrics.recordCount || 0);
+  const costCoverageRevenuePct = totalRevenueNum > 0 ? Math.round((revenueWithCostNum / totalRevenueNum) * 1000) / 10 : 0;
+  const costCoverageRowsPct = totalRows > 0 ? Math.round((rowsWithCost / totalRows) * 1000) / 10 : 0;
+  const MIN_COST_COVERAGE_PCT = 20;
+  const hasReliableCostCoverage = costCoverageRowsPct >= MIN_COST_COVERAGE_PCT && costCoverageRevenuePct >= MIN_COST_COVERAGE_PCT;
 
   const monthlyRevenueRaw = await db`
     select to_char(s.sale_date, 'YYYY-MM') as month, sum(s.unit_price * s.quantity) as revenue
@@ -549,7 +568,7 @@ async function queryAnalytics(organizationId, options = {}) {
     where ${whereClause}
     group by p.id, p.name
     order by revenue desc
-    limit 10
+    limit 100
   `;
   const topProducts = topProductsRaw.map((r) => ({
     name: r.name,
@@ -564,11 +583,22 @@ async function queryAnalytics(organizationId, options = {}) {
       totalRevenue: Math.round(Number(metrics.totalRevenue || 0) * 100) / 100,
       totalQuantitySold: Math.round(Number(metrics.totalQuantitySold || 0) * 100) / 100,
       averageSellingPrice: Math.round(Number(metrics.averageSellingPrice || 0) * 100) / 100,
-      grossProfit: metrics.grossProfit != null ? Math.round(Number(metrics.grossProfit) * 100) / 100 : null,
-      grossMargin: metrics.grossMargin != null ? Number(metrics.grossMargin) : null,
-      totalCost: Math.round(Number(metrics.totalCost || 0) * 100) / 100,
+      grossProfit: hasReliableCostCoverage && metrics.grossProfit != null ? Math.round(Number(metrics.grossProfit) * 100) / 100 : null,
+      grossMargin: hasReliableCostCoverage && metrics.grossMargin != null ? Number(metrics.grossMargin) : null,
+      totalCost: hasReliableCostCoverage && metrics.totalCost != null ? Math.round(Number(metrics.totalCost) * 100) / 100 : null,
       recordCount: Number(metrics.recordCount || 0),
       averageTransactionValue: Math.round(Number(metrics.averageTransactionValue || 0) * 100) / 100,
+    },
+    // Lets callers (getRevenueProfitSummary's evidence-shaping) disclose
+    // WHY grossProfit/grossMargin/totalCost came back null when it isn't
+    // simply "no cost data at all" — e.g. "cost data covers 8% of revenue,
+    // not enough to calculate a reliable margin" vs. "no cost data uploaded."
+    costCoverage: {
+      hasReliableCostCoverage,
+      rowsWithCost,
+      totalRows,
+      revenuePct: costCoverageRevenuePct,
+      rowsPct: costCoverageRowsPct,
     },
     monthlyRevenue,
     monthlyProfit,

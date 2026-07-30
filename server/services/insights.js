@@ -15,26 +15,64 @@ const { getSql, assertOrgId } = require('./db');
 // 1. Gross Profit by Category
 // ────────────────────────────────────────────
 
-async function profitByCategory(organizationId) {
+// A handful of cost-tagged rows within a category shouldn't produce a
+// confident-looking margin for that category — same threshold and
+// reasoning as analytics.js::profitLeakage and db.js::queryAnalytics.
+const MIN_CATEGORY_COST_COVERAGE_PCT = 20;
+
+async function profitByCategory(organizationId, { datasetId } = {}) {
   assertOrgId(organizationId);
   const db = getSql();
-  return db`
+  let where = db`s.organization_id = ${organizationId}`;
+  if (datasetId) where = db`${where} and s.dataset_id = ${datasetId}`;
+  const rows = await db`
     select
       coalesce(p.category, 'Uncategorised') as category,
       count(distinct p.id) as "productCount",
+      count(*)::int as "rowCount",
       sum(s.unit_price * s.quantity) as revenue,
-      sum(s.unit_cost * s.quantity) as cost,
-      sum((s.unit_price - s.unit_cost) * s.quantity) as profit,
-      case when sum(s.unit_price * s.quantity) > 0
-           then round((sum((s.unit_price - s.unit_cost) * s.quantity) / sum(s.unit_price * s.quantity) * 100)::numeric, 1)
-           else 0 end as "marginPct",
-      sum(s.quantity) as "unitsSold"
+      sum(s.quantity) as "unitsSold",
+      count(*) filter (where s.unit_cost is not null)::int as "rowsWithCost",
+      coalesce(sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null), 0) as "revenueWithCost",
+      sum(s.unit_cost * s.quantity) filter (where s.unit_cost is not null) as cost,
+      sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null) as profit,
+      case when sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null) > 0
+           then round((sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null)
+             / sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null) * 100)::numeric, 1)
+           else null end as "marginPct"
     from sale s
     join product p on s.product_id = p.id
-    where s.organization_id = ${organizationId}
+    where ${where}
     group by p.category
-    order by profit desc
+    order by revenue desc
   `;
+
+  // Numerator (profit) and denominator (marginPct's revenue base) are both
+  // already restricted to cost-known rows above — a plain profit/revenue
+  // division would silently deflate the figure by dividing known profit by
+  // ALL revenue (including cost-unknown rows). But even that cost-known
+  // subset can be too small to trust: a category with cost data on 2 of 100
+  // rows would still report a specific-looking margin for those 2 rows
+  // alone. Gate on coverage before exposing cost/profit/marginPct at all.
+  return rows.map((r) => {
+    const revenue = Number(r.revenue) || 0;
+    const rowCount = Number(r.rowCount) || 0;
+    const rowsWithCost = Number(r.rowsWithCost) || 0;
+    const revenueWithCost = Number(r.revenueWithCost) || 0;
+    const rowsPct = rowCount > 0 ? Math.round((rowsWithCost / rowCount) * 1000) / 10 : 0;
+    const revenuePct = revenue > 0 ? Math.round((revenueWithCost / revenue) * 1000) / 10 : 0;
+    const hasReliableCostCoverage = rowsPct >= MIN_CATEGORY_COST_COVERAGE_PCT && revenuePct >= MIN_CATEGORY_COST_COVERAGE_PCT;
+    return {
+      category: r.category,
+      productCount: Number(r.productCount),
+      revenue,
+      unitsSold: Number(r.unitsSold),
+      cost: hasReliableCostCoverage && r.cost != null ? Number(r.cost) : null,
+      profit: hasReliableCostCoverage && r.profit != null ? Number(r.profit) : null,
+      marginPct: hasReliableCostCoverage && r.marginPct != null ? Number(r.marginPct) : null,
+      costCoverage: { hasReliableCostCoverage, rowsWithCost, rowCount, revenuePct, rowsPct },
+    };
+  }).sort((a, b) => (b.profit ?? -Infinity) - (a.profit ?? -Infinity));
 }
 
 // ────────────────────────────────────────────
