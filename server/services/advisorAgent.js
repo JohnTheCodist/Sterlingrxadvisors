@@ -16,9 +16,48 @@ const { getDataScope } = require('./advisorQueries');
 const LLM_API_KEY = process.env.LLM_API_KEY || '';
 const LLM_API_URL = process.env.LLM_API_URL || 'https://api.openai.com/v1/chat/completions';
 const LLM_MODEL = process.env.LLM_MODEL || 'gpt-4o-mini';
-const LLM_TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT_MS || '30000', 10);
+
+// INACTIVITY timeout, not a total-request budget. The old timer was armed
+// once and only cleared after the whole stream drained, so its window had to
+// cover connection + the provider's thinking time + every token streaming
+// out. A healthy provider mid-way through a long answer was aborted at the
+// deadline and the owner saw half an answer followed by "couldn't reach the
+// AI service" — the single biggest source of that report. Now the clock
+// resets on every chunk received, so a stream that is actively delivering is
+// never killed; only a genuinely stalled connection trips it.
+// Deliberately NOT the shared LLM_TIMEOUT_MS: that one is tuned for
+// llmMapper.js's short, structured column-mapping calls, where a tight 15s
+// is correct because a slow call should fall back to rule-based mapping fast
+// and not stall an upload. A streaming conversation has the opposite needs,
+// so the Advisor gets its own knobs and sensible defaults.
+const LLM_STALL_TIMEOUT_MS = parseInt(process.env.ADVISOR_STALL_TIMEOUT_MS || '60000', 10);
+// Separate, longer ceiling so a pathological never-ending stream still ends.
+const LLM_MAX_REQUEST_MS = parseInt(process.env.ADVISOR_MAX_REQUEST_MS || '180000', 10);
+
+// Transient network faults (DeepSeek in particular resets connections under
+// load) previously surfaced straight to the owner as a hard failure. Retry
+// only on connection-level errors, never on a 4xx — a bad request retried is
+// just a slower bad request.
+const LLM_MAX_RETRIES = parseInt(process.env.ADVISOR_MAX_RETRIES || '2', 10);
+const LLM_RETRY_BASE_MS = 500;
+
+// Also Advisor-specific: the shared LLM_MAX_TOKENS is 1024, right for the
+// mapper's short JSON replies but enough to truncate a consulting-style
+// answer mid-sentence (one test reply ended on a dangling "##").
+const LLM_MAX_TOKENS = parseInt(process.env.ADVISOR_MAX_TOKENS || '2048', 10);
 
 const MAX_TOOL_ITERATIONS = 5;
+
+/** Connection-level faults worth retrying — never HTTP status errors. */
+function isTransientNetworkError(err) {
+  if (!err) return false;
+  if (err.name === 'AbortError') return false; // our own stall timer, not a blip
+  const code = err.cause?.code || err.code || '';
+  if (['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'EPIPE', 'ENOTFOUND', 'EAI_AGAIN', 'UND_ERR_SOCKET', 'UND_ERR_CONNECT_TIMEOUT'].includes(code)) return true;
+  return /fetch failed|socket hang up|network|connection (closed|reset|ended)/i.test(err.message || '');
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /**
  * Renders what the dashboard is currently displaying into the system prompt
@@ -239,9 +278,23 @@ You're replying inside a WhatsApp chat on a phone screen, not a web page — thi
  *
  * @returns {Promise<{content: string, tool_calls?: Array}>}
  */
-async function callLlmStream(messages, onDelta) {
+async function callLlmStreamOnce(messages, onDelta) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+
+  // Two clocks: a stall timer that RESETS on every byte received, and an
+  // absolute ceiling. `streamed` records whether any content already reached
+  // the caller, so the retry layer above never re-runs a request whose output
+  // the owner has partially seen (that would duplicate text on screen).
+  let stalled = false;
+  let streamed = false;
+  let stallTimer = null;
+  const armStall = () => {
+    if (stallTimer) clearTimeout(stallTimer);
+    stallTimer = setTimeout(() => { stalled = true; controller.abort(); }, LLM_STALL_TIMEOUT_MS);
+  };
+  const hardTimer = setTimeout(() => controller.abort(), LLM_MAX_REQUEST_MS);
+  armStall();
+
   try {
     const response = await fetch(LLM_API_URL, {
       method: 'POST',
@@ -254,7 +307,7 @@ async function callLlmStream(messages, onDelta) {
         messages,
         tools: TOOLS,
         tool_choice: 'auto',
-        max_tokens: 1024,
+        max_tokens: LLM_MAX_TOKENS,
         temperature: 0.3,
         stream: true,
       }),
@@ -262,15 +315,20 @@ async function callLlmStream(messages, onDelta) {
     });
     if (!response.ok) {
       const text = await response.text().catch(() => '');
-      throw new Error(`LLM API returned ${response.status}: ${text.slice(0, 300)}`);
+      const err = new Error(`LLM API returned ${response.status}: ${text.slice(0, 300)}`);
+      err.httpStatus = response.status;
+      err.streamed = false;
+      throw err;
     }
 
     let content = '';
     const toolCallsAcc = [];
     let buffer = '';
+    let finishReason = null;
     const decoder = new TextDecoder();
 
     for await (const chunk of response.body) {
+      armStall(); // real bytes arrived — the connection is alive, restart the clock
       buffer += decoder.decode(chunk, { stream: true });
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';
@@ -283,11 +341,15 @@ async function callLlmStream(messages, onDelta) {
 
         let json;
         try { json = JSON.parse(payload); } catch (_) { continue; }
-        const delta = json.choices?.[0]?.delta;
+        const choice = json.choices?.[0];
+        if (!choice) continue;
+        if (choice.finish_reason) finishReason = choice.finish_reason;
+        const delta = choice.delta;
         if (!delta) continue;
 
         if (delta.content) {
           content += delta.content;
+          streamed = true;
           if (onDelta) onDelta(delta.content);
         }
 
@@ -306,10 +368,49 @@ async function callLlmStream(messages, onDelta) {
     }
 
     const toolCalls = toolCallsAcc.filter(Boolean);
-    return { content, tool_calls: toolCalls.length > 0 ? toolCalls : undefined };
+    if (finishReason === 'length') {
+      console.warn(`[advisor] answer hit the ${LLM_MAX_TOKENS}-token cap and was truncated`);
+    }
+    return { content, tool_calls: toolCalls.length > 0 ? toolCalls : undefined, finishReason };
+  } catch (err) {
+    // Distinguish our own stall abort from a caller/provider abort so the
+    // message the owner sees names the real cause.
+    if (err.name === 'AbortError') {
+      const e = new Error(stalled
+        ? `no response for ${Math.round(LLM_STALL_TIMEOUT_MS / 1000)}s`
+        : `exceeded the ${Math.round(LLM_MAX_REQUEST_MS / 1000)}s limit`);
+      e.isTimeout = true;
+      e.streamed = streamed;
+      throw e;
+    }
+    err.streamed = streamed;
+    throw err;
   } finally {
-    clearTimeout(timeout);
+    if (stallTimer) clearTimeout(stallTimer);
+    clearTimeout(hardTimer);
   }
+}
+
+/**
+ * Retries only connection-level faults, and only while nothing has been
+ * streamed to the owner yet — re-running a partially delivered answer would
+ * print it twice.
+ */
+async function callLlmStream(messages, onDelta) {
+  let lastErr;
+  for (let attempt = 0; attempt <= LLM_MAX_RETRIES; attempt++) {
+    try {
+      return await callLlmStreamOnce(messages, onDelta);
+    } catch (err) {
+      lastErr = err;
+      const retryable = isTransientNetworkError(err) && !err.streamed && attempt < LLM_MAX_RETRIES;
+      if (!retryable) break;
+      const backoff = LLM_RETRY_BASE_MS * (2 ** attempt);
+      console.warn(`[advisor] transient LLM error (${err.message}) — retry ${attempt + 1}/${LLM_MAX_RETRIES} in ${backoff}ms`);
+      await sleep(backoff);
+    }
+  }
+  throw lastErr;
 }
 
 /**
@@ -344,13 +445,35 @@ async function chatStream(organizationId, history, onToken, options = {}) {
   const messages = [{ role: 'system', content: systemPrompt }, ...history];
   const toolCallsUsed = [];
 
+  let partial = '';
   for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
     let message;
     try {
-      message = await callLlmStream(messages, onToken);
+      message = await callLlmStream(messages, (tok) => {
+        partial += tok;
+        if (onToken) onToken(tok);
+      });
     } catch (err) {
-      const reply = `Sorry, I couldn't reach the AI service (${err.message}). Try again in a moment.`;
-      if (onToken) onToken(reply);
+      // Whatever already streamed is real, evidenced output the owner can
+      // see — never discard it or bury it under a failure banner. Append a
+      // short, honest note instead, and name the actual cause (a stall, a
+      // network fault, or a provider error) rather than one generic string
+      // for all three.
+      const cause = err.isTimeout
+        ? `the AI service stopped responding (${err.message})`
+        : err.httpStatus
+          ? `the AI service returned an error (${err.httpStatus})`
+          : `I couldn't reach the AI service (${err.message})`;
+      let reply;
+      if (partial.trim()) {
+        const note = `\n\n_(Answer cut short — ${cause}. The figures above are real; ask again for the rest.)_`;
+        if (onToken) onToken(note);
+        reply = partial + note;
+      } else {
+        reply = `Sorry, ${cause}. Please try again in a moment.`;
+        if (onToken) onToken(reply);
+      }
+      console.error(`[advisor] LLM call failed after ${toolCallsUsed.length} tool call(s):`, err.message);
       return { reply, toolCalls: toolCallsUsed };
     }
 
