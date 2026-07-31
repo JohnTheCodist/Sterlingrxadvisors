@@ -732,16 +732,18 @@ app.post('/api/confirm-mapping', (req, res) => {
       // hasTransactionCapability gate — not a separate classifier check.
       const isSalesFile = hasTransactionCapability(result.mapping, result.tiers);
 
-      // regEntry was resolved above, before persisting.
-      const caps = regEntry ? regEntry.capabilities : null;
+      // Determine capabilities by classifying the raw sheet rows. Reading from
+      // regEntry.capabilities doesn't work when: (1) /api/classify was never
+      // called, (2) the file is a duplicate and the capabilities weren't
+      // updated, or (3) regEntry is null. Calling classifyDataset here directly
+      // ensures capabilities are always detected, matching the WhatsApp pipeline.
+      const primarySheetRows = Object.values(sheets)[0] || [];
+      const caps = classifyDataset(primarySheetRows).capabilities;
 
-      // Build effective dashboard list. Prefer recommended_dashboards from the
-      // registry, but fall back to capabilities when it's not stored (e.g. old
-      // entries from before this field was added). Never pass undefined to the
-      // widget engine — that would evaluate ALL dashboards without gating.
-      const recDashboards = regEntry?.recommended_dashboards || [];
-      const dashFromCaps = caps ? Object.keys(caps).filter((k) => caps[k]) : [];
-      const baseDashboards = recDashboards.length > 0 ? recDashboards : (dashFromCaps.length > 0 ? dashFromCaps : ['inventory', 'expiry']);
+      // Never pass undefined to the widget engine — that would evaluate ALL
+      // dashboards without gating.
+      const dashFromCaps = Object.keys(caps).filter((k) => caps[k]);
+      const baseDashboards = dashFromCaps.length > 0 ? dashFromCaps : ['inventory', 'expiry'];
       const effectiveDashboards = baseDashboards.filter((d) => d !== 'sales');
       if (isSalesFile) effectiveDashboards.push('sales');
 
@@ -753,6 +755,8 @@ app.post('/api/confirm-mapping', (req, res) => {
       if (regEntry) {
         await datasetRegistry.update(organizationId, regEntry.datasetId, {
           processingStatus: 'processed',
+          capabilities: caps,
+          recommended_dashboards: dashFromCaps,
           mappedColumns: userMapping,
           normalizedSchema: result.schema || null,
           rowCount: result.normalized.length,
