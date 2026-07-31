@@ -57,6 +57,66 @@ const MIN_INVENTORY_COVERAGE_PCT = 20;
 const roundMoney = (n) => Math.round(n * 100) / 100;
 const roundPct = (n) => Math.round(n * 10) / 10;
 
+const naira = (n) => `₦${Math.round(Number(n) || 0).toLocaleString()}`;
+
+/** Days from today until a date. Negative means it has already passed. */
+function daysUntil(raw) {
+  if (raw == null || raw === '') return null;
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
+  return Math.round((d - today) / 86400000);
+}
+
+const readReorder = (rec) => {
+  const n = Number(rec.reorder_level);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+};
+
+const dimOf = (rec, field) => {
+  const v = rec[field];
+  if (v == null || v === '') return null;
+  const s = String(v).trim();
+  return s || null;
+};
+
+/**
+ * Sums a per-record value into buckets keyed by one dimension.
+ * Returns rows sorted descending plus the excluded count, so every widget
+ * built on it discloses what it could not price rather than silently
+ * shrinking the total.
+ */
+function valueByDimension(records, dimField, valueFn) {
+  const buckets = new Map();
+  let skipped = 0;
+  for (const rec of records) {
+    const key = dimOf(rec, dimField);
+    const value = valueFn(rec);
+    if (key == null || value == null) { skipped++; continue; }
+    buckets.set(key, (buckets.get(key) || 0) + value);
+  }
+  const rows = [...buckets.entries()]
+    .map(([label, value]) => ({ label, value: roundMoney(value) }))
+    .filter((r) => r.value !== 0)
+    .sort((a, b) => b.value - a.value);
+  return { rows, skipped, total: roundMoney(rows.reduce((s, r) => s + r.value, 0)) };
+}
+
+/**
+ * The executive interpretation attached to a widget result.
+ *
+ * This is the layer that separates a chart from advice: `insight` says what
+ * the number MEANS in business terms, `action` says what to do about it, and
+ * `severity` tells the dashboard how loudly to say it. Every string here must
+ * be built from figures the widget actually computed — a hard-coded claim
+ * about the business would be a fabrication wearing an executive's voice.
+ */
+function executive(insight, action, severity = 'info') {
+  return { insight, action, severity };
+}
+
 // ---- widget definitions ----------------------------------------------------
 
 const WIDGETS = [
@@ -1832,6 +1892,7 @@ const WIDGETS = [
     title: 'Where Is Profit Leaking?',
     description: 'Identify exactly which products are eroding gross profit using four evidence-based rules: high revenue/low margin, sold below cost, low profit contribution, and margin below target. Every insight is traceable to the data — no AI guesses.',
     dashboard: 'inventory',
+    section: 'Operational Performance',
     category: 'Products',
     priority: 17,
     chartType: 'scatter',
@@ -1894,6 +1955,7 @@ const WIDGETS = [
     title: 'Stock Value',
     description: 'Total value of current inventory calculated as stock quantity multiplied by cost price.',
     dashboard: 'inventory',
+    section: 'Financial Health',
     category: 'KPIs',
     priority: 1,
     chartType: 'kpi-card',
@@ -1941,6 +2003,7 @@ const WIDGETS = [
     title: 'Where Is Cash Tied Up?',
     description: 'Products ranked by the cash locked in their stock, with the cumulative share running across. Inventory value concentrates heavily — the crossing point of the 80% line shows how few products hold most of your working capital, and those are where a stock reduction frees the most cash.',
     dashboard: 'inventory',
+    section: 'Financial Health',
     category: 'Analysis',
     priority: 5,
     chartType: 'pareto',
@@ -2016,6 +2079,7 @@ const WIDGETS = [
     title: 'Potential Revenue',
     description: 'What this inventory would bring in if every unit on the shelf sold at its recorded selling price. A ceiling, not a forecast — it assumes complete sell-through with no expiry, damage or discounting.',
     dashboard: 'inventory',
+    section: 'Financial Health',
     category: 'KPIs',
     priority: 2,
     chartType: 'kpi-card',
@@ -2048,6 +2112,11 @@ const WIDGETS = [
           ? `${priced} of ${totalProducts} stocked products priced (${coveragePct}% coverage)`
           : `${units.toLocaleString()} units across ${priced} products`,
         ...(unpriced > 0 ? { partialData: true, productsPriced: priced, totalProducts, coveragePct } : {}),
+        executive: executive(
+          `Current stock could return ${naira(total)} if all ${units.toLocaleString()} units sell at recorded prices.`,
+          'Compare this against what the stock cost you — the gap between the two is the profit you are holding, not the cash you have.',
+          'info'
+        ),
       };
     },
   },
@@ -2057,6 +2126,7 @@ const WIDGETS = [
     title: 'Potential Gross Profit',
     description: 'The profit sitting on your shelves — what current stock would earn above what it cost to buy, if all of it sold at recorded prices. Products missing either price are excluded rather than counted as free.',
     dashboard: 'inventory',
+    section: 'Financial Health',
     category: 'KPIs',
     priority: 3,
     chartType: 'kpi-card',
@@ -2094,6 +2164,13 @@ const WIDGETS = [
         alert: belowCost > 0,
         ...(belowCost > 0 ? { productsBelowCost: belowCost } : {}),
         ...(incomplete > 0 ? { partialCostData: true, productsFullyPriced: both, totalProducts, coveragePct } : {}),
+        executive: executive(
+          `Current inventory holds ${naira(profit)} of unrealised gross profit${belowCost > 0 ? `, though ${belowCost} line${belowCost === 1 ? ' is' : 's are'} priced below cost` : ''}.`,
+          belowCost > 0
+            ? 'Reprice the below-cost lines before anything else — each one loses money on every unit sold.'
+            : 'Prioritise sell-through on your highest-margin lines to convert this into realised profit.',
+          belowCost > 0 ? 'high' : 'info'
+        ),
       };
     },
   },
@@ -2103,6 +2180,7 @@ const WIDGETS = [
     title: 'Potential Margin',
     description: 'Gross margin the current inventory would return if it sold at recorded prices, measured against the 20–40% range typical for a Nigerian independent pharmacy. Both the profit and the revenue behind it are measured over the same fully-priced products, so the percentage is not diluted by stock whose cost is unknown.',
     dashboard: 'inventory',
+    section: 'Financial Health',
     category: 'KPIs',
     priority: 4,
     chartType: 'bullet',
@@ -2173,6 +2251,7 @@ const WIDGETS = [
     title: 'What Needs Reordering?',
     description: 'Every product at or below its reorder level, ranked by how far below it has fallen. The bar is the shortfall — the units needed to bring that line back to its reorder point — so the longest bar is the largest order to place.',
     dashboard: 'inventory',
+    section: 'Inventory Risk',
     category: 'Analysis',
     priority: 6,
     chartType: 'hbar',
@@ -2228,10 +2307,574 @@ const WIDGETS = [
   },
 
   {
+    id: 'products-below-reorder',
+    title: 'Stock Position vs Reorder Level',
+    description: 'Every product measured against its own reorder level. Bars left of zero are below target and need buying; bars right of zero are carrying more than the reorder point calls for. Reading both directions on one axis shows where purchasing is mistimed in either direction, which a low-stock list alone cannot.',
+    dashboard: 'inventory',
+    section: 'Inventory Risk',
+    category: 'Analysis',
+    priority: 7,
+    chartType: 'diverging-bar',
+    requiredFields: ['product_name', 'current_stock', 'reorder_level'],
+    format: 'number',
+    compute(records) {
+      const byProduct = new Map();
+      for (const rec of records) {
+        const name = dimOf(rec, 'product_name') || dimOf(rec, 'product');
+        const stock = Number(rec.current_stock);
+        const reorder = readReorder(rec);
+        if (!name || reorder == null || !Number.isFinite(stock) || stock < 0) continue;
+        const gap = stock - reorder;
+        const prev = byProduct.get(name);
+        // Keep the worst position when a product spans several batch rows.
+        if (!prev || gap < prev.value) byProduct.set(name, { label: name, value: gap, currentStock: stock, reorderLevel: reorder });
+      }
+      const all = [...byProduct.values()];
+      if (all.length === 0) return { error: 'No product has both a stock quantity and a reorder level.' };
+
+      const below = all.filter((d) => d.value < 0).sort((a, b) => a.value - b.value);
+      const above = all.filter((d) => d.value > 0).sort((a, b) => b.value - a.value);
+      // Show the extremes of both directions — the middle of the distribution
+      // is by definition the products that need no decision.
+      const data = [...below.slice(0, 10), ...above.slice(0, 10)].sort((a, b) => a.value - b.value);
+      const shortfallUnits = below.reduce((s, d) => s + Math.abs(d.value), 0);
+
+      return {
+        data,
+        belowCount: below.length,
+        aboveCount: above.length,
+        atLevelCount: all.length - below.length - above.length,
+        executive: executive(
+          `${below.length} of ${all.length} products sit below their reorder level, ${shortfallUnits.toLocaleString()} units short in total, while ${above.length} carry more than the reorder point requires.`,
+          below.length > 0
+            ? 'Place replenishment orders for the deficit lines first — they are the ones that turn into lost sales.'
+            : 'No line is below its reorder point. Review the overstocked lines for cash that could be released.',
+          below.length > 0 ? 'high' : 'low'
+        ),
+      };
+    },
+  },
+
+  {
+    id: 'expiry-risk-value',
+    title: 'Value at Risk of Expiring',
+    description: 'The money sitting in stock that expires within the next 90 days, valued at what you paid for it. This is the cash you stand to write off if none of it sells, and the window in which a promotion or a supplier return can still recover it.',
+    dashboard: 'expiry',
+    section: 'Inventory Risk',
+    category: 'KPIs',
+    priority: 1,
+    chartType: 'kpi-card',
+    requiredFields: ['current_stock', 'expiry_date', 'cost_price'],
+    format: 'currency',
+    compute(records, options = {}) {
+      const horizon = Number(options.expiryHorizonDays) || 90;
+      let atRisk = 0;
+      let lines = 0;
+      let units = 0;
+      let priced = 0;
+      let unpriced = 0;
+      for (const rec of records) {
+        const stock = readStock(rec);
+        const days = daysUntil(rec.expiry_date);
+        if (stock == null || days == null) continue;
+        if (days < 0 || days > horizon) continue;
+        const cost = readCost(rec);
+        if (cost == null) { unpriced++; continue; }
+        atRisk += cost * stock;
+        units += stock;
+        lines++;
+        priced++;
+      }
+      if (priced === 0 && unpriced === 0) {
+        return {
+          value: 0,
+          label: `At Risk (${horizon} days)`,
+          sublabel: 'Nothing in stock expires within this window',
+          executive: executive(
+            `No stock expires in the next ${horizon} days.`,
+            'No expiry action needed right now. Re-check after the next delivery.',
+            'low'
+          ),
+        };
+      }
+      if (priced === 0) return { error: `${unpriced} product(s) expire within ${horizon} days but none has a cost price, so the value at risk cannot be calculated.` };
+
+      return {
+        value: roundMoney(atRisk),
+        label: `At Risk (${horizon} days)`,
+        sublabel: `${units.toLocaleString()} units across ${lines} line${lines === 1 ? '' : 's'}${unpriced > 0 ? ` · ${unpriced} unpriced line(s) excluded` : ''}`,
+        alert: atRisk > 0,
+        ...(unpriced > 0 ? { partialCostData: true, linesWithoutCost: unpriced } : {}),
+        executive: executive(
+          `${naira(atRisk)} of stock expires within ${horizon} days, across ${lines} line${lines === 1 ? '' : 's'}.`,
+          'Run a targeted promotion on these lines, or open a supplier return before the window closes.',
+          atRisk > 0 ? 'high' : 'low'
+        ),
+      };
+    },
+  },
+
+  {
+    id: 'expired-inventory-value',
+    title: 'Already Expired',
+    description: 'Stock whose expiry date has passed, valued at cost. This is money already lost rather than money at risk — it is here so it is written off deliberately and pulled from the shelf, not left counting toward inventory value.',
+    dashboard: 'expiry',
+    section: 'Inventory Risk',
+    category: 'KPIs',
+    priority: 2,
+    chartType: 'kpi-card',
+    requiredFields: ['current_stock', 'expiry_date', 'cost_price'],
+    format: 'currency',
+    compute(records) {
+      let lost = 0;
+      let lines = 0;
+      let units = 0;
+      for (const rec of records) {
+        const stock = readStock(rec);
+        const days = daysUntil(rec.expiry_date);
+        const cost = readCost(rec);
+        if (stock == null || days == null || cost == null) continue;
+        if (days >= 0) continue;
+        lost += cost * stock;
+        units += stock;
+        lines++;
+      }
+      if (lines === 0) {
+        return {
+          value: 0,
+          label: 'Already Expired',
+          sublabel: 'No expired stock on hand',
+          executive: executive('No stock on hand has passed its expiry date.', 'Nothing to write off. Keep monitoring the at-risk window.', 'low'),
+        };
+      }
+      return {
+        value: roundMoney(lost),
+        label: 'Already Expired',
+        sublabel: `${units.toLocaleString()} units across ${lines} line${lines === 1 ? '' : 's'}`,
+        alert: true,
+        executive: executive(
+          `${naira(lost)} of stock has already expired and is still counted in inventory.`,
+          'Write these lines off and remove them from the shelf — they inflate your inventory value until you do.',
+          'high'
+        ),
+      };
+    },
+  },
+
+  {
+    id: 'average-days-to-expiry',
+    title: 'Average Days Until Expiry',
+    description: 'How much shelf life the stock on hand has left on average, weighted by units so a large batch counts more than a single pack. A short average means expiry pressure is broad rather than confined to a few lines.',
+    dashboard: 'expiry',
+    section: 'Inventory Risk',
+    category: 'KPIs',
+    priority: 3,
+    chartType: 'kpi-card',
+    requiredFields: ['expiry_date', 'current_stock'],
+    format: 'number',
+    compute(records) {
+      let weighted = 0;
+      let units = 0;
+      let lines = 0;
+      let expiredLines = 0;
+      for (const rec of records) {
+        const stock = readStock(rec);
+        const days = daysUntil(rec.expiry_date);
+        if (stock == null || days == null) continue;
+        if (days < 0) { expiredLines++; continue; }
+        weighted += days * stock;
+        units += stock;
+        lines++;
+      }
+      if (units === 0) return { error: 'No unexpired stock has an expiry date, so average shelf life cannot be calculated.' };
+      const avg = Math.round(weighted / units);
+      const months = Math.round((avg / 30) * 10) / 10;
+      return {
+        value: avg,
+        label: 'Avg Days to Expiry',
+        sublabel: `About ${months} months, weighted across ${units.toLocaleString()} units${expiredLines > 0 ? ` · ${expiredLines} expired line(s) excluded` : ''}`,
+        alert: avg < 90,
+        executive: executive(
+          `Stock on hand averages ${avg} days (${months} months) of remaining shelf life.`,
+          avg < 90
+            ? 'That is a short runway — plan promotions now rather than waiting for the 90-day window.'
+            : 'Shelf life is comfortable. Focus expiry effort on the specific at-risk lines rather than the whole range.',
+          avg < 90 ? 'high' : 'low'
+        ),
+      };
+    },
+  },
+
+  {
+    id: 'overstock-value',
+    title: 'Cash Trapped in Overstock',
+    description: 'Stock held above the reorder level, valued at cost. Carrying more than the reorder point calls for is working capital sitting on a shelf — this ranks the products holding the most of it.',
+    dashboard: 'inventory',
+    section: 'Inventory Risk',
+    category: 'Analysis',
+    priority: 8,
+    chartType: 'hbar',
+    requiredFields: ['product_name', 'current_stock', 'reorder_level', 'cost_price'],
+    format: 'currency',
+    compute(records) {
+      const byProduct = new Map();
+      for (const rec of records) {
+        const name = dimOf(rec, 'product_name') || dimOf(rec, 'product');
+        const stock = readStock(rec);
+        const reorder = readReorder(rec);
+        const cost = readCost(rec);
+        if (!name || stock == null || reorder == null || cost == null) continue;
+        const excess = stock - reorder;
+        if (excess <= 0) continue;
+        byProduct.set(name, (byProduct.get(name) || 0) + excess * cost);
+      }
+      const data = [...byProduct.entries()]
+        .map(([label, value]) => ({ label, value: roundMoney(value) }))
+        .sort((a, b) => b.value - a.value);
+      if (data.length === 0) {
+        return { error: 'No product is carrying stock above its reorder level — no cash is trapped in overstock.' };
+      }
+      const total = data.reduce((s, d) => s + d.value, 0);
+      const topShare = roundPct((data[0].value / total) * 100);
+      return {
+        data: data.slice(0, 15),
+        highlightCount: Math.min(5, data.length),
+        totalOverstockValue: roundMoney(total),
+        productCount: data.length,
+        executive: executive(
+          `${naira(total)} is tied up in stock held above reorder level across ${data.length} product${data.length === 1 ? '' : 's'}, with ${topShare}% of it in ${data[0].label} alone.`,
+          'Cut the next order on these lines and push sell-through — this is the fastest cash to release without touching service levels.',
+          'medium'
+        ),
+      };
+    },
+  },
+
+  {
+    id: 'inventory-by-category',
+    title: 'Where Inventory Investment Sits',
+    description: 'Inventory value at cost, split by product category. Shows which parts of the range your working capital is committed to, which is the starting point for deciding whether that split matches where the business actually earns.',
+    dashboard: 'inventory',
+    section: 'Strategic Allocation',
+    category: 'Breakdown',
+    priority: 9,
+    chartType: 'hbar',
+    requiredFields: ['category', 'current_stock', 'cost_price'],
+    format: 'currency',
+    compute(records) {
+      const { rows, total } = valueByDimension(records, 'category', (rec) => {
+        const stock = readStock(rec);
+        const cost = readCost(rec);
+        return stock != null && cost != null ? stock * cost : null;
+      });
+      if (rows.length === 0) return { error: 'No product has a category, a stock quantity and a cost price together.' };
+      const topShare = roundPct((rows[0].value / total) * 100);
+      return {
+        data: rows.slice(0, 15),
+        highlightCount: 1,
+        totalValue: total,
+        categoryCount: rows.length,
+        executive: executive(
+          `${naira(total)} of inventory spans ${rows.length} categor${rows.length === 1 ? 'y' : 'ies'}, with ${topShare}% of it in ${rows[0].label}.`,
+          'Compare this split against margin by category — investment concentrated in a low-margin category is the clearest rebalancing opportunity.',
+          topShare >= 50 ? 'medium' : 'info'
+        ),
+      };
+    },
+  },
+
+  {
+    id: 'supplier-concentration',
+    title: 'Supplier Concentration',
+    description: 'Inventory value at cost by supplier. Concentration is a risk position, not just a purchasing fact: when one supplier holds most of your stock value, their price rises, stockouts and delivery delays pass straight through to your shelf.',
+    dashboard: 'supplier',
+    section: 'Strategic Allocation',
+    category: 'Analysis',
+    priority: 2,
+    chartType: 'treemap',
+    requiredFields: ['supplier', 'current_stock', 'cost_price'],
+    format: 'currency',
+    compute(records) {
+      const { rows, total } = valueByDimension(records, 'supplier', (rec) => {
+        const stock = readStock(rec);
+        const cost = readCost(rec);
+        return stock != null && cost != null ? stock * cost : null;
+      });
+      if (rows.length === 0) return { error: 'No product has a supplier, a stock quantity and a cost price together.' };
+      const topShare = roundPct((rows[0].value / total) * 100);
+      const concentrated = topShare >= 50;
+      return {
+        data: rows.slice(0, 20),
+        series: rows.slice(0, 20).map((r) => ({ name: r.label, value: r.value })),
+        totalValue: total,
+        supplierCount: rows.length,
+        topSupplier: rows[0].label,
+        topSupplierSharePct: topShare,
+        executive: executive(
+          `${topShare}% of your ${naira(total)} inventory value comes from ${rows[0].label}, across ${rows.length} supplier${rows.length === 1 ? '' : 's'} in total.`,
+          concentrated
+            ? 'That is a single point of failure on price and availability — qualify a second source for the lines that matter most.'
+            : 'Supply is reasonably spread. Use this split when negotiating terms with your largest supplier.',
+          concentrated ? 'medium' : 'info'
+        ),
+      };
+    },
+  },
+
+  {
+    id: 'margin-by-product',
+    title: 'Margin by Product',
+    description: 'Unit margin percentage for each product, from the gap between its purchase and selling price. Independent of how much stock you hold or how much has sold — this is the profitability of the line itself.',
+    dashboard: 'inventory',
+    section: 'Strategic Allocation',
+    category: 'Products',
+    priority: 10,
+    chartType: 'hbar',
+    requiredFields: ['product_name', 'cost_price', 'selling_price'],
+    format: 'percent',
+    compute(records) {
+      const byProduct = new Map();
+      for (const rec of records) {
+        const name = dimOf(rec, 'product_name') || dimOf(rec, 'product');
+        const cost = readCost(rec);
+        const price = readSellingPrice(rec);
+        if (!name || cost == null || price == null || price <= 0) continue;
+        if (!byProduct.has(name)) byProduct.set(name, roundPct(((price - cost) / price) * 100));
+      }
+      const all = [...byProduct.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+      if (all.length === 0) return { error: 'No product has both a cost price and a selling price, so margin cannot be ranked.' };
+
+      const negative = all.filter((d) => d.value < 0);
+      // Both ends carry the decision: the best lines to push and the ones
+      // losing money on every sale. The middle informs nothing.
+      const data = all.length <= 20 ? all : [...all.slice(0, 10), ...all.slice(-10)];
+      const avg = roundPct(all.reduce((s, d) => s + d.value, 0) / all.length);
+      return {
+        data,
+        highlightCount: Math.min(5, data.length),
+        productCount: all.length,
+        averageMarginPct: avg,
+        negativeMarginCount: negative.length,
+        executive: executive(
+          negative.length > 0
+            ? `Margins run from ${all[0].value}% (${all[0].label}) down to ${all[all.length - 1].value}%, and ${negative.length} product${negative.length === 1 ? ' is' : 's are'} priced below cost. Average is ${avg}%.`
+            : `Margins run from ${all[0].value}% (${all[0].label}) down to ${all[all.length - 1].value}% (${all[all.length - 1].label}), averaging ${avg}%.`,
+          negative.length > 0
+            ? 'Fix the below-cost lines first — every unit sold loses money. Then shift promotion toward the top of this list.'
+            : 'Push the top of this list in promotions and shelf position; review buying terms on the bottom.',
+          negative.length > 0 ? 'high' : 'info'
+        ),
+      };
+    },
+  },
+
+  {
+    id: 'margin-by-category',
+    title: 'Margin by Category',
+    description: 'Average unit margin per category, weighted by the stock held in each so a category is judged on the products you actually carry. Read alongside inventory by category: money committed to a low-margin category is the clearest rebalancing signal there is.',
+    dashboard: 'inventory',
+    section: 'Strategic Allocation',
+    category: 'Breakdown',
+    priority: 11,
+    chartType: 'hbar',
+    requiredFields: ['category', 'cost_price', 'selling_price', 'current_stock'],
+    format: 'percent',
+    compute(records) {
+      // Weighted by stock value, not a plain average of percentages: a mean
+      // of margins treats a single pack and a full case as equal claims on
+      // the category's profitability, which they are not.
+      const buckets = new Map();
+      for (const rec of records) {
+        const cat = dimOf(rec, 'category');
+        const cost = readCost(rec);
+        const price = readSellingPrice(rec);
+        const stock = readStock(rec);
+        if (!cat || cost == null || price == null || stock == null || price <= 0) continue;
+        const b = buckets.get(cat) || { revenue: 0, profit: 0 };
+        b.revenue += price * stock;
+        b.profit += (price - cost) * stock;
+        buckets.set(cat, b);
+      }
+      const rows = [...buckets.entries()]
+        .filter(([, b]) => b.revenue > 0)
+        .map(([label, b]) => ({ label, value: roundPct((b.profit / b.revenue) * 100) }))
+        .sort((a, b) => b.value - a.value);
+      if (rows.length === 0) return { error: 'No category has products with both prices and a stock quantity.' };
+      return {
+        data: rows,
+        highlightCount: 1,
+        categoryCount: rows.length,
+        executive: executive(
+          `${rows[0].label} returns the strongest margin at ${rows[0].value}%; ${rows[rows.length - 1].label} the weakest at ${rows[rows.length - 1].value}%.`,
+          'Shift purchasing toward the top of this list, and check whether the weakest category is worth its shelf space and cash.',
+          'info'
+        ),
+      };
+    },
+  },
+
+
+  {
+    id: 'slow-moving-products',
+    title: 'Slow Movers',
+    description: 'Products with the lowest units sold over the period. Slow lines drain working capital twice — the cash is committed and the shelf space is spent — so they are the first candidates for discounting or smaller repeat orders.',
+    dashboard: 'inventory',
+    section: 'Operational Performance',
+    category: 'Products',
+    priority: 13,
+    chartType: 'hbar',
+    requiredFields: ['product_name', 'quantity'],
+    format: 'number',
+    compute(records) {
+      const sold = new Map();
+      for (const rec of records) {
+        const name = dimOf(rec, 'product_name') || dimOf(rec, 'product');
+        const qty = Number(rec.quantity);
+        if (!name || !Number.isFinite(qty) || qty < 0) continue;
+        sold.set(name, (sold.get(name) || 0) + qty);
+      }
+      const all = [...sold.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => a.value - b.value);
+      if (all.length === 0) return { error: 'No product has a sold quantity, so movement cannot be ranked.' };
+
+      const slowest = all.slice(0, 15);
+      const totalUnits = all.reduce((s, d) => s + d.value, 0);
+      const slowShare = totalUnits > 0 ? roundPct((slowest.reduce((s, d) => s + d.value, 0) / totalUnits) * 100) : 0;
+      return {
+        // The hbar renderer sorts descending, so the slowest sit at the
+        // bottom of the chart. Negating would misreport the quantity, so the
+        // executive note carries the ranking instead.
+        data: slowest,
+        highlightCount: 0,
+        productCount: all.length,
+        slowestProduct: all[0].label,
+        executive: executive(
+          `The 15 slowest of ${all.length} products account for just ${slowShare}% of units sold; the slowest, ${all[0].label}, moved ${all[0].value.toLocaleString()} unit${all[0].value === 1 ? '' : 's'}.`,
+          'Discount these to clear, and cut them from the next order rather than restocking to habit.',
+          'medium'
+        ),
+      };
+    },
+  },
+
+  {
+    id: 'dead-stock-value',
+    title: 'Dead Stock',
+    description: 'Products still holding stock that recorded no sales at all over the period, valued at cost. This is the clearest form of trapped cash there is: it has not moved once, so it will not move on its own.',
+    dashboard: 'inventory',
+    section: 'Operational Performance',
+    category: 'Analysis',
+    priority: 14,
+    chartType: 'hbar',
+    requiredFields: ['product_name', 'current_stock', 'cost_price', 'quantity'],
+    format: 'currency',
+    compute(records) {
+      // One pass builds both sides — sold quantity and held stock — so a
+      // product can never be counted dead on one basis and alive on another.
+      const byProduct = new Map();
+      for (const rec of records) {
+        const name = dimOf(rec, 'product_name') || dimOf(rec, 'product');
+        if (!name) continue;
+        const entry = byProduct.get(name) || { sold: 0, stock: 0, cost: null };
+        const qty = Number(rec.quantity);
+        if (Number.isFinite(qty) && qty > 0) entry.sold += qty;
+        const stock = readStock(rec);
+        if (stock != null) entry.stock = Math.max(entry.stock, stock);
+        const cost = readCost(rec);
+        if (cost != null && entry.cost == null) entry.cost = cost;
+        byProduct.set(name, entry);
+      }
+      const dead = [...byProduct.entries()]
+        .filter(([, e]) => e.sold === 0 && e.stock > 0 && e.cost != null)
+        .map(([label, e]) => ({ label, value: roundMoney(e.stock * e.cost), units: e.stock }))
+        .sort((a, b) => b.value - a.value);
+
+      if (dead.length === 0) {
+        return { error: 'Every stocked product with a cost price recorded at least one sale — no dead stock in this period.' };
+      }
+      const total = dead.reduce((s, d) => s + d.value, 0);
+      return {
+        data: dead.slice(0, 15),
+        highlightCount: Math.min(5, dead.length),
+        deadStockValue: roundMoney(total),
+        productCount: dead.length,
+        executive: executive(
+          `${naira(total)} sits in ${dead.length} product${dead.length === 1 ? '' : 's'} that did not sell a single unit in this period.`,
+          'Liquidate or return these. They are not slow — they are stationary, and holding them costs shelf space and cash every month.',
+          'high'
+        ),
+      };
+    },
+  },
+
+  {
+    id: 'stock-coverage-days',
+    title: 'Stock Coverage',
+    description: 'How many days the current stock of each product would last at the rate it has been selling. Short coverage is a stockout forming; very long coverage is cash committed far ahead of demand.',
+    dashboard: 'inventory',
+    section: 'Operational Performance',
+    category: 'Analysis',
+    priority: 15,
+    chartType: 'hbar',
+    requiredFields: ['product_name', 'current_stock', 'quantity', 'transaction_date'],
+    format: 'number',
+    compute(records) {
+      let minDate = null;
+      let maxDate = null;
+      const byProduct = new Map();
+      for (const rec of records) {
+        const name = dimOf(rec, 'product_name') || dimOf(rec, 'product');
+        if (!name) continue;
+        const d = rec.transaction_date ? new Date(rec.transaction_date) : null;
+        if (d && !Number.isNaN(d.getTime())) {
+          if (!minDate || d < minDate) minDate = d;
+          if (!maxDate || d > maxDate) maxDate = d;
+        }
+        const entry = byProduct.get(name) || { sold: 0, stock: 0 };
+        const qty = Number(rec.quantity);
+        if (Number.isFinite(qty) && qty > 0) entry.sold += qty;
+        const stock = readStock(rec);
+        if (stock != null) entry.stock = Math.max(entry.stock, stock);
+        byProduct.set(name, entry);
+      }
+      if (!minDate || !maxDate) return { error: 'No usable transaction dates, so a daily sales rate cannot be established.' };
+      const periodDays = Math.max(1, Math.round((maxDate - minDate) / 86400000) + 1);
+
+      const rows = [];
+      for (const [label, e] of byProduct) {
+        if (e.stock <= 0 || e.sold <= 0) continue;
+        const perDay = e.sold / periodDays;
+        rows.push({ label, value: Math.round(e.stock / perDay), currentStock: e.stock, dailyRate: Math.round(perDay * 100) / 100 });
+      }
+      if (rows.length === 0) return { error: 'No product has both stock on hand and recorded sales, so coverage cannot be calculated.' };
+
+      rows.sort((a, b) => a.value - b.value);
+      const thin = rows.filter((r) => r.value <= 14);
+      const excessive = rows.filter((r) => r.value >= 180);
+      return {
+        // Shortest coverage first — those are the decisions with a deadline.
+        data: rows.slice(0, 15),
+        highlightCount: Math.min(thin.length, 5),
+        periodDays,
+        productCount: rows.length,
+        under14Days: thin.length,
+        over180Days: excessive.length,
+        executive: executive(
+          `${thin.length} product${thin.length === 1 ? ' has' : 's have'} under two weeks of cover at current sales rates${excessive.length > 0 ? `, while ${excessive.length} carr${excessive.length === 1 ? 'ies' : 'y'} over six months' worth` : ''}. Rates are measured over the ${periodDays} days this data covers.`,
+          thin.length > 0
+            ? 'Reorder the short-cover lines now — at these rates they run out before a normal delivery cycle completes.'
+            : 'No line is close to running out. Review the longest-cover products for cash to release.',
+          thin.length > 0 ? 'high' : 'low'
+        ),
+      };
+    },
+  },
+
+  {
     id: 'current-stock',
     title: 'Current Stock Levels',
     description: 'Current stock quantities per product with optional reorder level indicators.',
     dashboard: 'inventory',
+    section: 'Operational Performance',
     category: 'KPIs',
     priority: 2,
     chartType: 'table',
@@ -2269,6 +2912,7 @@ const WIDGETS = [
     title: 'Low Stock Alert',
     description: 'Number of products currently below the configured stock threshold.',
     dashboard: 'inventory',
+    section: 'Inventory Risk',
     category: 'KPIs',
     priority: 3,
     chartType: 'kpi-card',
@@ -2302,6 +2946,7 @@ const WIDGETS = [
     title: 'Inventory Turnover',
     description: 'Measures how quickly inventory is sold and replaced. Higher values indicate faster stock movement.',
     dashboard: 'inventory',
+    section: 'Strategic Allocation',
     category: 'Analysis',
     priority: 4,
     chartType: 'kpi-card',
@@ -2335,6 +2980,7 @@ const WIDGETS = [
     title: 'Expiry Risk',
     description: 'Products approaching or past their expiration date within 90 and 180 days.',
     dashboard: 'expiry',
+    section: 'Inventory Risk',
     category: 'KPIs',
     priority: 1,
     chartType: 'kpi-card',
@@ -2379,6 +3025,7 @@ const WIDGETS = [
     title: 'Expiry Timeline',
     description: 'Detailed expiry schedule showing days remaining and stock status for each product.',
     dashboard: 'expiry',
+    section: 'Inventory Risk',
     category: 'Analysis',
     priority: 2,
     chartType: 'table',
@@ -2418,6 +3065,7 @@ const WIDGETS = [
     title: 'Supplier Breakdown',
     description: 'Product distribution across suppliers. Shows which suppliers supply the most products.',
     dashboard: 'supplier',
+    section: 'Strategic Allocation',
     category: 'Analysis',
     priority: 1,
     chartType: 'table',

@@ -28,6 +28,7 @@ import TopPriorities from '../components/overview/TopPriorities';
 import AlertsPanel from '../components/overview/AlertsPanel';
 import AdvisorChat from '../components/overview/AdvisorChat';
 import BulletChart from '../components/BulletChart.jsx';
+import ExecutiveNote from '../components/ExecutiveNote.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { apiFetch } from '../lib/apiClient.js';
 
@@ -291,6 +292,8 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
   const scatters = valid.filter(w => w.chartType === 'scatter');
   const stackedAreas = valid.filter(w => w.chartType === 'stacked-area');
   const bullets = valid.filter(w => w.chartType === 'bullet');
+  const divergingBars = valid.filter(w => w.chartType === 'diverging-bar');
+  const histograms = valid.filter(w => w.chartType === 'histogram');
 
   // Transform widget series format [{x, y}] to Recharts [{label, value}]
   const toRecharts = (seriesArr) => {
@@ -325,6 +328,31 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
               description={w.description}
             />
           ))}
+        </div>
+      )}
+
+      {/* What the KPIs above mean, and what to do about them. Collected in
+          one block rather than inside each tile: the cards are a 4-up grid of
+          headline figures, and a paragraph in each would destroy the scan
+          that makes a KPI row worth having. Ordered by severity so the thing
+          needing action is read first. */}
+      {kpiCards.some(w => w.result?.executive) && (
+        <div className="mb-6 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6">
+          <h3 className="mb-1 text-base font-semibold text-[var(--color-ink)]">What this means</h3>
+          <p className="text-xs text-[var(--color-ink-faint)]">Interpretation and next step for each figure above.</p>
+          <div className="divide-y divide-[var(--color-line)]">
+            {[...kpiCards.filter(w => w.result?.executive)]
+              .sort((a, b) => {
+                const rank = { high: 0, medium: 1, info: 2, low: 3 };
+                return (rank[a.result.executive.severity] ?? 2) - (rank[b.result.executive.severity] ?? 2);
+              })
+              .map(w => (
+                <div key={w.id} className="pt-1 first:pt-0">
+                  <ExecutiveNote note={w.result.executive} />
+                  <p className="mb-3 ml-3.5 mt-1 text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">{w.title}</p>
+                </div>
+              ))}
+          </div>
         </div>
       )}
 
@@ -371,6 +399,7 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
             ) : (
               <p className="text-sm text-[var(--color-ink-faint)]">No data available for this chart.</p>
             )}
+            <ExecutiveNote note={w.result?.executive} />
           </div>
         );
       })}
@@ -452,6 +481,7 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
             ) : (
               <p className="text-sm text-[var(--color-ink-faint)]">No data available for this chart.</p>
             )}
+            <ExecutiveNote note={w.result?.executive} />
           </div>
         );
       })}
@@ -496,6 +526,7 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
             ) : (
               <p className="text-sm text-[var(--color-ink-faint)]">No data available for this chart.</p>
             )}
+            <ExecutiveNote note={w.result?.executive} />
           </div>
         );
       })}
@@ -515,8 +546,76 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
             interpretation={w.result?.interpretation}
             ariaLabel={`${w.result?.label || w.title}: ${w.result?.value}%`}
           />
+          <ExecutiveNote note={w.result?.executive} />
         </div>
       ))}
+
+      {/* Diverging bars — one axis, both directions. Deficit and surplus
+          against the same target read as one distribution rather than two
+          unrelated lists, which is the whole point of the form. */}
+      {divergingBars.map(w => {
+        const chartData = [...(w.result?.data || [])].sort((a, b) => a.value - b.value);
+        const maxLabelLen = chartData.reduce((m, d) => Math.max(m, String(d.label || '').length), 0);
+        return (
+          <div key={w.id} className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6 mb-4">
+            <div className="flex items-center gap-1.5 mb-3">
+              <h3 className="text-base font-semibold text-[var(--color-ink)]">{w.title}</h3>
+              {w.description && <InfoBadge description={w.description} />}
+            </div>
+            {chartData.length > 0 ? (
+              <div style={{ height: Math.max(240, chartData.length * 26 + 60) }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 24, left: 10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 11, fill: 'var(--color-ink-faint)' }} />
+                    <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: 'var(--color-ink-faint)' }} width={Math.min(maxLabelLen * 7, 180)} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <ReferenceLine x={0} stroke="var(--color-ink-faint)" strokeWidth={1.5} />
+                    <Bar dataKey="value" radius={[0, 3, 3, 0]}>
+                      {chartData.map((d, i) => (
+                        <Cell key={i} fill={d.value < 0 ? 'var(--color-danger)' : 'var(--color-line-strong)'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--color-ink-faint)]">No data available for this chart.</p>
+            )}
+            <ExecutiveNote note={w.result?.executive} />
+          </div>
+        );
+      })}
+
+      {/* Histograms — distribution across ordered buckets, so the bars keep
+          their given order rather than being ranked by height. */}
+      {histograms.map(w => {
+        const chartData = w.result?.data || [];
+        return (
+          <div key={w.id} className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6 mb-4">
+            <div className="flex items-center gap-1.5 mb-3">
+              <h3 className="text-base font-semibold text-[var(--color-ink)]">{w.title}</h3>
+              {w.description && <InfoBadge description={w.description} />}
+            </div>
+            {chartData.length > 0 ? (
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }} barCategoryGap="8%">
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--color-ink-faint)' }} />
+                    <YAxis tick={{ fontSize: 11, fill: 'var(--color-ink-faint)' }} allowDecimals={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="value" fill="var(--color-primary)" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--color-ink-faint)]">No data available for this chart.</p>
+            )}
+            <ExecutiveNote note={w.result?.executive} />
+          </div>
+        );
+      })}
 
       {/* Treemaps */}
       {treemaps.map(w => {
@@ -575,6 +674,7 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
             ) : (
               <p className="text-sm text-[var(--color-ink-faint)]">No data available for this chart.</p>
             )}
+            <ExecutiveNote note={w.result?.executive} />
           </div>
         );
       })}
@@ -769,6 +869,7 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
             ) : (
               <p className="text-sm text-[var(--color-ink-faint)]">No data available for this chart.</p>
             )}
+            <ExecutiveNote note={w.result?.executive} />
           </div>
         );
       })}
