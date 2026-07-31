@@ -753,6 +753,7 @@ async function normalize(rows, options = {}) {
     // Resolved identity (manufacturer, generic — enrichment only, never source)
     if (src._resolved_manufacturer) rec.resolved_manufacturer = src._resolved_manufacturer;
     if (src._resolved_generic_name) rec.resolved_generic = src._resolved_generic_name;
+    if (src._resolved_generic_confidence != null) rec.resolved_generic_confidence = src._resolved_generic_confidence;
     if (src._resolved_brand) rec.resolved_brand = src._resolved_brand;
     if (src._resolved_strength) rec.resolved_strength = src._resolved_strength;
     if (src._resolved_dosage_form) rec.resolved_form = src._resolved_dosage_form;

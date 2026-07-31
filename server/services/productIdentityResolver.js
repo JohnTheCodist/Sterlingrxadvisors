@@ -277,18 +277,31 @@ function enrichIdentity(resolved, originalFields) {
 
   let resolvedBrand = brandName;
   let resolvedGeneric = genericName;
+  // How sure we are that resolvedGeneric names the same drug the source text
+  // meant. An exact knowledge-base hit scores 0.95; a single-character typo
+  // resolved by fuzzy match scores 0.65; a two-character difference 0.55.
+  // Analytics uses this to decide whether two spellings may be safely counted
+  // as one product — without it, every fuzzy match looks equally certain.
+  // A generic taken straight from the file's own column is authoritative.
+  let resolvedGenericConfidence = genericName ? 1 : 0;
 
   if (!resolvedGeneric && brandName) {
     const fuzzy = fuzzyLookupProduct(brandName);
     if (fuzzy.bestMatch && fuzzy.source && fuzzy.source !== 'brand_kb') {
-      if (fuzzy.bestMatch.generic) resolvedGeneric = fuzzy.bestMatch.generic;
+      if (fuzzy.bestMatch.generic) {
+        resolvedGeneric = fuzzy.bestMatch.generic;
+        resolvedGenericConfidence = Number(fuzzy.confidence) || 0;
+      }
     }
   }
 
   // Brand KB inference for missing generic
   if (!resolvedGeneric && resolvedProductName) {
     const id = identifyDrug(resolvedProductName);
-    if (id.recognized && id.generic) resolvedGeneric = id.generic;
+    if (id.recognized && id.generic) {
+      resolvedGeneric = id.generic;
+      resolvedGenericConfidence = Number(id.confidence) || 0;
+    }
     if (id.recognized && id.manufacturer && !nafdacManufacturer) {
       nafdacManufacturer = id.manufacturer;
       resolvedManufacturer = resolvedManufacturer || nafdacManufacturer;
@@ -311,6 +324,7 @@ function enrichIdentity(resolved, originalFields) {
     // === Resolved Identity (NAFDAC enrichment — separate from source) ===
     resolved_brand: resolvedBrand,
     resolved_generic: resolvedGeneric,
+    resolved_generic_confidence: resolvedGeneric ? resolvedGenericConfidence : 0,
     resolved_manufacturer: resolvedManufacturer,
     resolved_strength: clean(originalFields.strength) || null,
     resolved_form: clean(originalFields.dosage_form) || null,
@@ -431,6 +445,7 @@ function resolveProductIdentities(rawRows, mapping) {
       // === Resolved Identity (NAFDAC enrichment) ===
       _resolved_brand: enriched.resolved_brand,
       _resolved_generic_name: enriched.resolved_generic,
+      _resolved_generic_confidence: enriched.resolved_generic_confidence,
       _resolved_manufacturer: enriched.resolved_manufacturer,
       _resolved_strength: enriched.resolved_strength,
       _resolved_dosage_form: enriched.resolved_form,
