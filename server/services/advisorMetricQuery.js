@@ -193,12 +193,16 @@ async function computeItemsPerTransaction(db, organizationId, where, dim, capped
  */
 async function computeBusinessMetric(organizationId, params = {}) {
   assertOrgId(organizationId);
-  const db = getSql();
   const {
     measure, groupBy = null, filters = {}, n = 20, scope = 'current',
     offset = 0, sortDir = 'desc', minValue = null, maxValue = null,
   } = params;
 
+  // Validate the enums BEFORE touching the database. These messages exist so
+  // the model can correct its own call on the next turn, so they must not be
+  // reachable only when a connection happens to be available — otherwise a
+  // mistyped measure surfaces as whatever the driver failed with instead of
+  // the list of measures that would have worked.
   const measureDef = MEASURES[measure];
   if (!measureDef && measure !== 'items_per_transaction') {
     return { error: `Unknown measure '${measure}'. Supported measures: ${[...Object.keys(MEASURES), 'items_per_transaction'].join(', ')}.` };
@@ -207,6 +211,8 @@ async function computeBusinessMetric(organizationId, params = {}) {
   if (groupBy && !dim) {
     return { error: `Unknown groupBy '${groupBy}'. Supported: ${Object.keys(DIMENSIONS).join(', ')}.` };
   }
+
+  const db = getSql();
 
   const cappedN = Math.max(1, Math.min(100, Number(n) || 20));
   const cappedOffset = Math.max(0, Number(offset) || 0);

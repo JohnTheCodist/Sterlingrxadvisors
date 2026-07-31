@@ -92,7 +92,10 @@ async function abcAnalysis(organizationId) {
       p.name,
       coalesce(p.category, 'Uncategorised') as category,
       sum(s.unit_price * s.quantity) as revenue,
-      sum((s.unit_price - s.unit_cost) * s.quantity) as profit,
+      count(*)::int as "rowCount",
+      count(*) filter (where s.unit_cost is not null)::int as "rowsWithCost",
+      coalesce(sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null), 0) as "revenueWithCost",
+      sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null) as profit,
       sum(s.quantity) as "unitsSold"
     from sale s
     join product p on s.product_id = p.id
@@ -103,17 +106,40 @@ async function abcAnalysis(organizationId) {
 
   if (products.length === 0) return [];
 
-  const totalRevenue = products.reduce((s, p) => s + Number(p.revenue), 0);
-  const totalProfit = products.reduce((s, p) => s + Number(p.profit || 0), 0);
+  // Resolve each product's profit to a number or to null — never to 0. `profit`
+  // only sums cost-known rows, so a product with no cost price at all used to
+  // be coerced to 0 and became indistinguishable from one genuinely selling at
+  // cost. ABC classification is driven by revenue and is unaffected by this.
+  const resolved = products.map((p) => {
+    const revenue = Number(p.revenue) || 0;
+    const rowCount = Number(p.rowCount) || 0;
+    const rowsWithCost = Number(p.rowsWithCost) || 0;
+    const revenueWithCost = Number(p.revenueWithCost) || 0;
+    const rowsPct = rowCount > 0 ? Math.round((rowsWithCost / rowCount) * 1000) / 10 : 0;
+    const revenuePct = revenue > 0 ? Math.round((revenueWithCost / revenue) * 1000) / 10 : 0;
+    const reliable = rowsPct >= MIN_CATEGORY_COST_COVERAGE_PCT && revenuePct >= MIN_CATEGORY_COST_COVERAGE_PCT;
+    return {
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      revenue,
+      profit: reliable && p.profit != null ? Number(p.profit) : null,
+      unitsSold: Number(p.unitsSold),
+      costCoverage: { hasReliableCostCoverage: reliable, rowsWithCost, rowCount, revenuePct, rowsPct },
+    };
+  });
+
+  const totalRevenue = resolved.reduce((s, p) => s + p.revenue, 0);
+  // Profit shares are shares of KNOWN profit — products without cost data are
+  // excluded from the base rather than counted as contributing zero.
+  const totalProfit = resolved.reduce((s, p) => s + (p.profit ?? 0), 0);
 
   let cumRev = 0;
   let cumProfit = 0;
 
-  return products.map((p) => {
-    const revenue = Number(p.revenue);
-    const profit = Number(p.profit || 0);
-    cumRev += revenue;
-    cumProfit += profit;
+  return resolved.map((p) => {
+    cumRev += p.revenue;
+    if (p.profit != null) cumProfit += p.profit;
     const cumRevPct = totalRevenue > 0 ? (cumRev / totalRevenue) * 100 : 0;
     const cumProfitPct = totalProfit > 0 ? (cumProfit / totalProfit) * 100 : 0;
 
@@ -123,11 +149,8 @@ async function abcAnalysis(organizationId) {
 
     return {
       ...p,
-      revenue,
-      profit,
-      unitsSold: Number(p.unitsSold),
-      revenuePct: totalRevenue > 0 ? Math.round((revenue / totalRevenue) * 10000) / 100 : 0,
-      profitPct: totalProfit > 0 ? Math.round((profit / totalProfit) * 10000) / 100 : 0,
+      revenuePct: totalRevenue > 0 ? Math.round((p.revenue / totalRevenue) * 10000) / 100 : 0,
+      profitPct: p.profit != null && totalProfit > 0 ? Math.round((p.profit / totalProfit) * 10000) / 100 : null,
       cumulativeRevenuePct: Math.round(cumRevPct * 100) / 100,
       cumulativeProfitPct: Math.round(cumProfitPct * 100) / 100,
       abcClass,
@@ -141,20 +164,26 @@ async function abcAnalysis(organizationId) {
 async function abcSummary(organizationId) {
   const items = await abcAnalysis(organizationId);
   const summary = {
-    A: { count: 0, revenue: 0, profit: 0 },
-    B: { count: 0, revenue: 0, profit: 0 },
-    C: { count: 0, revenue: 0, profit: 0 },
+    A: { count: 0, revenue: 0, profit: 0, productsWithCost: 0 },
+    B: { count: 0, revenue: 0, profit: 0, productsWithCost: 0 },
+    C: { count: 0, revenue: 0, profit: 0, productsWithCost: 0 },
   };
   for (const p of items) {
     summary[p.abcClass].count++;
     summary[p.abcClass].revenue += p.revenue;
-    summary[p.abcClass].profit += p.profit || 0;
+    if (p.profit != null) {
+      summary[p.abcClass].profit += p.profit;
+      summary[p.abcClass].productsWithCost++;
+    }
   }
   const totalRev = summary.A.revenue + summary.B.revenue + summary.C.revenue;
   for (const cls of ['A', 'B', 'C']) {
     summary[cls].revenueShare = totalRev > 0
       ? Math.round((summary[cls].revenue / totalRev) * 10000) / 100
       : 0;
+    // A class whose products all lack cost data has no profit to report —
+    // saying 0 would read as "these products earn nothing."
+    if (summary[cls].productsWithCost === 0) summary[cls].profit = null;
   }
   return summary;
 }

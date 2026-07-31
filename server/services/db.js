@@ -475,6 +475,12 @@ async function loadFactRecords(organizationId, records, options = {}) {
 
 // ---- analytics queries ------------------------------------------------
 
+// A handful of cost-tagged rows shouldn't produce a confident-looking profit
+// or margin — for the org as a whole, for one month, or for one product.
+// Same floor and reasoning as analytics.js::profitLeakage,
+// insights.js::profitByCategory and advisorQueries.js::getWeeklyRevenue.
+const MIN_COST_COVERAGE_PCT = 20;
+
 /**
  * Query analytics from the star schema for one organization.
  * Returns the same JSON shape the dashboard has always expected.
@@ -497,9 +503,15 @@ async function queryAnalytics(organizationId, options = {}) {
       coalesce(sum(s.unit_price * s.quantity), 0) as "totalRevenue",
       coalesce(sum(s.quantity), 0) as "totalQuantitySold",
       coalesce(sum(s.unit_price * s.quantity) / nullif(sum(s.quantity), 0), 0) as "averageSellingPrice",
-      sum((s.unit_price - s.unit_cost) * s.quantity) as "grossProfit",
-      case when sum(s.unit_price * s.quantity) > 0
-           then round((sum((s.unit_price - s.unit_cost) * s.quantity) / sum(s.unit_price * s.quantity)) * 100, 2)
+      sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null) as "grossProfit",
+      -- Numerator and denominator MUST share one basis. grossProfit only sums
+      -- rows that have a unit_cost, so dividing it by revenue across ALL rows
+      -- deflates the margin by exactly the share of revenue lacking cost data
+      -- — a business with a real 30% margin on its cost-tagged rows reported
+      -- 3% when only a tenth of revenue carried a cost price.
+      case when sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null) > 0
+           then round((sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null)
+             / sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null)) * 100, 2)
            else null end as "grossMargin",
       coalesce(sum(s.unit_price * s.quantity) / nullif(count(*), 0), 0) as "averageTransactionValue",
       sum(s.unit_cost * s.quantity) as "totalCost",
@@ -523,7 +535,6 @@ async function queryAnalytics(organizationId, options = {}) {
   const totalRows = Number(metrics.recordCount || 0);
   const costCoverageRevenuePct = totalRevenueNum > 0 ? Math.round((revenueWithCostNum / totalRevenueNum) * 1000) / 10 : 0;
   const costCoverageRowsPct = totalRows > 0 ? Math.round((rowsWithCost / totalRows) * 1000) / 10 : 0;
-  const MIN_COST_COVERAGE_PCT = 20;
   const hasReliableCostCoverage = costCoverageRowsPct >= MIN_COST_COVERAGE_PCT && costCoverageRevenuePct >= MIN_COST_COVERAGE_PCT;
 
   const monthlyRevenueRaw = await db`
@@ -541,27 +552,51 @@ async function queryAnalytics(organizationId, options = {}) {
   const monthlyProfitRaw = await db`
     select to_char(s.sale_date, 'YYYY-MM') as month,
            sum(s.unit_price * s.quantity) as revenue,
-           sum(s.unit_cost * s.quantity) as cost,
-           sum((s.unit_price - s.unit_cost) * s.quantity) as profit
+           count(*)::int as "rowCount",
+           count(*) filter (where s.unit_cost is not null)::int as "rowsWithCost",
+           coalesce(sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null), 0) as "revenueWithCost",
+           sum(s.unit_cost * s.quantity) filter (where s.unit_cost is not null) as cost,
+           sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null) as profit
     from sale s
     where ${whereClause}
     group by to_char(s.sale_date, 'YYYY-MM')
     order by month
   `;
-  const monthlyProfit = monthlyProfitRaw.map((r) => ({
-    month: r.month,
-    revenue: Math.round(Number(r.revenue) * 100) / 100,
-    cost: r.cost != null ? Math.round(Number(r.cost) * 100) / 100 : null,
-    profit: r.profit != null ? Math.round(Number(r.profit) * 100) / 100 : null,
-  }));
+  // cost/profit cover only cost-known rows while revenue covers every row, so
+  // a month whose cost data is sparse would show a real-looking profit beside
+  // a much larger revenue — reading as a collapsed margin for that month
+  // rather than as missing data. Gate per month on the same floor the
+  // org-wide figures use.
+  const monthlyProfit = monthlyProfitRaw.map((r) => {
+    const revenue = Number(r.revenue) || 0;
+    const rowCount = Number(r.rowCount) || 0;
+    const rowsWithCost = Number(r.rowsWithCost) || 0;
+    const revenueWithCost = Number(r.revenueWithCost) || 0;
+    const rowsPct = rowCount > 0 ? Math.round((rowsWithCost / rowCount) * 1000) / 10 : 0;
+    const revenuePct = revenue > 0 ? Math.round((revenueWithCost / revenue) * 1000) / 10 : 0;
+    const reliable = rowsPct >= MIN_COST_COVERAGE_PCT && revenuePct >= MIN_COST_COVERAGE_PCT;
+    return {
+      month: r.month,
+      revenue: Math.round(revenue * 100) / 100,
+      cost: reliable && r.cost != null ? Math.round(Number(r.cost) * 100) / 100 : null,
+      profit: reliable && r.profit != null ? Math.round(Number(r.profit) * 100) / 100 : null,
+      costCoverage: { hasReliableCostCoverage: reliable, rowsWithCost, rowCount, revenuePct, rowsPct },
+    };
+  });
 
   const topProductsRaw = await db`
     select p.name,
            sum(s.unit_price * s.quantity) as revenue,
            sum(s.quantity) as quantity,
-           sum((s.unit_price - s.unit_cost) * s.quantity) as profit,
-           case when sum(s.unit_price * s.quantity) > 0
-                then round((sum((s.unit_price - s.unit_cost) * s.quantity) / sum(s.unit_price * s.quantity)) * 100, 2)
+           count(*)::int as "rowCount",
+           count(*) filter (where s.unit_cost is not null)::int as "rowsWithCost",
+           coalesce(sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null), 0) as "revenueWithCost",
+           sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null) as profit,
+           -- Same shared-basis rule as the org-wide grossMargin: divide
+           -- cost-known profit by cost-known revenue, never by all revenue.
+           case when sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null) > 0
+                then round((sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null)
+                  / sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null)) * 100, 2)
                 else null end as margin
     from sale s
     join product p on s.product_id = p.id
@@ -570,13 +605,23 @@ async function queryAnalytics(organizationId, options = {}) {
     order by revenue desc
     limit 100
   `;
-  const topProducts = topProductsRaw.map((r) => ({
-    name: r.name,
-    revenue: Math.round(Number(r.revenue) * 100) / 100,
-    quantity: Math.round(Number(r.quantity) * 100) / 100,
-    profit: r.profit != null ? Math.round(Number(r.profit) * 100) / 100 : null,
-    margin: r.margin != null ? Number(r.margin) : null,
-  }));
+  const topProducts = topProductsRaw.map((r) => {
+    const revenue = Number(r.revenue) || 0;
+    const rowCount = Number(r.rowCount) || 0;
+    const rowsWithCost = Number(r.rowsWithCost) || 0;
+    const revenueWithCost = Number(r.revenueWithCost) || 0;
+    const rowsPct = rowCount > 0 ? Math.round((rowsWithCost / rowCount) * 1000) / 10 : 0;
+    const revenuePct = revenue > 0 ? Math.round((revenueWithCost / revenue) * 1000) / 10 : 0;
+    const reliable = rowsPct >= MIN_COST_COVERAGE_PCT && revenuePct >= MIN_COST_COVERAGE_PCT;
+    return {
+      name: r.name,
+      revenue: Math.round(revenue * 100) / 100,
+      quantity: Math.round(Number(r.quantity) * 100) / 100,
+      profit: reliable && r.profit != null ? Math.round(Number(r.profit) * 100) / 100 : null,
+      margin: reliable && r.margin != null ? Number(r.margin) : null,
+      costCoverage: { hasReliableCostCoverage: reliable, rowsWithCost, rowCount, revenuePct, rowsPct },
+    };
+  });
 
   return {
     metrics: {

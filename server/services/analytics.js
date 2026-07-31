@@ -18,7 +18,29 @@ function parseMonth(val) {
 }
 
 // Backward-compatible field accessors
-const productOf = (rec) => rec.canonical_product || rec.product_name || rec.product;
+// Confidence a resolved generic must reach before two different source
+// spellings may be counted as ONE product. The fuzzy matcher scores an exact
+// knowledge-base hit at 0.95 and a single-character typo at 0.65, but drops to
+// 0.55 once two or more characters differ — which is also where a genuinely
+// different drug starts to look like a typo. Merging is a one-way door in the
+// numbers (two products become one row with no trace), so the line sits above
+// that: obvious misspellings combine, uncertain ones stay apart.
+const MIN_GENERIC_MERGE_CONFIDENCE = 0.65;
+
+// Grouping key for every per-product rollup.
+//
+// Source identity is what the pharmacy typed and is never rewritten on the
+// record itself. But leaving analytics keyed on it means one mistyped row
+// splits a product's revenue across two lines in Top Products. So grouping —
+// and ONLY grouping — prefers the resolved generic when the resolver is
+// confident enough to stand behind it; otherwise it falls back to the source
+// name, which is always safe.
+const productOf = (rec) => {
+  if (rec.resolved_generic && (rec.resolved_generic_confidence ?? 0) >= MIN_GENERIC_MERGE_CONFIDENCE) {
+    return rec.resolved_generic;
+  }
+  return rec.canonical_product || rec.product_name || rec.product;
+};
 const priceOf = (rec) => rec.selling_price != null ? rec.selling_price : rec.price;
 const costOf = (rec) => rec.cost_price != null ? rec.cost_price : rec.cost;
 
@@ -40,6 +62,30 @@ const revenueOf = (rec) => {
   return num(priceOf(rec)) * num(rec.quantity);
 };
 
+// ---- cost coverage -----------------------------------------------------
+
+// Same floor and reasoning as profitLeakage's cost-coverage gate: a couple of
+// cost-tagged rows shouldn't produce a confident-looking profit or margin.
+const MIN_ROW_COST_COVERAGE_PCT = 20;
+
+// Profit must be computed from ONE basis. Accumulating cost over cost-known
+// rows but revenue over every row books the revenue of cost-unknown rows as
+// pure profit — the mirror of the deflated margin the same mistake produces
+// when the division runs the other way. Every profit figure in this module
+// therefore uses the cost-known revenue as its base, and withholds the
+// figure entirely when coverage is too thin to trust.
+function coverageOf({ revenue, revenueWithCost, rowCount, rowsWithCost }) {
+  const rowsPct = rowCount > 0 ? (rowsWithCost / rowCount) * 100 : 0;
+  const revenuePct = revenue > 0 ? (revenueWithCost / revenue) * 100 : 0;
+  return {
+    hasReliableCostCoverage: rowsPct >= MIN_ROW_COST_COVERAGE_PCT && revenuePct >= MIN_ROW_COST_COVERAGE_PCT,
+    rowsWithCost,
+    rowCount,
+    rowsPct: Math.round(rowsPct * 10) / 10,
+    revenuePct: Math.round(revenuePct * 10) / 10,
+  };
+}
+
 // ---- key metrics -------------------------------------------------------
 
 function calculateMetrics(normalizedRecords) {
@@ -54,8 +100,14 @@ function calculateMetrics(normalizedRecords) {
   let totalRevenue = 0;
   let totalCost = 0;
   let totalQty = 0;
-  let hasCost = false;
   let transactionCount = 0;
+  // Revenue and row count restricted to rows that carry a cost price. Gross
+  // profit must be computed against THESE, not against every row: subtracting
+  // a partial cost from the full revenue books the revenue of cost-unknown
+  // rows as pure profit. On a file where 1 row in 10 had a cost price that
+  // turned ₦120 of real profit (30% margin) into ₦3,720 at 93%.
+  let revenueWithCost = 0;
+  let rowsWithCost = 0;
 
   for (const rec of normalizedRecords) {
     const rev = num(revenueOf(rec));
@@ -71,16 +123,25 @@ function calculateMetrics(normalizedRecords) {
 
     if (tCost > 0) {
       totalCost += tCost;
-      hasCost = true;
+      revenueWithCost += rev;
+      rowsWithCost++;
     }
 
     if (rev > 0) transactionCount++;
   }
 
+  const costCoverage = coverageOf({
+    revenue: totalRevenue,
+    revenueWithCost,
+    rowCount: normalizedRecords.length,
+    rowsWithCost,
+  });
+  const reliable = costCoverage.hasReliableCostCoverage;
+
   const avgSellingPrice = totalQty > 0 ? totalRevenue / totalQty : 0;
-  const grossProfit = hasCost ? totalRevenue - totalCost : null;
-  const grossMargin = hasCost && totalRevenue > 0
-    ? ((totalRevenue - totalCost) / totalRevenue) * 100
+  const grossProfit = reliable ? revenueWithCost - totalCost : null;
+  const grossMargin = reliable && revenueWithCost > 0
+    ? ((revenueWithCost - totalCost) / revenueWithCost) * 100
     : null;
   const avgTxnValue = transactionCount > 0 ? totalRevenue / transactionCount : 0;
 
@@ -91,9 +152,10 @@ function calculateMetrics(normalizedRecords) {
     grossProfit: grossProfit !== null ? Math.round(grossProfit * 100) / 100 : null,
     grossMargin: grossMargin !== null ? Math.round(grossMargin * 100) / 100 : null,
     averageTransactionValue: Math.round(avgTxnValue * 100) / 100,
-    totalCost: Math.round(totalCost * 100) / 100,
+    totalCost: reliable ? Math.round(totalCost * 100) / 100 : null,
     recordCount: normalizedRecords.length,
     transactionCount,
+    costCoverage,
   };
 }
 
@@ -172,30 +234,36 @@ function topProducts(normalizedRecords, limit = 10) {
     const qty = num(rec.quantity);
 
     if (!productMap[name]) {
-      productMap[name] = { revenue: 0, quantity: 0, cost: 0, hasCost: false };
+      productMap[name] = { revenue: 0, quantity: 0, cost: 0, revenueWithCost: 0, rowCount: 0, rowsWithCost: 0 };
     }
     productMap[name].revenue += rev;
     productMap[name].quantity += qty;
+    productMap[name].rowCount++;
 
     const tCost = totalCostOf(rec);
     if (tCost > 0) {
       productMap[name].cost += tCost;
-      productMap[name].hasCost = true;
+      productMap[name].revenueWithCost += rev;
+      productMap[name].rowsWithCost++;
     }
   }
 
   return Object.entries(productMap)
-    .map(([name, data]) => ({
-      name,
-      revenue: Math.round(data.revenue * 100) / 100,
-      quantity: Math.round(data.quantity * 100) / 100,
-      profit: data.hasCost
-        ? Math.round((data.revenue - data.cost) * 100) / 100
-        : null,
-      margin: data.hasCost && data.revenue > 0
-        ? Math.round(((data.revenue - data.cost) / data.revenue) * 10000) / 100
-        : null,
-    }))
+    .map(([name, data]) => {
+      const costCoverage = coverageOf(data);
+      const reliable = costCoverage.hasReliableCostCoverage;
+      const knownProfit = data.revenueWithCost - data.cost;
+      return {
+        name,
+        revenue: Math.round(data.revenue * 100) / 100,
+        quantity: Math.round(data.quantity * 100) / 100,
+        profit: reliable ? Math.round(knownProfit * 100) / 100 : null,
+        margin: reliable && data.revenueWithCost > 0
+          ? Math.round((knownProfit / data.revenueWithCost) * 10000) / 100
+          : null,
+        costCoverage,
+      };
+    })
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, limit);
 }
@@ -213,24 +281,31 @@ function monthlyProfit(normalizedRecords) {
     const cost = totalCostOf(rec);
 
     if (!monthMap[month]) {
-      monthMap[month] = { revenue: 0, cost: 0, hasCost: false };
+      monthMap[month] = { revenue: 0, cost: 0, revenueWithCost: 0, rowCount: 0, rowsWithCost: 0 };
     }
     monthMap[month].revenue += rev;
+    monthMap[month].rowCount++;
     if (cost > 0) {
       monthMap[month].cost += cost;
-      monthMap[month].hasCost = true;
+      monthMap[month].revenueWithCost += rev;
+      monthMap[month].rowsWithCost++;
     }
   }
 
+  // Same single-basis rule as topProducts — the month's profit is the profit
+  // on its cost-known rows, not all its revenue minus a partial cost.
   return Object.entries(monthMap)
-    .map(([month, data]) => ({
-      month,
-      revenue: Math.round(data.revenue * 100) / 100,
-      cost: data.hasCost ? Math.round(data.cost * 100) / 100 : null,
-      profit: data.hasCost
-        ? Math.round((data.revenue - data.cost) * 100) / 100
-        : null,
-    }))
+    .map(([month, data]) => {
+      const costCoverage = coverageOf(data);
+      const reliable = costCoverage.hasReliableCostCoverage;
+      return {
+        month,
+        revenue: Math.round(data.revenue * 100) / 100,
+        cost: reliable ? Math.round(data.cost * 100) / 100 : null,
+        profit: reliable ? Math.round((data.revenueWithCost - data.cost) * 100) / 100 : null,
+        costCoverage,
+      };
+    })
     .sort((a, b) => a.month.localeCompare(b.month));
 }
 
@@ -417,20 +492,27 @@ function weeklyProfit(normalizedRecords) {
     const rev = num(revenueOf(rec));
     const cost = totalCostOf(rec);
 
-    if (!map[week]) map[week] = { revenue: 0, cost: 0, hasCost: false };
+    if (!map[week]) map[week] = { revenue: 0, cost: 0, revenueWithCost: 0, rowCount: 0, rowsWithCost: 0 };
     map[week].revenue += rev;
+    map[week].rowCount++;
     if (cost > 0) {
       map[week].cost += cost;
-      map[week].hasCost = true;
+      map[week].revenueWithCost += rev;
+      map[week].rowsWithCost++;
     }
   }
   return Object.entries(map)
-    .map(([week, data]) => ({
-      week,
-      revenue: Math.round(data.revenue * 100) / 100,
-      cost: data.hasCost ? Math.round(data.cost * 100) / 100 : null,
-      profit: data.hasCost ? Math.round((data.revenue - data.cost) * 100) / 100 : null,
-    }))
+    .map(([week, data]) => {
+      const costCoverage = coverageOf(data);
+      const reliable = costCoverage.hasReliableCostCoverage;
+      return {
+        week,
+        revenue: Math.round(data.revenue * 100) / 100,
+        cost: reliable ? Math.round(data.cost * 100) / 100 : null,
+        profit: reliable ? Math.round((data.revenueWithCost - data.cost) * 100) / 100 : null,
+        costCoverage,
+      };
+    })
     .sort((a, b) => a.week.localeCompare(b.week));
 }
 
@@ -443,20 +525,27 @@ function dailyProfit(normalizedRecords) {
     const rev = num(revenueOf(rec));
     const cost = totalCostOf(rec);
 
-    if (!map[day]) map[day] = { revenue: 0, cost: 0, hasCost: false };
+    if (!map[day]) map[day] = { revenue: 0, cost: 0, revenueWithCost: 0, rowCount: 0, rowsWithCost: 0 };
     map[day].revenue += rev;
+    map[day].rowCount++;
     if (cost > 0) {
       map[day].cost += cost;
-      map[day].hasCost = true;
+      map[day].revenueWithCost += rev;
+      map[day].rowsWithCost++;
     }
   }
   return Object.entries(map)
-    .map(([day, data]) => ({
-      day,
-      revenue: Math.round(data.revenue * 100) / 100,
-      cost: data.hasCost ? Math.round(data.cost * 100) / 100 : null,
-      profit: data.hasCost ? Math.round((data.revenue - data.cost) * 100) / 100 : null,
-    }))
+    .map(([day, data]) => {
+      const costCoverage = coverageOf(data);
+      const reliable = costCoverage.hasReliableCostCoverage;
+      return {
+        day,
+        revenue: Math.round(data.revenue * 100) / 100,
+        cost: reliable ? Math.round(data.cost * 100) / 100 : null,
+        profit: reliable ? Math.round((data.revenueWithCost - data.cost) * 100) / 100 : null,
+        costCoverage,
+      };
+    })
     .sort((a, b) => a.day.localeCompare(b.day));
 }
 

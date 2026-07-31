@@ -371,6 +371,10 @@ async function findProduct(organizationId, query) {
   return { candidates: close.map((c) => c.p), fuzzy: true };
 }
 
+// Same floor and reasoning as MIN_WEEK_COST_COVERAGE_PCT above — a couple of
+// cost-tagged rows shouldn't produce a confident-looking margin for a product.
+const MIN_PRODUCT_COST_COVERAGE_PCT = 20;
+
 async function getProductProfile(organizationId, { query } = {}) {
   assertOrgId(organizationId);
   const found = await findProduct(organizationId, query);
@@ -383,7 +387,10 @@ async function getProductProfile(organizationId, { query } = {}) {
   const [stats] = await db`
     select sum(s.unit_price * s.quantity) as revenue,
            sum(s.quantity) as quantity,
-           sum((s.unit_price - s.unit_cost) * s.quantity) as profit,
+           count(*)::int as "rowCount",
+           count(*) filter (where s.unit_cost is not null)::int as "rowsWithCost",
+           coalesce(sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null), 0) as "revenueWithCost",
+           sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null) as profit,
            avg(s.unit_price) as "avgPrice",
            count(*) as transactions
     from sale s where s.organization_id = ${organizationId} and s.product_id = ${product.id}
@@ -417,7 +424,18 @@ async function getProductProfile(organizationId, { query } = {}) {
   }
 
   const revenue = Number(stats.revenue);
-  const profit = stats.profit != null ? Number(stats.profit) : null;
+
+  // profit sums only this product's cost-known rows. Dividing it by `revenue`
+  // (every row) would deflate the margin in proportion to how much of the
+  // product's revenue lacks a cost price — so the margin base is the
+  // cost-known revenue, and both are withheld below the coverage floor.
+  const rowCount = Number(stats.rowCount) || 0;
+  const rowsWithCost = Number(stats.rowsWithCost) || 0;
+  const revenueWithCost = Number(stats.revenueWithCost) || 0;
+  const rowsPct = rowCount > 0 ? Math.round((rowsWithCost / rowCount) * 1000) / 10 : 0;
+  const revenuePct = revenue > 0 ? Math.round((revenueWithCost / revenue) * 1000) / 10 : 0;
+  const hasReliableCostCoverage = rowsPct >= MIN_PRODUCT_COST_COVERAGE_PCT && revenuePct >= MIN_PRODUCT_COST_COVERAGE_PCT;
+  const profit = hasReliableCostCoverage && stats.profit != null ? Number(stats.profit) : null;
 
   return {
     found: true,
@@ -427,7 +445,8 @@ async function getProductProfile(organizationId, { query } = {}) {
     revenue: round(revenue),
     quantitySold: round(stats.quantity),
     profit: profit != null ? round(profit) : null,
-    margin: revenue > 0 && profit != null ? round((profit / revenue) * 100) : null,
+    margin: revenueWithCost > 0 && profit != null ? round((profit / revenueWithCost) * 100) : null,
+    costCoverage: { hasReliableCostCoverage, rowsWithCost, rowCount, revenuePct, rowsPct },
     averagePrice: round(stats.avgPrice),
     transactions: Number(stats.transactions),
     shareOfTotalRevenuePct: totalRevenue > 0 ? round((revenue / totalRevenue) * 100) : null,

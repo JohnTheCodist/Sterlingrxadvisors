@@ -15,7 +15,14 @@ const { getDataScope } = require('./advisorQueries');
 
 const LLM_API_KEY = process.env.LLM_API_KEY || '';
 const LLM_API_URL = process.env.LLM_API_URL || 'https://api.openai.com/v1/chat/completions';
-const LLM_MODEL = process.env.LLM_MODEL || 'gpt-4o-mini';
+// Per-feature model override, falling back to the shared LLM_MODEL when
+// unset. The Advisor is the only consumer that depends on TOOL CALLING — it
+// gets every number it reports by calling a tool, so a model without
+// reliable function-calling doesn't fail loudly here, it just stops calling
+// tools and starts answering from nothing. That makes it the one place worth
+// pinning to a stronger model independently of the cheaper, higher-volume
+// column-mapping calls.
+const LLM_MODEL = process.env.ADVISOR_MODEL || process.env.LLM_MODEL || 'gpt-4o-mini';
 
 // INACTIVITY timeout, not a total-request budget. The old timer was armed
 // once and only cleared after the whole stream drained, so its window had to

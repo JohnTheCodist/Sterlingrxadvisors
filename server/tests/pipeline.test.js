@@ -26,16 +26,47 @@ const { parseDrugName } = require('../services/productParser');
 let passed = 0;
 let failed = 0;
 
+// Tests and section headers are queued, then drained in order by run() at the
+// bottom of the file. The runner used to call fn() and ignore what came back,
+// which silently broke every test of an async function: normalize() returns a
+// promise, so `normalize(rows).normalized` was undefined rather than the
+// records, and a rejected promise could never reach the catch. Queuing lets
+// each test be awaited in turn while keeping the output in source order.
+const queue = [];
+
 function test(name, fn) {
-  try {
-    fn();
-    passed++;
-    console.log(`  PASS  ${name}`);
-  } catch (e) {
-    failed++;
-    console.log(`  FAIL  ${name}`);
-    console.log(`        ${e.message}`);
+  queue.push(async () => {
+    try {
+      await fn();
+      passed++;
+      console.log(`  PASS  ${name}`);
+    } catch (e) {
+      failed++;
+      console.log(`  FAIL  ${name}`);
+      console.log(`        ${e.message}`);
+    }
+  });
+}
+
+function section(header) {
+  queue.push(() => console.log(header));
+}
+
+// A few cases exercise paths that write to Postgres (joining a DimProduct
+// sheet persists the enrichment columns). Those are integration tests: they
+// need a real database, not a stub. Report them as SKIP rather than letting
+// them fail on every machine without one — a red suite nobody can make green
+// gets ignored, which is how the async breakage above survived so long.
+let skipped = 0;
+const HAS_DB = !!process.env.DATABASE_URL;
+const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
+function testDb(name, fn) {
+  if (!HAS_DB) {
+    queue.push(() => { skipped++; console.log(`  SKIP  ${name} (needs DATABASE_URL)`); });
+    return;
   }
+  test(name, fn);
 }
 
 function assert(condition, msg) {
@@ -58,72 +89,72 @@ function assertDeepEquals(actual, expected, msg) {
 
 // ---- tests --------------------------------------------------------------
 
-console.log('\n=== Currency Parsing ===');
-test('strips naira symbol and commas', () => {
+section('\n=== Currency Parsing ===');
+test('strips naira symbol and commas', async () => {
   assertEquals(parseCurrency('₦1,500'), 1500);
 });
-test('handles plain number string', () => {
+test('handles plain number string', async () => {
   assertEquals(parseCurrency('1200'), 1200);
 });
-test('handles number type', () => {
+test('handles number type', async () => {
   assertEquals(parseCurrency(3500), 3500);
 });
-test('handles negative values', () => {
+test('handles negative values', async () => {
   assertEquals(parseCurrency('-100'), -100);
 });
-test('returns null for empty string', () => {
+test('returns null for empty string', async () => {
   assertEquals(parseCurrency(''), null);
 });
-test('returns null for null', () => {
+test('returns null for null', async () => {
   assertEquals(parseCurrency(null), null);
 });
-test('handles dollar sign', () => {
+test('handles dollar sign', async () => {
   assertEquals(parseCurrency('$500'), 500);
 });
 
-console.log('\n=== Date Parsing ===');
-test('recognizes YYYY-MM-DD', () => {
+section('\n=== Date Parsing ===');
+test('recognizes YYYY-MM-DD', async () => {
   assertEquals(parseDateString('2026-07-15'), '2026-07-15');
 });
-test('recognizes DD/MM/YYYY', () => {
+test('recognizes DD/MM/YYYY', async () => {
   assertEquals(parseDateString('15/01/2026'), '2026-01-15');
 });
-test('recognizes YYYY-MM', () => {
+test('recognizes YYYY-MM', async () => {
   assertEquals(parseDateString('2026-07'), '2026-07-01');
 });
-test('converts Excel serial date', () => {
+test('converts Excel serial date', async () => {
   // Excel serial 45801 → mid-2025 (exact date depends on Excel's leap-year handling)
   const result = serialToDate(45801);
   assert(result.startsWith('2025-05'), `Expected May 2025, got ${result}`);
 });
-test('returns null for invalid date string', () => {
+test('returns null for invalid date string', async () => {
   assertEquals(parseDateString('not-a-date'), null);
 });
-test('returns null for empty', () => {
+test('returns null for empty', async () => {
   assertEquals(parseDateString(''), null);
 });
 
-console.log('\n=== YYYYMMDD Date Parsing ===');
-test('parses 20240101 as date', () => {
+section('\n=== YYYYMMDD Date Parsing ===');
+test('parses 20240101 as date', async () => {
   assertEquals(parseYYYYMMDD(20240101), '2024-01-01');
 });
-test('parses 20261231 as date', () => {
+test('parses 20261231 as date', async () => {
   assertEquals(parseYYYYMMDD(20261231), '2026-12-31');
 });
-test('rejects non-8-digit number', () => {
+test('rejects non-8-digit number', async () => {
   assertEquals(parseYYYYMMDD(202401), null);
 });
-test('rejects invalid month', () => {
+test('rejects invalid month', async () => {
   assertEquals(parseYYYYMMDD(20241301), null);
 });
-test('rejects year before 1900', () => {
+test('rejects year before 1900', async () => {
   assertEquals(parseYYYYMMDD(18990101), null);
 });
-test('rejects float', () => {
+test('rejects float', async () => {
   assertEquals(parseYYYYMMDD(20240101.5), null);
 });
 
-console.log('\n=== Enterprise Date Parsing — Multiple Separators ===');
+section('\n=== Enterprise Date Parsing — Multiple Separators ===');
 // Slash
 test('DD/MM/YYYY with slashes', () => assertEquals(parseDateString('20/05/2024'), '2024-05-20'));
 // Dash
@@ -137,18 +168,18 @@ test('DD\\MM\\YYYY with backslash', () => assertEquals(parseDateString('20\\05\\
 // Underscore
 test('YYYY_MM_DD with underscore', () => assertEquals(parseDateString('2024_05_20'), '2024-05-20'));
 
-console.log('\n=== Enterprise Date Parsing — YMD Formats ===');
+section('\n=== Enterprise Date Parsing — YMD Formats ===');
 test('YYYY/MM/DD with slashes', () => assertEquals(parseDateString('2024/05/20'), '2024-05-20'));
 test('YYYY-MM-DD ISO', () => assertEquals(parseDateString('2024-05-20'), '2024-05-20'));
 test('YYYY.MM.DD with dots', () => assertEquals(parseDateString('2024.05.20'), '2024-05-20'));
 test('YYYY MM DD with spaces', () => assertEquals(parseDateString('2024 05 20'), '2024-05-20'));
 
-console.log('\n=== Enterprise Date Parsing — US Format (MM/DD/YYYY) ===');
+section('\n=== Enterprise Date Parsing — US Format (MM/DD/YYYY) ===');
 test('MM/DD/YYYY — auto-detected (month > 12 impossible as day)', () => assertEquals(parseDateString('05/20/2024'), '2024-05-20'));
 test('MM-DD-YYYY with dashes', () => assertEquals(parseDateString('05-20-2024'), '2024-05-20'));
 test('MM.DD.YYYY with dots', () => assertEquals(parseDateString('05.20.2024'), '2024-05-20'));
 
-console.log('\n=== Enterprise Date Parsing — Month Names ===');
+section('\n=== Enterprise Date Parsing — Month Names ===');
 test('DD Mon YYYY', () => assertEquals(parseDateString('20 May 2024'), '2024-05-20'));
 test('DD MON YYYY (uppercase)', () => assertEquals(parseDateString('20 MAY 2024'), '2024-05-20'));
 test('DD-Mon-YYYY with dashes', () => assertEquals(parseDateString('20-May-2024'), '2024-05-20'));
@@ -160,101 +191,101 @@ test('Abbreviated month name', () => assertEquals(parseDateString('20 Jan 2024')
 test('Sept abbreviation', () => assertEquals(parseDateString('20 Sept 2024'), '2024-09-20'));
 test('February full name', () => assertEquals(parseDateString('February 20 2024'), '2024-02-20'));
 
-console.log('\n=== Enterprise Date Parsing — Compact Formats ===');
+section('\n=== Enterprise Date Parsing — Compact Formats ===');
 test('YYYYMMDD as string', () => assertEquals(parseDateString('20240520'), '2024-05-20'));
 test('DDMMYYYY as string', () => assertEquals(parseDateString('20052024'), '2024-05-20'));
 test('DDMMYY (6-digit compact)', () => assertEquals(parseDateString('240520'), '2024-05-20'));
 
-console.log('\n=== Enterprise Date Parsing — Ordinal Dates ===');
+section('\n=== Enterprise Date Parsing — Ordinal Dates ===');
 test('20th May 2024', () => assertEquals(parseDateString('20th May 2024'), '2024-05-20'));
 test('1st January 2025', () => assertEquals(parseDateString('1st January 2025'), '2025-01-01'));
 test('2nd Feb 2023', () => assertEquals(parseDateString('2nd Feb 2023'), '2023-02-02'));
 test('3rd Mar 2022', () => assertEquals(parseDateString('3rd Mar 2022'), '2022-03-03'));
 
-console.log('\n=== Enterprise Date Parsing — Date-Time Values ===');
+section('\n=== Enterprise Date Parsing — Date-Time Values ===');
 test('ISO datetime with T separator', () => assertEquals(parseDateString('2024-05-20T14:32:21'), '2024-05-20'));
 test('ISO datetime with space separator', () => assertEquals(parseDateString('2024-05-20 14:32'), '2024-05-20'));
 test('Slash date with time', () => assertEquals(parseDateString('20/05/2024 9:45'), '2024-05-20'));
 test('US format with time', () => assertEquals(parseDateString('05-20-2024 22:30'), '2024-05-20'));
 test('YMD with time', () => assertEquals(parseDateString('2024/05/20 13:45:30'), '2024-05-20'));
 
-console.log('\n=== Enterprise Date Parsing — Timezone Formats ===');
+section('\n=== Enterprise Date Parsing — Timezone Formats ===');
 test('ISO with Z timezone', () => assertEquals(parseDateString('2024-05-20T15:30:45Z'), '2024-05-20'));
 test('ISO with +01:00 timezone', () => assertEquals(parseDateString('2024-05-20T15:30:45+01:00'), '2024-05-20'));
 test('ISO with milliseconds and Z', () => assertEquals(parseDateString('2024-05-20T15:30:45.000Z'), '2024-05-20'));
 
-console.log('\n=== Enterprise Date Parsing — Two-Digit Years ===');
+section('\n=== Enterprise Date Parsing — Two-Digit Years ===');
 test('DD/MM/YY → 2024', () => assertEquals(parseDateString('20/05/24'), '2024-05-20'));
 test('DD-MM-YY with 50+ year → 19xx', () => assertEquals(parseDateString('20-05-99'), '1999-05-20'));
 test('MM/DD/YY US format', () => assertEquals(parseDateString('05/20/24'), '2024-05-20'));
 
-console.log('\n=== Enterprise Date Parsing — Nigerian Priority ===');
+section('\n=== Enterprise Date Parsing — Nigerian Priority ===');
 test('05/06/2024 → 5 June (not 6 May)', () => assertEquals(parseDateString('05/06/2024'), '2024-06-05'));
 test('13/05/2024 — day >12 forces DD/MM', () => assertEquals(parseDateString('13/05/2024'), '2024-05-13'));
 test('05/20/2024 — month >12 forces MM/DD→DD/MM', () => assertEquals(parseDateString('05/20/2024'), '2024-05-20'));
 test('2024/20/05 — second part >12 forces YYYY/DD/MM', () => assertEquals(parseDateString('2024/20/05'), '2024-05-20'));
 
-console.log('\n=== Enterprise Date Parsing — Invalid Dates ===');
+section('\n=== Enterprise Date Parsing — Invalid Dates ===');
 test('32/05/2024 — day impossible', () => assertEquals(parseDateString('32/05/2024'), null));
 test('20/15/2024 — month impossible', () => assertEquals(parseDateString('20/15/2024'), null));
 test('99/99/9999 — both impossible', () => assertEquals(parseDateString('99/99/9999'), null));
 test('abc123 — nonsense', () => assertEquals(parseDateString('abc123'), null));
 test('banana — pure text', () => assertEquals(parseDateString('banana'), null));
 
-console.log('\n=== Enterprise Date Parsing — Excel Serial Dates ===');
-test('Excel serial 45412 → 2024-04-29', () => {
+section('\n=== Enterprise Date Parsing — Excel Serial Dates ===');
+test('Excel serial 45412 → 2024-04-29', async () => {
   const result = serialToDate(45412);
   assertEquals(result, '2024-04-29');
 });
-test('Excel serial in normalizeDate', () => {
+test('Excel serial in normalizeDate', async () => {
   // normalizeDate should handle Excel serial and return ISO
   const { normalize } = require('../services/normalizer');
   const rows = [{ Product: 'X', Qty: '2', Price: '100', Date: 45412 }];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   assertEquals(result.normalized[0].transaction_date, '2024-04-29');
 });
 
-console.log('\n=== Enterprise Date Parsing — Edge Cases ===');
+section('\n=== Enterprise Date Parsing — Edge Cases ===');
 test('empty string returns null', () => assertEquals(parseDateString(''), null));
 test('whitespace only returns null', () => assertEquals(parseDateString('   '), null));
 test('null returns null', () => assertEquals(parseDateString(null), null));
 test('YYYY-MM returns first of month', () => assertEquals(parseDateString('2025-03'), '2025-03-01'));
-test('normalizeDate handles null', () => {
+test('normalizeDate handles null', async () => {
   const { normalize } = require('../services/normalizer');
   const rows = [{ Product: 'X', Qty: '2', Price: '100', Date: null }];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   assertEquals(result.normalized[0].transaction_date, null);
 });
-test('normalizeDate handles empty string', () => {
+test('normalizeDate handles empty string', async () => {
   const { normalize } = require('../services/normalizer');
   const rows = [{ Product: 'X', Qty: '2', Price: '100', Date: '' }];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   assertEquals(result.normalized[0].transaction_date, null);
 });
 
-console.log('\n=== Sheet Joining ===');
-test('detects DimProduct sheet', () => {
+section('\n=== Sheet Joining ===');
+test('detects DimProduct sheet', async () => {
   const r = joinSheets({
     'Sales': [{ ProductID: 'P1', Qty: 2 }],
     'DimProduct': [{ ProductID: 'P1', ProductName: 'Paracetamol' }],
   });
   assert(r.meta.joined.includes('product'), 'DimProduct should be joined');
 });
-test('enriches product name from DimProduct', () => {
+test('enriches product name from DimProduct', async () => {
   const r = joinSheets({
     'Sales': [{ ProductID: 'P1', Qty: 2 }],
     'DimProduct': [{ ProductID: 'P1', ProductName: 'Paracetamol' }],
   });
   assertEquals(r.rows[0]['_productName'], 'Paracetamol');
 });
-test('handles missing dimension values gracefully', () => {
+test('handles missing dimension values gracefully', async () => {
   const r = joinSheets({
     'Sales': [{ ProductID: 'P99', Qty: 2 }],
     'DimProduct': [{ ProductID: 'P1', ProductName: 'Paracetamol' }],
   });
   assertEquals(r.rows[0]['_productName'] || null, null);
 });
-test('joins pharmacy dimension', () => {
+test('joins pharmacy dimension', async () => {
   const r = joinSheets({
     'Sales': [{ PharmacyID: 'PH1', Revenue: 100 }],
     'DimPharmacy': [{ PharmacyID: 'PH1', PharmacyName: 'Main Branch' }],
@@ -262,114 +293,118 @@ test('joins pharmacy dimension', () => {
   assertEquals(r.rows[0]['_pharmacyName'], 'Main Branch');
 });
 
-console.log('\n=== Quantity Parsing ===');
-test('converts string to number', () => {
-  const r = normalize([{ Product: 'X', Qty: '5', Price: '100' }]);
+section('\n=== Quantity Parsing ===');
+test('converts string to number', async () => {
+  const r = await normalize([{ Product: 'X', Qty: '5', Price: '100' }]);
   assertEquals(r.normalized[0].quantity, 5);
 });
-test('converts comma-separated number', () => {
-  const r = normalize([{ Product: 'X', Qty: '1,200', Price: '100' }]);
+test('converts comma-separated number', async () => {
+  const r = await normalize([{ Product: 'X', Qty: '1,200', Price: '100' }]);
   assertEquals(r.normalized[0].quantity, 1200);
 });
-test('defaults missing quantity to 1 when price exists', () => {
-  const r = normalize([{ Product: 'X', Price: '100', Date: '2024-01-15' }]);
+test('defaults missing quantity to 1 when price exists', async () => {
+  const r = await normalize([{ Product: 'X', Price: '100', Date: '2024-01-15' }]);
   assertEquals(r.normalized[0].quantity, 1);
 });
-test('fills null quantity with 1', () => {
-  const r = normalize([{ Product: 'X', Date: '2024-01-15' }]);
+test('fills null quantity with 1', async () => {
+  const r = await normalize([{ Product: 'X', Date: '2024-01-15' }]);
   assertEquals(r.normalized[0].quantity, 1);
 });
 
-console.log('\n=== Whitespace Trimming ===');
-test('trims product names', () => {
-  const r = normalize([{ 'Medicine  ': '  Paracetamol  ', 'Qty': '2', 'Price': '200' }]);
+section('\n=== Whitespace Trimming ===');
+test('trims product names', async () => {
+  const r = await normalize([{ 'Medicine  ': '  Paracetamol  ', 'Qty': '2', 'Price': '200' }]);
   assert(r.normalized[0].product_name != null);
   assert(r.normalized[0].product_name.toLowerCase().includes('paracetamol'),
     `Got: ${r.normalized[0].product_name}`);
 });
 
-console.log('\n=== Product Name Normalization (Phase 4) ===');
-test('normalizes 500MG TAB to canonical', () => {
+section('\n=== Product Name Normalization (Phase 4) ===');
+test('normalizes 500MG TAB to canonical', async () => {
   const result = normalizeProductName('PARACETAMOL 500MG TAB');
   assertEquals(result.recognized, true);
   assertEquals(result.generic, 'Paracetamol');
   assertEquals(result.strength, '500mg');
   assertEquals(result.form, 'Tablet');
-  // Business identity = generic only — KB-inferred strength/form are NOT injected
-  assertEquals(result.normalized, 'Paracetamol');
+  // Business identity keeps the strength and form the SOURCE TEXT stated.
+  // Dropping them to the bare generic would merge "Paracetamol 500mg" and
+  // "Paracetamol 1g" into one identity — genuinely different SKUs with
+  // different costs and stock. See productNormalizer.js "Build canonical name".
+  assertEquals(result.normalized, 'Paracetamol 500mg Tablet');
   assert(result.confidence >= 0.7);
 });
-test('normalizes lowercase variant', () => {
+test('normalizes lowercase variant', async () => {
   const result = normalizeProductName('paracetamol 500mg');
   assertEquals(result.recognized, true);
   assertEquals(result.generic, 'Paracetamol');
-  // Business identity = generic only
-  assertEquals(result.normalized, 'Paracetamol');
+  // Same rule: the strength stated in the source survives into the identity.
+  assertEquals(result.normalized, 'Paracetamol 500mg Tablet');
 });
-test('normalizes PCM abbreviation', () => {
+test('normalizes PCM abbreviation', async () => {
   const result = normalizeProductName('PCM 500');
   assertEquals(result.recognized, true);
   assertEquals(result.generic, 'Paracetamol');
   assertEquals(result.strength, '500mg');
 });
-test('normalizes Ampiclox brand', () => {
+test('normalizes Ampiclox brand', async () => {
   const result = normalizeProductName('Ampiclox 500MG CAP');
   assertEquals(result.recognized, true);
   assert(result.generic.includes('Ampicillin'), `Generic: ${result.generic}`);
-  // Business identity = brand name (what the pharmacy uploaded)
-  assertEquals(result.normalized, 'Ampiclox');
+  // Business identity leads with the brand the pharmacy uploaded, then keeps
+  // the strength and form their own text stated.
+  assertEquals(result.normalized, 'Ampiclox 500mg Capsule');
 });
-test('handles null', () => {
+test('handles null', async () => {
   const result = normalizeProductName(null);
   assertEquals(result.recognized, false);
   assertEquals(result.flag, 'EMPTY');
 });
-test('handles empty string', () => {
+test('handles empty string', async () => {
   const result = normalizeProductName('');
   assertEquals(result.recognized, false);
   assertEquals(result.flag, 'EMPTY');
 });
-test('flags unrecognized drug names', () => {
+test('flags unrecognized drug names', async () => {
   // A name that should not match any known pattern
   const result = normalizeProductName('!!@#$ Unknown 12345');
   assertEquals(result.recognized, false, `Should not recognize: ${result.normalized}`);
   assert(result.flag != null, `Flag should exist, got: ${JSON.stringify(result)}`);
 });
-test('provides canonical ID for known drugs', () => {
+test('provides canonical ID for known drugs', async () => {
   const result = normalizeProductName('Paracetamol 500mg');
   assertEquals(result.recognized, true);
   assert(result.canonicalId != null);
   assert(result.canonicalId.startsWith('DRUG-'));
 });
 
-console.log('\n=== Payment Method Normalization ===');
-test('normalizes CASH', () => {
+section('\n=== Payment Method Normalization ===');
+test('normalizes CASH', async () => {
   assertEquals(normalizePaymentMethod('CASH'), 'Cash');
 });
-test('normalizes Cash Payment', () => {
+test('normalizes Cash Payment', async () => {
   assertEquals(normalizePaymentMethod('Cash Payment'), 'Cash');
 });
-test('normalizes TRF', () => {
+test('normalizes TRF', async () => {
   assertEquals(normalizePaymentMethod('TRF'), 'Transfer');
 });
-test('normalizes Bank Transfer', () => {
+test('normalizes Bank Transfer', async () => {
   assertEquals(normalizePaymentMethod('Bank Transfer'), 'Transfer');
 });
-test('normalizes POS Terminal', () => {
+test('normalizes POS Terminal', async () => {
   assertEquals(normalizePaymentMethod('POS Terminal'), 'POS');
 });
-test('normalizes Card Payment', () => {
+test('normalizes Card Payment', async () => {
   assertEquals(normalizePaymentMethod('Card Payment'), 'POS');
 });
-test('normalizes NHIS', () => {
+test('normalizes NHIS', async () => {
   assertEquals(normalizePaymentMethod('NHIS'), 'Insurance');
 });
-test('returns null for unrecognized', () => {
+test('returns null for unrecognized', async () => {
   assertEquals(normalizePaymentMethod('XYZ'), null);
 });
 
-console.log('\n=== Duplicate Transaction Removal ===');
-test('removes exact duplicates', () => {
+section('\n=== Duplicate Transaction Removal ===');
+test('removes exact duplicates', async () => {
   const records = [
     { product: 'Paracetamol', quantity: 2, price: 200, transaction_date: '2024-01-15' },
     { product: 'Paracetamol', quantity: 2, price: 200, transaction_date: '2024-01-15' },
@@ -379,7 +414,7 @@ test('removes exact duplicates', () => {
   assertEquals(deduped.length, 2);
   assertEquals(duplicatesRemoved, 1);
 });
-test('keeps non-duplicates', () => {
+test('keeps non-duplicates', async () => {
   const records = [
     { product: 'A', quantity: 1, price: 100, transaction_date: '2024-01-01' },
     { product: 'A', quantity: 2, price: 100, transaction_date: '2024-01-01' },
@@ -389,8 +424,8 @@ test('keeps non-duplicates', () => {
   assertEquals(duplicatesRemoved, 0);
 });
 
-console.log('\n=== Duplicate Column Handling ===');
-test('removes rows that match column headers', () => {
+section('\n=== Duplicate Column Handling ===');
+test('removes rows that match column headers', async () => {
   const rows = [
     { Drug: 'Paracetamol', Qty: '2', Price: '200' },
     { Drug: 'Drug', Qty: 'Qty', Price: 'Price' },
@@ -402,15 +437,15 @@ test('removes rows that match column headers', () => {
   assertEquals(stats.headersRemoved, 1);
 });
 
-console.log('\n=== Missing Value Handling ===');
-test('fills null product with Unknown', () => {
+section('\n=== Missing Value Handling ===');
+test('fills null product with Unknown', async () => {
   const records = [
     { product: null, quantity: 2, price: 200, transaction_date: '2024-01-01' },
   ];
   const filled = fillMissingValues(records);
   assertEquals(filled[0].product, 'Unknown');
 });
-test('fills null quantity with 1', () => {
+test('fills null quantity with 1', async () => {
   const records = [
     { product: 'X', quantity: null, price: 200, transaction_date: '2024-01-01' },
   ];
@@ -418,8 +453,8 @@ test('fills null quantity with 1', () => {
   assertEquals(filled[0].quantity, 1);
 });
 
-console.log('\n=== Empty Row Removal ===');
-test('removes completely empty rows', () => {
+section('\n=== Empty Row Removal ===');
+test('removes completely empty rows', async () => {
   const rows = [
     { Drug: 'Paracetamol', Qty: '2', Price: '200' },
     { Drug: null, Qty: null, Price: null },
@@ -430,8 +465,8 @@ test('removes completely empty rows', () => {
   assertEquals(stats.emptyRemoved, 1);
 });
 
-console.log('\n=== Full Pipeline Integration (Phase 3+4) ===');
-test('handles complete pharmacy export correctly', () => {
+section('\n=== Full Pipeline Integration (Phase 3+4) ===');
+test('handles complete pharmacy export correctly', async () => {
   const rows = [
     { 'Drug Name': 'PARACETAMOL 500MG TAB', 'Qty Sold': '2', 'Selling Price': '₦200', 'Cost Price': '₦100', 'Sale Date': '2024-01-15', 'Payment': 'CASH' },
     { 'Drug Name': 'paracetamol 500mg',     'Qty Sold': '1', 'Selling Price': '₦200', 'Cost Price': '₦100', 'Sale Date': '2024-01-15', 'Payment': 'Cash Payment' },
@@ -443,7 +478,7 @@ test('handles complete pharmacy export correctly', () => {
     { 'Drug Name': 'Ampiclox 500mg Capsule','Qty Sold': '5', 'Selling Price': '₦1,500', 'Cost Price': '₦950', 'Sale Date': '2024-01-18', 'Payment': 'POS Terminal' },
   ];
 
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const a = analyze(result.normalized);
 
   // 7 input rows, 2 duplicates removed = 5 unique records
@@ -467,14 +502,14 @@ test('handles complete pharmacy export correctly', () => {
     'Normalized payment methods');
 });
 
-console.log('\n=== Validation Report ===');
-test('generates validation report with before/after comparison', () => {
+section('\n=== Validation Report ===');
+test('generates validation report with before/after comparison', async () => {
   const rows = [
     { 'Medicine': 'Paracetamol', 'Qty': '2', 'Price': '200', 'Cost': '100' },
     { 'Medicine': 'Paracetamol', 'Qty': '2', 'Price': '200', 'Cost': '100' }, // duplicate
     { 'Medicine': 'Ibuprofen',  'Qty': '3', 'Price': '500', 'Cost': '300' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const a = analyze(result.normalized);
   const report = validate(rows, result, a);
 
@@ -484,23 +519,23 @@ test('generates validation report with before/after comparison', () => {
   assertEquals(report.pipelineStages.afterDedup, 2);
 });
 
-console.log('\n=== Dictionary Integrity ===');
-test('all required dictionary categories exist', () => {
+section('\n=== Dictionary Integrity ===');
+test('all required dictionary categories exist', async () => {
   const expected = ['product_name', 'quantity', 'revenue', 'cost_price', 'selling_price', 'transaction_date', 'payment_method'];
   for (const cat of expected) {
     assert(Array.isArray(DICTIONARY[cat]), `${cat} is missing from dictionary`);
     assert(DICTIONARY[cat].length > 0, `${cat} has no synonyms`);
   }
 });
-test('no duplicate synonyms within a category', () => {
+test('no duplicate synonyms within a category', async () => {
   for (const [cat, synonyms] of Object.entries(DICTIONARY)) {
     const unique = new Set(synonyms);
     assertEquals(unique.size, synonyms.length, `Duplicates in ${cat}`);
   }
 });
 
-console.log('\n=== Multi-Sheet Dimension Joining ===');
-test('normalizeFromSheets enriches product names', () => {
+section('\n=== Multi-Sheet Dimension Joining ===');
+testDb('normalizeFromSheets enriches product names', async () => {
   const sheets = {
     'Sales': [
       { ProductID: 'P1', Qty: '2', Price: '200', DateKey: 20240115 },
@@ -511,37 +546,37 @@ test('normalizeFromSheets enriches product names', () => {
       { ProductID: 'P2', ProductName: 'Augmentin 625mg' },
     ],
   };
-  const result = normalizeFromSheets(sheets);
+  const result = await normalizeFromSheets(sheets, { organizationId: TEST_ORG_ID });
   // Phase 4 product normalization may canonicalize names
   assert(result.normalized[0].product_name.includes('Paracetamol'), `Got: ${result.normalized[0].product_name}`);
   assert(result.normalized[1].product_name.includes('Amoxicillin') || result.normalized[1].product_name.includes('Augmentin'),
     `Got: ${result.normalized[1].product_name}`);
 });
-test('normalizeFromSheets parses YYYYMMDD DateKey', () => {
+testDb('normalizeFromSheets parses YYYYMMDD DateKey', async () => {
   const sheets = {
     'Sales': [{ ProductID: 'P1', Qty: '2', Price: '200', DateKey: 20240715 }],
     'DimProduct': [{ ProductID: 'P1', ProductName: 'Paracetamol' }],
   };
-  const result = normalizeFromSheets(sheets);
+  const result = await normalizeFromSheets(sheets, { organizationId: TEST_ORG_ID });
   assertEquals(result.normalized[0].transaction_date, '2024-07-15');
 });
-test('normalizeFromSheets handles single sheet (no dims)', () => {
+test('normalizeFromSheets handles single sheet (no dims)', async () => {
   const sheets = {
     'Sheet1': [{ Product: 'X', Qty: '1', Price: '100' }],
   };
-  const result = normalizeFromSheets(sheets);
+  const result = await normalizeFromSheets(sheets);
   assertEquals(result.normalized.length, 1);
   assertEquals(result.joinMeta.joined.length, 0);
 });
 
-console.log('\n=== Header Normalization ===');
-test('strips currency symbols', () => {
+section('\n=== Header Normalization ===');
+test('strips currency symbols', async () => {
   assertEquals(normalizeHeader('Selling Price (₦)'), 'selling price');
 });
-test('lowercases and collapses whitespace', () => {
+test('lowercases and collapses whitespace', async () => {
   assertEquals(normalizeHeader('  Product  NAME  '), 'product name');
 });
-test('replaces underscores with spaces', () => {
+test('replaces underscores with spaces', async () => {
   assertEquals(normalizeHeader('Qty_Sold'), 'qty sold');
 });
 
@@ -549,16 +584,16 @@ test('replaces underscores with spaces', () => {
 
 const { resolveIdentity, enrichIdentity, resolveProductIdentities, computeResolutionMethod } = require('../services/productIdentityResolver');
 
-console.log('\n=== Product Identity Resolution ===');
+section('\n=== Product Identity Resolution ===');
 
-test('Rule 1: direct product_name column is used as-is', () => {
+test('Rule 1: direct product_name column is used as-is', async () => {
   const r = resolveIdentity({ product_name: 'Paracetamol 500mg', brand: null, generic_name: null, strength: null, dosage_form: null });
   assert(r !== null, 'Should resolve');
   assertEquals(r.rule, 1, 'Should use Rule 1');
   assertEquals(r.product_name, 'Paracetamol 500mg');
 });
 
-test('Rule 2: brand + strength + dosage_form compose product name', () => {
+test('Rule 2: brand + strength + dosage_form compose product name', async () => {
   const r = resolveIdentity({ product_name: null, brand: 'Amoxil', generic_name: null, strength: '500mg', dosage_form: 'Capsule' });
   assert(r !== null, 'Should resolve');
   assertEquals(r.rule, 2);
@@ -566,39 +601,39 @@ test('Rule 2: brand + strength + dosage_form compose product name', () => {
   assert(r.product_name.includes('500mg'), `Got: ${r.product_name}`);
 });
 
-test('Rule 3: generic_name + strength compose product name', () => {
+test('Rule 3: generic_name + strength compose product name', async () => {
   const r = resolveIdentity({ product_name: null, brand: null, generic_name: 'Ibuprofen', strength: '400mg', dosage_form: null });
   assert(r !== null, 'Should resolve');
   assertEquals(r.rule, 3);
   assertEquals(r.product_name, 'Ibuprofen 400mg');
 });
 
-test('Rule 5: brand only falls back to brand name', () => {
+test('Rule 5: brand only falls back to brand name', async () => {
   const r = resolveIdentity({ product_name: null, brand: 'Coartem', generic_name: null, strength: null, dosage_form: null });
   assert(r !== null, 'Should resolve');
   assertEquals(r.rule, 5);
   assertEquals(r.product_name, 'Coartem');
 });
 
-test('Rule 7: no identity fields returns null', () => {
+test('Rule 7: no identity fields returns null', async () => {
   const r = resolveIdentity({ product_name: null, brand: null, generic_name: null, strength: null, dosage_form: null });
   assertEquals(r, null, 'Should return null when nothing to resolve');
 });
 
-test('Case 5: product not in NAFDAC keeps original uploaded value', () => {
+test('Case 5: product not in NAFDAC keeps original uploaded value', async () => {
   const rows = [{ 'Product': 'SuperCure Plus XR-7000', 'Qty': '2', 'Price': '500' }];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   assert(rec.canonical_product != null, 'canonical_product should be set');
   assert(rec.canonical_product.includes('SuperCure') || rec.product_name.includes('SuperCure'),
     `Should keep original name, got: ${rec.canonical_product}`);
 });
 
-test('canonical_product and display_product fields exist in normalized records', () => {
+test('canonical_product and display_product fields exist in normalized records', async () => {
   const rows = [
     { 'Drug': 'Paracetamol 500mg', 'Qty': '5', 'Price': '200', 'Cost': '100', 'Date': '2024-01-15' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   assert(result.normalized.length > 0, 'Should produce normalized records');
   const rec = result.normalized[0];
   assert('canonical_product' in rec, 'canonical_product field should exist');
@@ -606,14 +641,14 @@ test('canonical_product and display_product fields exist in normalized records',
   assert(rec.canonical_product != null, 'canonical_product should not be null');
 });
 
-test('canonical_product drives analytics grouping via productOf', () => {
+test('canonical_product drives analytics grouping via productOf', async () => {
   // Two records with same canonical_product should group together in top products
   const rows = [
     { 'Drug': 'Paracetamol 500mg', 'Qty': '3', 'Price': '200', 'Date': '2024-01-10' },
     { 'Drug': 'Paracetamol 500mg', 'Qty': '2', 'Price': '200', 'Date': '2024-01-11' },
     { 'Drug': 'Ibuprofen 400mg',   'Qty': '1', 'Price': '150', 'Date': '2024-01-12' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const a = analyze(result.normalized);
   // Paracetamol should be top product (qty 5 vs 1)
   assert(a.topProducts && a.topProducts.length > 0, 'Should have top products');
@@ -621,7 +656,7 @@ test('canonical_product drives analytics grouping via productOf', () => {
   assert(top.name.toLowerCase().includes('paracetamol'), `Top product should be Paracetamol, got: ${top.name}`);
 });
 
-test('resolveProductIdentities adds canonical_product to all records', () => {
+test('resolveProductIdentities adds canonical_product to all records', async () => {
   const rows = [
     { drug_name: 'Amoxicillin 250mg', qty: '1', price: '300' },
     { drug_name: 'SuperFake 999', qty: '2', price: '100' },
@@ -635,9 +670,9 @@ test('resolveProductIdentities adds canonical_product to all records', () => {
   assert(summary.total === 2, 'Summary total should match');
 });
 
-console.log('\n=== Manufacturer-Aware Disambiguation ===');
+section('\n=== Manufacturer-Aware Disambiguation ===');
 
-test('Case 2: manufacturer column disambiguates multi-manufacturer brand', () => {
+test('Case 2: manufacturer column disambiguates multi-manufacturer brand', async () => {
   // Amlodipine Tablets has 2 manufacturers in NAFDAC:
   //   Skg - Pharma Limited, Jucheck Malt Pharmaceutical Limited
   // Test via resolveProductIdentities to isolate resolution from product normalization
@@ -662,12 +697,12 @@ test('Case 2: manufacturer column disambiguates multi-manufacturer brand', () =>
   assert(rec.display_product.includes('Skg'), `display_product should include manufacturer, got: ${rec.display_product}`);
 });
 
-test('Case 3: no manufacturer column falls back to best-guess manufacturer', () => {
+test('Case 3: no manufacturer column falls back to best-guess manufacturer', async () => {
   // Amlodipine Tablets — without manufacturer column, should pick top manufacturer for enrichment
   const rows = [
     { 'Drug Name': 'Amlodipine Tablets', 'Strength': '10mg', 'Qty': '2', 'Price': '500', 'Date': '2024-03-10' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   // canonical_product should be source identity, NOT enriched with manufacturer
   assert(rec.canonical_product != null, 'canonical_product should be set');
@@ -678,10 +713,15 @@ test('Case 3: no manufacturer column falls back to best-guess manufacturer', () 
   assert(!rec.canonical_product.includes('('), `Source identity should not include manufacturer: ${rec.canonical_product}`);
   // Case 3: ambiguous/inferred manufacturer — must NOT appear in display_product
   assert(!rec.display_product.includes('('), `Ambiguous manufacturer should not appear in display: ${rec.display_product}`);
-  assert(rec.resolution_status === 'AMBIGUOUS_MATCH' || rec.resolution_status === 'enriched', `Expected ambiguous status, got: ${rec.resolution_status}`);
+  // Anything short of EXACT_MATCH is acceptable here — the assertion that
+  // matters is the one above: an unconfirmed manufacturer must never reach
+  // display_product. PARTIAL_MATCH ("some fields match") is the honest status
+  // for a row with no manufacturer column at all.
+  assert(['AMBIGUOUS_MATCH', 'PARTIAL_MATCH', 'enriched'].includes(rec.resolution_status),
+    `Expected a non-exact match status, got: ${rec.resolution_status}`);
 });
 
-test('has_variants is set correctly for multi-manufacturer brands', () => {
+test('has_variants is set correctly for multi-manufacturer brands', async () => {
   // Test enrichIdentity directly with a multi-manufacturer brand
   const resolved = { product_name: 'Amlodipine Tablets', rule: 5, ruleLabel: 'Brand Name only', confidence: 0.60, parts_used: ['brand'] };
   const fields = { brand: 'Amlodipine Tablets' };
@@ -689,7 +729,7 @@ test('has_variants is set correctly for multi-manufacturer brands', () => {
   assert(enriched.has_variants === true, `Expected has_variants=true for multi-manufacturer brand, got: ${enriched.has_variants}`);
 });
 
-test('has_variants is false for single-manufacturer or unknown brands', () => {
+test('has_variants is false for single-manufacturer or unknown brands', async () => {
   // A product not in NAFDAC should have has_variants=false
   const resolved = { product_name: 'SuperFake Drug 999', rule: 1, ruleLabel: 'Direct PRODUCT column', confidence: 0.95, parts_used: ['product_name'] };
   const fields = { product_name: 'SuperFake Drug 999' };
@@ -697,18 +737,18 @@ test('has_variants is false for single-manufacturer or unknown brands', () => {
   assert(enriched.has_variants === false, `Expected has_variants=false for unknown product, got: ${enriched.has_variants}`);
 });
 
-test('unknown products remain unchanged (no false normalization)', () => {
+test('unknown products remain unchanged (no false normalization)', async () => {
   const rows = [
     { 'Drug Name': 'TotallyFake Medicine X9000', 'Qty': '1', 'Price': '999' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   // Unknown products should keep their original name, not get incorrectly normalized
   assert(rec.canonical_product.includes('TotallyFake'), `Unknown product should keep original name, got: ${rec.canonical_product}`);
   assertEquals(rec.product_name, 'TotallyFake Medicine X9000', 'Product name should be unchanged');
 });
 
-test('Case 2 resolution_source is nafdac_weighted', () => {
+test('Case 2 resolution_source is nafdac_weighted', async () => {
   const rows = [
     { 'Drug Name': 'Amlodipine Tablets', 'Manufacturer': 'Skg - Pharma Limited', 'Qty': '1', 'Price': '300' },
   ];
@@ -719,7 +759,7 @@ test('Case 2 resolution_source is nafdac_weighted', () => {
   assert(summary.variantDisambiguated >= 1, `Expected variantDisambiguated >= 1, got: ${summary.variantDisambiguated}`);
 });
 
-test('Case 3 resolution_source is nafdac_weighted', () => {
+test('Case 3 resolution_source is nafdac_weighted', async () => {
   const rows = [
     { 'Drug Name': 'Amlodipine Tablets', 'Qty': '1', 'Price': '300' },
   ];
@@ -730,33 +770,33 @@ test('Case 3 resolution_source is nafdac_weighted', () => {
   assert(summary.variantDisambiguated >= 1, `Expected variantDisambiguated >= 1, got: ${summary.variantDisambiguated}`);
 });
 
-console.log('\n=== Dual Product Identity ===');
+section('\n=== Dual Product Identity ===');
 
-test('source_product_name is set and never includes manufacturer suffix', () => {
+test('source_product_name is set and never includes manufacturer suffix', async () => {
   const rows = [
     { 'Drug Name': 'Ibuprofen 400mg', 'Qty': '3', 'Price': '350', 'Date': '2024-03-15' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   assert(rec.source_product_name != null, 'source_product_name should be set');
   assert(rec.source_product_name.toLowerCase().includes('ibuprofen'), `Expected ibuprofen in source, got: ${rec.source_product_name}`);
   assert(!rec.source_product_name.includes('('), `Source should NOT include manufacturer: ${rec.source_product_name}`);
 });
 
-test('canonical_product equals source identity (not enriched)', () => {
+test('canonical_product equals source identity (not enriched)', async () => {
   const rows = [
     { 'Drug Name': 'Ibuprofen 400mg', 'Qty': '3', 'Price': '350', 'Date': '2024-03-15' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   assertEquals(rec.canonical_product, rec.source_product_name, 'canonical should equal source');
 });
 
-test('resolved_manufacturer is separate from manufacturer column value', () => {
+test('resolved_manufacturer is separate from manufacturer column value', async () => {
   const rows = [
     { 'Drug Name': 'Paracetamol 500mg', 'Manufacturer': 'GSK', 'Qty': '1', 'Price': '200', 'Date': '2024-01-01' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   // resolved_manufacturer should be populated (from NAFDAC)
   assert(rec.resolved_manufacturer != null, 'resolved_manufacturer should be set from NAFDAC');
@@ -764,12 +804,12 @@ test('resolved_manufacturer is separate from manufacturer column value', () => {
   assert(rec.manufacturer != null, 'manufacturer field should be set');
 });
 
-test('display_product defaults to source — no manufacturer for ambiguous matches', () => {
+test('display_product defaults to source — no manufacturer for ambiguous matches', async () => {
   // Paracetamol has many manufacturers → ambiguous. Display should stay clean.
   const rows = [
     { 'Drug Name': 'Paracetamol 500mg', 'Qty': '1', 'Price': '200', 'Date': '2024-01-01' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   // Source identity never includes manufacturer
   assert(!rec.source_product_name.includes('('), `Source should be clean: ${rec.source_product_name}`);
@@ -777,7 +817,7 @@ test('display_product defaults to source — no manufacturer for ambiguous match
   assert(!rec.display_product.includes('('), `Display should not include ambiguous mfr: ${rec.display_product}`);
 });
 
-test('EXACT_MATCH shows manufacturer in display for unique brands', () => {
+test('EXACT_MATCH shows manufacturer in display for unique brands', async () => {
   // Test via enrichIdentity with a unique-brand scenario
   const resolved = { product_name: 'Coartem 80/480', rule: 1, ruleLabel: 'Direct PRODUCT', confidence: 0.95, parts_used: ['product_name'] };
   const fields = { product_name: 'Coartem 80/480' };
@@ -790,7 +830,7 @@ test('EXACT_MATCH shows manufacturer in display for unique brands', () => {
   assert(!enriched.source_product_name.includes('('), 'Source should never include mfr');
 });
 
-test('ambiguous/inferred manufacturer never appears in display', () => {
+test('ambiguous/inferred manufacturer never appears in display', async () => {
   // Amlodipine Tablets has multiple manufacturers → ambiguous
   const resolved = { product_name: 'Amlodipine Tablets', rule: 5, ruleLabel: 'Brand Only', confidence: 0.60, parts_used: ['brand'] };
   const fields = { brand: 'Amlodipine Tablets' };
@@ -801,55 +841,55 @@ test('ambiguous/inferred manufacturer never appears in display', () => {
   assert(['AMBIGUOUS_MATCH', 'enriched'].includes(enriched.resolution_status), `Expected ambiguous status, got: ${enriched.resolution_status}`);
 });
 
-test('resolution_status is present on enriched records', () => {
+test('resolution_status is present on enriched records', async () => {
   const rows = [
     { 'Drug Name': 'Ibuprofen 400mg', 'Qty': '3', 'Price': '350', 'Date': '2024-03-15' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   assert(rec.resolution_status != null, 'resolution_status should be set');
   assert(['resolved', 'enriched', 'unverified', 'unknown', 'EXACT_MATCH', 'AMBIGUOUS_MATCH', 'PARTIAL_MATCH', 'PARSED_ONLY'].includes(rec.resolution_status),
     `Unexpected resolution_status: ${rec.resolution_status}`);
 });
 
-test('backward compat: manufacturer and generic_name still populated from resolved', () => {
+test('backward compat: manufacturer and generic_name still populated from resolved', async () => {
   const rows = [
     { 'Drug Name': 'Paracetamol 500mg', 'Qty': '1', 'Price': '200', 'Date': '2024-01-01' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   // Legacy fields still work — filled from resolved if not in upload
   assert(rec.manufacturer != null, 'manufacturer should be populated (backward compat)');
   assert(rec.generic_name != null, 'generic_name should be populated (backward compat)');
 });
 
-console.log('\n=== Multi-Layer Clinical Identity ===');
+section('\n=== Multi-Layer Clinical Identity ===');
 
-test('Layer 3: clinical_product_id set from NAFDAC', () => {
+test('Layer 3: clinical_product_id set from NAFDAC', async () => {
   const rows = [
     { 'Drug Name': 'Paracetamol 500mg', 'Qty': '1', 'Price': '200', 'Date': '2024-01-01' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   assert(rec.clinical_product_id != null, 'clinical_product_id should be set from NAFDAC');
   assert(typeof rec.clinical_product_id === 'string', 'clinical_product_id should be a string');
 });
 
-test('Layer 3: therapeutic_class populated from NAFDAC', () => {
+test('Layer 3: therapeutic_class populated from NAFDAC', async () => {
   const rows = [
     { 'Drug Name': 'Paracetamol 500mg', 'Qty': '1', 'Price': '200', 'Date': '2024-01-01' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   assert(rec.therapeutic_class != null, 'therapeutic_class should be populated');
 });
 
-test('Layer 3: active_ingredients inferred from generic', () => {
+test('Layer 3: active_ingredients inferred from generic', async () => {
   const rows = [
     { 'Drug Name': 'Paracetamol 500mg', 'Qty': '1', 'Price': '200', 'Date': '2024-01-01' },
     { 'Drug Name': 'Ibuprofen 400mg', 'Qty': '3', 'Price': '350', 'Date': '2024-03-15' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   // Paracetamol should have [Paracetamol] as active ingredient
   const rec0 = result.normalized[0];
   assert(Array.isArray(rec0.active_ingredients), 'active_ingredients should be an array');
@@ -860,7 +900,7 @@ test('Layer 3: active_ingredients inferred from generic', () => {
   assert(rec1.active_ingredients.includes('Ibuprofen'), 'Should include Ibuprofen');
 });
 
-test('resolution_tier is auto for high confidence matches', () => {
+test('resolution_tier is auto for high confidence matches', async () => {
   // Lonart is unique in NAFDAC → EXACT_MATCH → high confidence → auto
   const resolved = { product_name: 'Lonart', rule: 5, ruleLabel: 'Brand Only', confidence: 0.60, parts_used: ['brand'] };
   const fields = { brand: 'Lonart' };
@@ -870,7 +910,7 @@ test('resolution_tier is auto for high confidence matches', () => {
   }
 });
 
-test('resolution_tier is excluded for unknown products', () => {
+test('resolution_tier is excluded for unknown products', async () => {
   // Unknown product → low confidence → excluded from clinical intelligence
   const resolved = { product_name: 'SuperFakeDrug999', rule: 1, ruleLabel: 'Direct PRODUCT', confidence: 0.95, parts_used: ['product_name'] };
   const fields = { product_name: 'SuperFakeDrug999' };
@@ -879,11 +919,11 @@ test('resolution_tier is excluded for unknown products', () => {
   assertEquals(enriched.resolution_tier, 'excluded', 'Unknown should be excluded from clinical');
 });
 
-test('Layer 3: unknown products have no clinical data', () => {
+test('Layer 3: unknown products have no clinical data', async () => {
   const rows = [
     { 'Drug Name': 'TotallyUnknownPharma999', 'Qty': '1', 'Price': '999' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
   // Clinical fields should be null/empty for unknown products
   assert(rec.clinical_product_id === null, `clinical_product_id should be null, got: ${rec.clinical_product_id}`);
@@ -892,9 +932,9 @@ test('Layer 3: unknown products have no clinical data', () => {
   assert(rec.resolution_tier === 'excluded', `Unknown should be excluded tier, got: ${rec.resolution_tier}`);
 });
 
-console.log('\n=== PARSED_ONLY Resolution Status ===');
+section('\n=== PARSED_ONLY Resolution Status ===');
 
-test('PARSED_ONLY: parser extracts attributes but NAFDAC finds no match', () => {
+test('PARSED_ONLY: parser extracts attributes but NAFDAC finds no match', async () => {
   // Parse succeeds (generic + strength + form extracted) but NAFDAC lookup fails
   const resolved = { product_name: 'Citalopram 20mg Tablet', rule: 1, ruleLabel: 'Direct PRODUCT', confidence: 0.95, parts_used: ['product_name'] };
   const fields = { product_name: 'Citalopram 20mg Tablet' };
@@ -905,7 +945,7 @@ test('PARSED_ONLY: parser extracts attributes but NAFDAC finds no match', () => 
     `Expected parser source, got: ${enriched.resolution_source}`);
 });
 
-test('PARSED_ONLY: parser success is distinct from unverified (rule-based fallback)', () => {
+test('PARSED_ONLY: parser success is distinct from unverified (rule-based fallback)', async () => {
   // When parser extracts nothing but rule composer resolves → unverified
   // When parser extracts structured attributes → PARSED_ONLY
   const resolved = { product_name: 'Citalopram 20mg Tablet', rule: 1, ruleLabel: 'Direct PRODUCT', confidence: 0.95, parts_used: ['product_name'] };
@@ -916,14 +956,14 @@ test('PARSED_ONLY: parser success is distinct from unverified (rule-based fallba
     'PARSED_ONLY should replace unverified when parser extracted attributes');
 });
 
-test('PARSED_ONLY: unverified when parser finds only brand (no structured attributes)', () => {
+test('PARSED_ONLY: unverified when parser finds only brand (no structured attributes)', async () => {
   // Parser brand extraction is a fallback, not a meaningful structured parse
   const parsed = parseDrugName('SuperFakeDrug999');
   const parserExtracted = parsed && (parsed.generic || parsed.strength || parsed.form || parsed.pack_size);
   assert(!parserExtracted, 'SuperFakeDrug999 should NOT trigger parser success (brand-only does not count)');
 });
 
-test('PARSED_ONLY: existing EXACT_MATCH still works', () => {
+test('PARSED_ONLY: existing EXACT_MATCH still works', async () => {
   // A known product that NAFDAC matches should still get EXACT_MATCH, not PARSED_ONLY
   const resolved = { product_name: 'Paracetamol 500mg', rule: 1, ruleLabel: 'Direct PRODUCT', confidence: 0.95, parts_used: ['product_name'] };
   const fields = { product_name: 'Paracetamol 500mg' };
@@ -933,24 +973,24 @@ test('PARSED_ONLY: existing EXACT_MATCH still works', () => {
     `Known drug should NOT get PARSED_ONLY, got: ${enriched.resolution_status}`);
 });
 
-console.log('\n=== Resolution Metadata ===');
+section('\n=== Resolution Metadata ===');
 
-test('resolution_method: weighted_match for NAFDAC matches', () => {
+test('resolution_method: weighted_match for NAFDAC matches', async () => {
   assertEquals(computeResolutionMethod('EXACT_MATCH'), 'weighted_match');
   assertEquals(computeResolutionMethod('AMBIGUOUS_MATCH'), 'weighted_match');
   assertEquals(computeResolutionMethod('PARTIAL_MATCH'), 'weighted_match');
 });
 
-test('resolution_method: parser_only for PARSED_ONLY', () => {
+test('resolution_method: parser_only for PARSED_ONLY', async () => {
   assertEquals(computeResolutionMethod('PARSED_ONLY'), 'parser_only');
 });
 
-test('resolution_method: unresolved for unverified/unknown', () => {
+test('resolution_method: unresolved for unverified/unknown', async () => {
   assertEquals(computeResolutionMethod('unverified'), 'unresolved');
   assertEquals(computeResolutionMethod('unknown'), 'unresolved');
 });
 
-test('resolution_method is present on enriched records', () => {
+test('resolution_method is present on enriched records', async () => {
   const resolved = { product_name: 'Paracetamol 500mg', rule: 1, ruleLabel: 'Direct PRODUCT', confidence: 0.95, parts_used: ['product_name'] };
   const fields = { product_name: 'Paracetamol 500mg' };
   const enriched = enrichIdentity(resolved, fields);
@@ -958,7 +998,7 @@ test('resolution_method is present on enriched records', () => {
   assert(typeof enriched.resolution_method === 'string', 'resolution_method should be a string');
 });
 
-test('parser_confidence and lookup_confidence are present on enriched records', () => {
+test('parser_confidence and lookup_confidence are present on enriched records', async () => {
   // Citalopram: parser succeeds, NAFDAC fails → PARSED_ONLY
   const resolved = { product_name: 'Citalopram 20mg Tablet', rule: 1, ruleLabel: 'Direct PRODUCT', confidence: 0.95, parts_used: ['product_name'] };
   const fields = { product_name: 'Citalopram 20mg Tablet' };
@@ -970,7 +1010,7 @@ test('parser_confidence and lookup_confidence are present on enriched records', 
   assert(typeof enriched.lookup_confidence === 'number', 'lookup_confidence should be a number');
 });
 
-test('parser_confidence reflects structured field extraction count', () => {
+test('parser_confidence reflects structured field extraction count', async () => {
   // Paracetamol 500mg: generic + strength extracted → parser confidence higher
   const resolved = { product_name: 'Paracetamol 500mg', rule: 1, ruleLabel: 'Direct PRODUCT', confidence: 0.95, parts_used: ['product_name'] };
   const fields = { product_name: 'Paracetamol 500mg' };
@@ -980,7 +1020,7 @@ test('parser_confidence reflects structured field extraction count', () => {
   assert(enriched.parser_confidence <= 0.95, `parser_confidence too high: ${enriched.parser_confidence}`);
 });
 
-test('parser_confidence is null when parser has nothing to parse', () => {
+test('parser_confidence is null when parser has nothing to parse', async () => {
   // Empty product name → parser returns confidence 0, but we map null input → null
   const resolved = { product_name: null, rule: 7, ruleLabel: 'No identity', confidence: 0, parts_used: [] };
   const fields = { product_name: null };
@@ -989,7 +1029,7 @@ test('parser_confidence is null when parser has nothing to parse', () => {
     `parser_confidence should be null for empty input, got: ${enriched.parser_confidence}`);
 });
 
-test('lookup_confidence reflects NAFDAC weighted match confidence', () => {
+test('lookup_confidence reflects NAFDAC weighted match confidence', async () => {
   // Paracetamol should match in NAFDAC → lookup_confidence > 0
   const resolved = { product_name: 'Paracetamol 500mg', rule: 1, ruleLabel: 'Direct PRODUCT', confidence: 0.95, parts_used: ['product_name'] };
   const fields = { product_name: 'Paracetamol 500mg' };
@@ -999,7 +1039,7 @@ test('lookup_confidence reflects NAFDAC weighted match confidence', () => {
   assert(enriched.lookup_confidence <= 1, `lookup_confidence should be <= 1, got: ${enriched.lookup_confidence}`);
 });
 
-test('resolution_confidence is unchanged by metadata additions', () => {
+test('resolution_confidence is unchanged by metadata additions', async () => {
   const resolved = { product_name: 'Paracetamol 500mg', rule: 1, ruleLabel: 'Direct PRODUCT', confidence: 0.95, parts_used: ['product_name'] };
   const fields = { product_name: 'Paracetamol 500mg' };
   const enriched = enrichIdentity(resolved, fields);
@@ -1009,11 +1049,11 @@ test('resolution_confidence is unchanged by metadata additions', () => {
   assert(enriched.resolution_confidence >= 0, `resolution_confidence >= 0, got: ${enriched.resolution_confidence}`);
 });
 
-test('resolution metadata propagates through full pipeline', () => {
+test('resolution metadata propagates through full pipeline', async () => {
   const rows = [
     { 'Drug Name': 'Citalopram 20mg Tablet', 'Qty': '1', 'Price': '500', 'Date': '2024-06-01' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const rec = result.normalized[0];
 
   assert(rec.resolution_method != null, 'resolution_method should be set in pipeline output');
@@ -1023,9 +1063,9 @@ test('resolution metadata propagates through full pipeline', () => {
     `Expected parser_only in pipeline, got: ${rec.resolution_method}`);
 });
 
-console.log('\n=== Fuzzy Brand Matching ===');
+section('\n=== Fuzzy Brand Matching ===');
 
-test('fuzzy: Paracetamo resolves to Paracetamol', () => {
+test('fuzzy: Paracetamo resolves to Paracetamol', async () => {
   const result = identifyDrug('Paracetamo');
   assert(result.recognized, 'Paracetamo should be recognized via fuzzy match');
   assertEquals(result.generic, 'Paracetamol',
@@ -1033,33 +1073,33 @@ test('fuzzy: Paracetamo resolves to Paracetamol', () => {
   assertEquals(result.source, 'fuzzy_brand_match');
 });
 
-test('fuzzy: Ibuprofe resolves to Ibuprofen', () => {
+test('fuzzy: Ibuprofe resolves to Ibuprofen', async () => {
   const result = identifyDrug('Ibuprofe');
   assert(result.recognized, 'Ibuprofe should be recognized');
   assertEquals(result.generic, 'Ibuprofen');
 });
 
-test('fuzzy: Flagy resolves to Flagyl (Metronidazole)', () => {
+test('fuzzy: Flagy resolves to Flagyl (Metronidazole)', async () => {
   const result = identifyDrug('Flagy');
   assert(result.recognized, 'Flagy should be recognized');
   assertEquals(result.generic, 'Metronidazole',
     `Expected Metronidazole, got: ${result.generic}`);
 });
 
-test('fuzzy: Amoxicilli resolves to Amoxicillin', () => {
+test('fuzzy: Amoxicilli resolves to Amoxicillin', async () => {
   const result = identifyDrug('Amoxicilli');
   assert(result.recognized, 'Amoxicilli should be recognized');
   assertEquals(result.generic, 'Amoxicillin');
 });
 
-test('fuzzy: Coarte resolves to Coartem (Artemether + Lumefantrine)', () => {
+test('fuzzy: Coarte resolves to Coartem (Artemether + Lumefantrine)', async () => {
   const result = identifyDrug('Coarte');
   assert(result.recognized, 'Coarte should be recognized');
   assertEquals(result.generic, 'Artemether + Lumefantrine',
     `Expected Artemether + Lumefantrine, got: ${result.generic}`);
 });
 
-test('fuzzy: misspelled variants group to same canonical_product in pipeline', () => {
+test('fuzzy: misspelled variants group to same canonical_product in pipeline', async () => {
   const rows = [
     { 'Drug Name': 'Paracetamol', 'Qty': '1', 'Price': '500', 'Date': '2024-01-01' },
     { 'Drug Name': 'Paracetamo', 'Qty': '1', 'Price': '500', 'Date': '2024-01-02' },
@@ -1077,20 +1117,27 @@ test('fuzzy: misspelled variants group to same canonical_product in pipeline', (
     { 'Drug Name': 'Coarte', 'Qty': '1', 'Price': '800', 'Date': '2024-01-02' },
     { 'Drug Name': 'Metformin', 'Qty': '1', 'Price': '300', 'Date': '2024-01-01' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
+  // Fuzzy resolution lands in resolved_generic, NOT canonical_product.
+  // canonical_product deliberately preserves what the pharmacy typed — a
+  // wrong fuzzy match must never silently rewrite their own product name —
+  // so the 15 source spellings stay 15, while the resolver groups them to 8.
   const canonicals = [...new Set(result.normalized.map(r => r.canonical_product))];
-  assertEquals(canonicals.length, 8,
-    `Expected 8 distinct canonical products, got ${canonicals.length}: ${canonicals.join(', ')}`);
+  assertEquals(canonicals.length, 15,
+    `Source spellings should be preserved, got ${canonicals.length}: ${canonicals.join(', ')}`);
+  const generics = [...new Set(result.normalized.map(r => r.resolved_generic))];
+  assertEquals(generics.length, 8,
+    `Expected 8 distinct resolved generics, got ${generics.length}: ${generics.join(', ')}`);
 });
 
-test('fuzzy: revenue is summed correctly across misspelled variants', () => {
+test('fuzzy: revenue is summed correctly across misspelled variants', async () => {
   const rows = [
     { 'Drug Name': 'Paracetamol', 'Qty': '1', 'Price': '500', 'Date': '2024-01-01' },
     { 'Drug Name': 'Paracetamo', 'Qty': '2', 'Price': '500', 'Date': '2024-01-02' },
     { 'Drug Name': 'Ibuprofen', 'Qty': '1', 'Price': '250', 'Date': '2024-01-01' },
     { 'Drug Name': 'Ibuprofe', 'Qty': '3', 'Price': '250', 'Date': '2024-01-02' },
   ];
-  const result = normalize(rows);
+  const result = await normalize(rows);
   const a = analyze(result.normalized);
 
   // Both Paracetamol variants should be combined revenue
@@ -1106,15 +1153,42 @@ test('fuzzy: revenue is summed correctly across misspelled variants', () => {
   assertEquals(ibu.quantity, 4, `Expected combined quantity 4, got: ${ibu.quantity}`);
 });
 
-test('fuzzy: completely unknown drugs still flagged as unknown', () => {
+test('fuzzy: completely unknown drugs still flagged as unknown', async () => {
   const result = identifyDrug('XyzzyDrug999');
   assert(!result.recognized, 'Completely unknown drug should NOT be recognized');
   assertEquals(result.flag, 'UNKNOWN_MEDICINE');
 });
 
-console.log('\n=== Prompt 0: Product Text Normalization ===');
+test('fuzzy: low-confidence matches are NOT merged in analytics', async () => {
+  // The counterweight to the merging test above. Merging is invisible in the
+  // output — two products silently become one row — so the gate that stops it
+  // happening on a weak match has to be held in place by a test.
+  // "Paracetmo" is two characters off, scoring 0.55, below the merge floor.
+  const rows = [
+    { 'Drug Name': 'Paracetamol', 'Qty': '1', 'Price': '500', 'Date': '2024-01-01' },
+    { 'Drug Name': 'Paracetmo', 'Qty': '1', 'Price': '500', 'Date': '2024-01-02' },
+    { 'Drug Name': 'Metformin', 'Qty': '1', 'Price': '300', 'Date': '2024-01-01' },
+    { 'Drug Name': 'Metronidazole', 'Qty': '1', 'Price': '300', 'Date': '2024-01-01' },
+  ];
+  const result = await normalize(rows);
+  const a = analyze(result.normalized);
 
-test('text norm: expands TAB/CAP/INJ/SUSP/SYR abbreviations', () => {
+  const weak = result.normalized.find(r => r.source_product_name === 'Paracetmo');
+  assert(weak.resolved_generic_confidence < 0.65,
+    `Two-character typo should score below the merge floor, got ${weak.resolved_generic_confidence}`);
+  assertEquals(a.topProducts.find(p => p.name === 'Paracetamol').revenue, 500,
+    'A below-threshold match must not be folded into the confident one');
+  assert(a.topProducts.find(p => p.name === 'Paracetmo') != null,
+    'The unmerged spelling must survive as its own row');
+
+  // Two genuinely different drugs that merely share a prefix must never merge.
+  assertEquals(a.topProducts.find(p => p.name === 'Metformin').revenue, 300);
+  assertEquals(a.topProducts.find(p => p.name === 'Metronidazole').revenue, 300);
+});
+
+section('\n=== Prompt 0: Product Text Normalization ===');
+
+test('text norm: expands TAB/CAP/INJ/SUSP/SYR abbreviations', async () => {
   assertEquals(normalizeProductText('Paracetamol 500MG TAB'), 'paracetamol 500mg tablet');
   assertEquals(normalizeProductText('Amoxicillin 250MG CAP'), 'amoxicillin 250mg capsule');
   assertEquals(normalizeProductText('Diclofenac 50MG INJ'), 'diclofenac 50mg injection');
@@ -1122,27 +1196,29 @@ test('text norm: expands TAB/CAP/INJ/SUSP/SYR abbreviations', () => {
   assertEquals(normalizeProductText('Coartem SYR'), 'coartem syrup');
 });
 
-test('text norm: normalizes unit spacing (500 MG → 500mg)', () => {
+test('text norm: normalizes unit spacing (500 MG → 500mg)', async () => {
   assertEquals(normalizeProductText('Ibuprofen 400 MG'), 'ibuprofen 400mg');
   assertEquals(normalizeProductText('10 ML SYR'), '10ml syrup');
-  assertEquals(normalizeProductText('5 G powder'), '5g powder');
+  // Grams are converted to milligrams so "5g" and "5000mg" — the same real
+  // dose — don't survive as two permanently different strings.
+  assertEquals(normalizeProductText('5 G powder'), '5000mg powder');
   assertEquals(normalizeProductText('Amoxicillin 250 mg'), 'amoxicillin 250mg');
 });
 
-test('text norm: lowercases and cleans punctuation', () => {
+test('text norm: lowercases and cleans punctuation', async () => {
   assertEquals(normalizeProductText('PARACETAMOL, 500mg TAB'), 'paracetamol 500mg tablet');
   // Parens preserved — meaningful for combination drugs like "Ampicillin + Cloxacillin (Ampiclox)"
   assertEquals(normalizeProductText('Ibuprofen (400mg) Caps'), 'ibuprofen (400mg) capsule');
   assertEquals(normalizeProductText('  Vitamin   C  500mg  '), 'vitamin c 500mg');
 });
 
-test('text norm: handles null and empty', () => {
+test('text norm: handles null and empty', async () => {
   assertEquals(normalizeProductText(null), null);
   assertEquals(normalizeProductText(''), '');
   assertEquals(normalizeProductText('  '), '');
 });
 
-test('text norm: abbreviation expansion helps downstream recognition', () => {
+test('text norm: abbreviation expansion helps downstream recognition', async () => {
   // Without normalization, "500MG TAB" might not be parsed as well
   // After normalization, the product parser sees "500mg tablet"
   const result = normalizeProductName('Paracetamol 500MG TAB');
@@ -1152,17 +1228,17 @@ test('text norm: abbreviation expansion helps downstream recognition', () => {
   assertEquals(result.form, 'Tablet');
 });
 
-test('text norm: synonyms are idempotent', () => {
+test('text norm: synonyms are idempotent', async () => {
   const a = normalizeProductText('Paracetamol 500MG TAB');
   const b = normalizeProductText(a);
   assertEquals(a, b, 'Normalization should be idempotent');
 });
 
-console.log('\n=== Context-Aware Widget Engine ===');
+section('\n=== Context-Aware Widget Engine ===');
 
 const { detectAvailableFields } = require('../services/widgetEngine');
 
-test('context: sales-only records do not expose inventory fields', () => {
+test('context: sales-only records do not expose inventory fields', async () => {
   const records = [
     { product_name: 'Paracetamol', quantity: 3, selling_price: 500, revenue: 1500, transaction_date: '2024-01-01',
       current_stock: null, reorder_level: null, min_stock: null, max_stock: null, opening_stock: null, expiry_date: null, supplier: null },
@@ -1179,7 +1255,7 @@ test('context: sales-only records do not expose inventory fields', () => {
   assert(!fields.has('supplier'), 'supplier should NOT be available when all null');
 });
 
-test('context: inventory records expose stock fields', () => {
+test('context: inventory records expose stock fields', async () => {
   const records = [
     { product_name: 'Paracetamol', current_stock: 150, reorder_level: 20, expiry_date: '2025-12-01',
       quantity: null, selling_price: null, transaction_date: null },
@@ -1195,7 +1271,7 @@ test('context: inventory records expose stock fields', () => {
   assert(!fields.has('selling_price'), 'selling_price should NOT be available when all null');
 });
 
-test('context: mixed data — field with any non-null value is available', () => {
+test('context: mixed data — field with any non-null value is available', async () => {
   const records = [
     { product_name: 'Paracetamol', current_stock: 150 },
     { product_name: 'Ibuprofen', current_stock: null },
@@ -1204,12 +1280,12 @@ test('context: mixed data — field with any non-null value is available', () =>
   assert(fields.has('current_stock'), 'current_stock should be available when at least one record has a value');
 });
 
-test('context: empty records returns empty set', () => {
+test('context: empty records returns empty set', async () => {
   assertEquals(detectAvailableFields([]).size, 0);
   assertEquals(detectAvailableFields(null).size, 0);
 });
 
-test('context: zero stock is valid data (not treated as missing)', () => {
+test('context: zero stock is valid data (not treated as missing)', async () => {
   const records = [
     { product_name: 'OutOfStock', current_stock: 0 },
   ];
@@ -1217,7 +1293,7 @@ test('context: zero stock is valid data (not treated as missing)', () => {
   assert(fields.has('current_stock'), 'current_stock=0 should be treated as available data');
 });
 
-test('context: widget engine excludes inventory widgets for sales-only dataset', () => {
+test('context: widget engine excludes inventory widgets for sales-only dataset', async () => {
   const { evaluate } = require('../services/widgetEngine');
   const records = [
     { product_name: 'Paracetamol', quantity: 3, selling_price: 500, revenue: 1500, transaction_date: '2024-01-01',
@@ -1239,11 +1315,11 @@ test('context: widget engine excludes inventory widgets for sales-only dataset',
     'low-stock-alert should report current_stock as missing');
 });
 
-console.log('\n=== Widget Descriptions (Info Tooltips) ===');
+section('\n=== Widget Descriptions (Info Tooltips) ===');
 
 const widgetRegistry = require('../services/widgetRegistry');
 
-test('info: every widget has a description', () => {
+test('info: every widget has a description', async () => {
   const all = widgetRegistry.getAll();
   assert(all.length > 0, 'Widget registry should not be empty');
   for (const w of all) {
@@ -1252,7 +1328,7 @@ test('info: every widget has a description', () => {
   }
 });
 
-test('info: KPI widget descriptions are concise and readable', () => {
+test('info: KPI widget descriptions are concise and readable', async () => {
   const kpis = widgetRegistry.getAll().filter(w => w.category === 'KPIs');
   for (const w of kpis) {
     assert(w.description.length >= 20, `Description too short for ${w.id}: "${w.description}"`);
@@ -1263,7 +1339,7 @@ test('info: KPI widget descriptions are concise and readable', () => {
   }
 });
 
-test('info: descriptions match expected examples from specification', () => {
+test('info: descriptions match expected examples from specification', async () => {
   const get = (id) => widgetRegistry.get(id).description;
   assertEquals(get('revenue-kpi'), 'Total sales generated during the selected period before deducting expenses.');
   assertEquals(get('profit-kpi'), 'Revenue minus the cost of goods sold. Shows how much profit was earned before operating expenses.');
@@ -1272,11 +1348,11 @@ test('info: descriptions match expected examples from specification', () => {
   assertEquals(get('low-stock-alert'), 'Number of products currently below the configured stock threshold.');
 });
 
-console.log('\n=== Time Granularity Detection ===');
+section('\n=== Time Granularity Detection ===');
 
 const { detectTimeGranularity } = require('../services/analytics');
 
-test('time: 5 days → daily only', () => {
+test('time: 5 days → daily only', async () => {
   const records = [
     { transaction_date: '2024-01-01' }, { transaction_date: '2024-01-02' }, { transaction_date: '2024-01-03' },
     { transaction_date: '2024-01-04' }, { transaction_date: '2024-01-05' },
@@ -1288,7 +1364,7 @@ test('time: 5 days → daily only', () => {
   assert(!g.year, 'year should NOT be available for 5 days');
 });
 
-test('time: 4 weeks (~28 days) → daily + weekly', () => {
+test('time: 4 weeks (~28 days) → daily + weekly', async () => {
   const records = [];
   for (let i = 0; i < 28; i++) {
     records.push({ transaction_date: `2024-01-${String(i + 1).padStart(2, '0')}` });
@@ -1300,7 +1376,7 @@ test('time: 4 weeks (~28 days) → daily + weekly', () => {
   assert(!g.year, 'year should NOT be available');
 });
 
-test('time: 8 months (~240 days) → daily + weekly + monthly', () => {
+test('time: 8 months (~240 days) → daily + weekly + monthly', async () => {
   const records = [];
   for (let m = 0; m < 8; m++) {
     records.push({ transaction_date: `2024-${String(m + 1).padStart(2, '0')}-01` });
@@ -1312,7 +1388,7 @@ test('time: 8 months (~240 days) → daily + weekly + monthly', () => {
   assert(!g.year, 'year should NOT be available (< 1 year span)');
 });
 
-test('time: 3 years → daily + weekly + monthly + yearly', () => {
+test('time: 3 years → daily + weekly + monthly + yearly', async () => {
   const records = [];
   for (let y = 2021; y <= 2023; y++) {
     records.push({ transaction_date: `${y}-01-01` });
@@ -1324,19 +1400,19 @@ test('time: 3 years → daily + weekly + monthly + yearly', () => {
   assert(g.year, 'year should be available for multi-year data');
 });
 
-test('time: no dates → nothing available', () => {
+test('time: no dates → nothing available', async () => {
   const g = detectTimeGranularity([{ name: 'test', value: 5 }]);
   assert(!g.day && !g.week && !g.month && !g.year, 'all should be false with no dates');
   assertEquals(g.spanDays, 0);
 });
 
-test('time: single date → daily only', () => {
+test('time: single date → daily only', async () => {
   const g = detectTimeGranularity([{ transaction_date: '2024-06-15' }]);
   assert(g.day, 'day should be available for a single date');
   assert(!g.week, 'week should NOT be available');
 });
 
-test('time: widget drill-levels respect granularity', () => {
+test('time: widget drill-levels respect granularity', async () => {
   const widget = widgetRegistry.get('monthly-revenue');
   // 5-day dataset → should only produce day drill level (not week/month)
   const records = [
@@ -1360,8 +1436,14 @@ test('time: widget drill-levels respect granularity', () => {
 
 // ---- summary -----------------------------------------------------------
 
-console.log(`\n${'='.repeat(50)}`);
-console.log(`Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);
-console.log(`${'='.repeat(50)}\n`);
+(async function run() {
+  for (const step of queue) await step();
 
-process.exit(failed > 0 ? 1 : 0);
+  console.log(`\n${'='.repeat(50)}`);
+  const skipNote = skipped > 0 ? `, ${skipped} skipped` : '';
+  console.log(`Results: ${passed} passed, ${failed} failed${skipNote}, ${passed + failed + skipped} total`);
+  if (skipped > 0) console.log('(set DATABASE_URL to run the skipped integration tests)');
+  console.log(`${'='.repeat(50)}\n`);
+
+  process.exit(failed > 0 ? 1 : 0);
+})();

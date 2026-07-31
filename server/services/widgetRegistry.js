@@ -330,20 +330,28 @@ const WIDGETS = [
       if (levels.length === 0) {
         return { error: 'No date or cost information available' };
       }
-      const hasProfitAnyLevel = levels.some((lvl) => byLevel[lvl].some((d) => d.profit !== null));
-      if (!hasProfitAnyLevel) {
-        return { error: 'Cost data not available for profit calculation' };
-      }
-
       const primaryLevel = levels.includes('month') ? 'month' : (levels.includes('week') ? 'week' : levels[0]);
       const data = byLevel[primaryLevel];
       const periodKey = primaryLevel; // 'month' | 'week' | 'day' — matches the field name on each row
 
-      const peak = data.reduce((best, d) => (d.profit || 0) > (best?.profit || 0) ? d : best, null);
-      const first = data[0];
-      const last = data[data.length - 1];
+      // The level actually plotted is the one that has to qualify. Checking
+      // "any level has profit" let a chart render whose profit line was a
+      // continuous gap, because a finer level happened to have one covered
+      // period — a Revenue vs. Profit chart with no profit in it.
+      const withProfit = data.filter((d) => d.profit != null);
+      if (withProfit.length === 0) {
+        return { error: 'Cost data not available for profit calculation' };
+      }
+
+      const peak = withProfit.reduce((best, d) => (d.profit > best.profit ? d : best), withProfit[0]);
+      const first = withProfit[0];
+      const last = withProfit[withProfit.length - 1];
       let insight = { title: 'Revenue vs. Profit', subtitle: `How much we keep after costs — ${primaryLevel}ly trend.` };
-      if (data.length >= 2 && (last?.profit || 0) > (first?.profit || 0) * 1.1) {
+      // Both endpoints must have a real profit figure. A period whose cost
+      // coverage was too thin comes back null, and treating that as 0 would
+      // either invent a growth story out of missing data or divide by it.
+      if (data.length >= 2 && first?.profit != null && last?.profit != null &&
+          first.profit > 0 && last.profit > first.profit * 1.1) {
         insight = {
           title: 'Profit Margin Expanding',
           subtitle: `Profit grew ${Math.round(((last.profit - first.profit) / first.profit) * 100)}% from ${first[periodKey]} to ${last[periodKey]}, ending at ₦${last.profit.toLocaleString()}.`,
@@ -358,7 +366,9 @@ const WIDGETS = [
       return {
         series: [
           { name: 'Revenue', data: data.map((d) => ({ x: d[periodKey], y: d.revenue })) },
-          { name: 'Profit', data: data.map((d) => ({ x: d[periodKey], y: d.profit || 0 })) },
+          // null, not 0 — a period without enough cost data must render as a
+          // gap in the profit line, not as a period that earned nothing.
+          { name: 'Profit', data: data.map((d) => ({ x: d[periodKey], y: d.profit })) },
         ],
         drillLevels: levels.length > 1 ? drillLevels : null,
         displayGranularity: primaryLevel,
@@ -538,47 +548,55 @@ const WIDGETS = [
       const periodKey = primaryLevel;
       const periodLabel = primaryLevel === 'month' ? 'Monthly' : primaryLevel === 'week' ? 'Weekly' : 'Daily';
 
-      const first = data[0];
-      const last = data[data.length - 1];
-      let peak = data.reduce((best, d) => (d.profit || 0) > (best?.profit || 0) ? d : best, null);
-      if (!peak || !peak.profit) {
-        const bestRev = data.reduce((best, d) => d.revenue > (best?.revenue || 0) ? d : best, null);
-        peak = bestRev;
+      // Every figure below must come from periods that actually HAVE a profit.
+      // Periods whose cost coverage was too thin carry null, and folding those
+      // in as 0 would drag the average down, invent growth against a zero base,
+      // and divide by it. The plotted level is the one that has to qualify —
+      // hasProfitAnyLevel only proves SOME level does.
+      const withProfit = data.filter((d) => d.profit != null);
+      if (withProfit.length === 0) {
+        return { error: 'Cost data not available for profit trend' };
       }
 
+      const first = withProfit[0];
+      const last = withProfit[withProfit.length - 1];
+      const peak = withProfit.reduce((best, d) => (d.profit > best.profit ? d : best), withProfit[0]);
+
       let insight = { title: 'Profit Trend', subtitle: null };
-      if (data.length < 2) {
+      if (withProfit.length < 2) {
         insight = {
           title: 'Single Period',
-          subtitle: `Profit of ₦${(last.profit || 0).toLocaleString()} recorded in ${last[periodKey]}.`,
+          subtitle: `Profit of ₦${last.profit.toLocaleString()} recorded in ${last[periodKey]}.`,
         };
-      } else if ((last.profit || 0) > (first.profit || 0) * 1.15) {
+      } else if (first.profit > 0 && last.profit > first.profit * 1.15) {
         insight = {
           title: 'Profit on the Rise',
           subtitle: `Bottom-line growth of ${Math.round(((last.profit - first.profit) / first.profit) * 100)}% from ${first[periodKey]} to ${last[periodKey]}, reaching ₦${last.profit.toLocaleString()}.`,
         };
-      } else if ((last.profit || 0) < (first.profit || 0) * 0.85) {
+      } else if (first.profit > 0 && last.profit < first.profit * 0.85) {
         insight = {
           title: 'Margin Under Pressure',
-          subtitle: `Profit fell ${Math.round(((first.profit - last.profit) / first.profit) * 100)}% from ${first[periodKey]}, with the strongest period at ₦${(peak.profit || peak.revenue).toLocaleString()} in ${peak[periodKey]}.`,
+          subtitle: `Profit fell ${Math.round(((first.profit - last.profit) / first.profit) * 100)}% from ${first[periodKey]}, with the strongest period at ₦${peak.profit.toLocaleString()} in ${peak[periodKey]}.`,
         };
       } else {
+        const avg = withProfit.reduce((s, d) => s + d.profit, 0) / withProfit.length;
         insight = {
           title: 'Profit Holding Steady',
-          subtitle: `${periodLabel} profit has been stable around ₦${Math.round(data.reduce((s, d) => s + (d.profit || 0), 0) / data.length).toLocaleString()}, peaking at ₦${(peak.profit || peak.revenue).toLocaleString()} in ${peak[periodKey]}.`,
+          subtitle: `${periodLabel} profit has been stable around ₦${Math.round(avg).toLocaleString()}, peaking at ₦${peak.profit.toLocaleString()} in ${peak[periodKey]}.`,
         };
       }
 
+      // null, not 0 — periods without enough cost data render as gaps.
       const drillLevels = {};
       for (const lvl of levels) {
-        drillLevels[lvl] = byLevel[lvl].map((d) => ({ x: d[lvl], y: d.profit || 0 }));
+        drillLevels[lvl] = byLevel[lvl].map((d) => ({ x: d[lvl], y: d.profit }));
       }
 
       return {
-        series: [{ name: 'Profit', data: data.map((d) => ({ x: d[periodKey], y: d.profit || 0 })) }],
+        series: [{ name: 'Profit', data: data.map((d) => ({ x: d[periodKey], y: d.profit })) }],
         drillLevels: levels.length > 1 ? drillLevels : null,
         displayGranularity: primaryLevel,
-        annotation: peak ? { x: peak[periodKey], y: peak.profit || peak.revenue, label: `Peak profit: ₦${(peak.profit || peak.revenue).toLocaleString()}` } : null,
+        annotation: { x: peak[periodKey], y: peak.profit, label: `Peak profit: ₦${peak.profit.toLocaleString()}` },
         insight,
       };
     },
