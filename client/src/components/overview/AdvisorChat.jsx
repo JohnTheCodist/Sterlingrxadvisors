@@ -419,6 +419,118 @@ function SidebarSkeleton() {
   );
 }
 
+// Conversations accumulate without limit, and rendering all of them buries
+// the handful the owner actually returns to under months of history.
+const INITIAL_CONVERSATIONS = 7;
+const CONVERSATION_BATCH = 10;
+
+/**
+ * Sidebar conversation list, revealed progressively.
+ *
+ * Starts at the most recent few behind an explicit "Show more". Once the
+ * owner has opened it once, further batches load on their own as the end of
+ * the list comes into view — the infinite-scroll behaviour only earns its
+ * place after they've signalled they want more history.
+ *
+ * The observer is deliberately NOT armed for the first batch: seven rows
+ * don't fill the sidebar, so its sentinel would already be on screen and
+ * would immediately reveal everything, which is the behaviour this replaces.
+ *
+ * Rendered twice (inline sidebar and mobile slide-over), so it owns its own
+ * observer per instance rather than sharing one ref across both.
+ */
+function ConversationList({
+  conversations, conversationsLoaded, conversationId, loading,
+  visibleCount, onShowMore, onSelect, onNewChat,
+}) {
+  const sentinelRef = useRef(null);
+  const visible = conversations.slice(0, visibleCount);
+  const hiddenCount = conversations.length - visible.length;
+  const hasMore = hiddenCount > 0;
+  const autoLoad = hasMore && visibleCount > INITIAL_CONVERSATIONS;
+
+  useEffect(() => {
+    if (!autoLoad) return undefined;
+    const el = sentinelRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    // Default root is the viewport, but intersection still accounts for
+    // clipping by the sidebar's own overflow container — so this fires when
+    // the row reaches the bottom of the list, not merely when the sidebar
+    // is on screen.
+    const io = new IntersectionObserver(
+      (entries) => { if (entries.some((e) => e.isIntersecting)) onShowMore(); },
+      { rootMargin: '60px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [autoLoad, onShowMore, visibleCount]);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onNewChat}
+        disabled={loading}
+        className="mb-3 flex w-full items-center gap-2 rounded-lg border border-[var(--color-line)] px-3 py-2 text-xs font-medium text-[var(--color-ink-soft)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:opacity-50"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        New chat
+      </button>
+
+      <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">Recent</p>
+
+      {!conversationsLoaded ? (
+        <SidebarSkeleton />
+      ) : conversations.length === 0 ? (
+        <p className="px-2 text-[11px] text-[var(--color-ink-faint)]">No conversations yet.</p>
+      ) : (
+        <>
+          <ul className="space-y-0.5">
+            {visible.map((c) => {
+              const isCurrent = c.id === conversationId;
+              return (
+                <li key={c.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSelect(c.id)}
+                    disabled={loading}
+                    aria-current={isCurrent ? 'true' : undefined}
+                    title={c.title}
+                    className={`w-full truncate rounded-lg px-2.5 py-2 text-left text-xs transition-colors disabled:opacity-50 ${
+                      isCurrent
+                        ? 'bg-[var(--color-primary-tint)] font-medium text-[var(--color-primary)]'
+                        : 'text-[var(--color-ink-soft)] hover:bg-[var(--color-bg-alt)]'
+                    }`}
+                  >
+                    {c.title}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          {hasMore && (
+            <>
+              {/* Watched once auto-loading is armed; harmless before that. */}
+              <div ref={sentinelRef} aria-hidden="true" className="h-px" />
+              <button
+                type="button"
+                onClick={onShowMore}
+                className="mt-1 w-full rounded-lg px-2.5 py-2 text-left text-[11px] font-medium text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-bg-alt)] hover:text-[var(--color-primary)]"
+              >
+                {`Show ${Math.min(hiddenCount, CONVERSATION_BATCH)} more`}
+                {hiddenCount > CONVERSATION_BATCH ? ` of ${hiddenCount}` : ''}
+              </button>
+            </>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
 export default function AdvisorChat({ analysisContext = null }) {
   const { organization } = useAuth();
   const organizationId = organization?.organizationId || null;
@@ -434,6 +546,10 @@ export default function AdvisorChat({ analysisContext = null }) {
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Held here rather than in ConversationList so the inline sidebar and the
+  // mobile slide-over stay on the same page of history as the viewport
+  // crosses the md breakpoint.
+  const [visibleConversations, setVisibleConversations] = useState(INITIAL_CONVERSATIONS);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [streamingText, setStreamingText] = useState('');
@@ -600,52 +716,21 @@ export default function AdvisorChat({ analysisContext = null }) {
     refreshConversations();
   };
 
+  const showMoreConversations = useCallback(() => {
+    setVisibleConversations((n) => n + CONVERSATION_BATCH);
+  }, []);
+
   const conversationList = (
-    <>
-      <button
-        type="button"
-        onClick={startNewChat}
-        disabled={loading}
-        className="mb-3 flex w-full items-center gap-2 rounded-lg border border-[var(--color-line)] px-3 py-2 text-xs font-medium text-[var(--color-ink-soft)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:opacity-50"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        New chat
-      </button>
-
-      <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">Recent</p>
-
-      {!conversationsLoaded ? (
-        <SidebarSkeleton />
-      ) : conversations.length === 0 ? (
-        <p className="px-2 text-[11px] text-[var(--color-ink-faint)]">No conversations yet.</p>
-      ) : (
-        <ul className="space-y-0.5">
-          {conversations.map((c) => {
-            const isCurrent = c.id === conversationId;
-            return (
-              <li key={c.id}>
-                <button
-                  type="button"
-                  onClick={() => selectConversation(c.id)}
-                  disabled={loading}
-                  aria-current={isCurrent ? 'true' : undefined}
-                  title={c.title}
-                  className={`w-full truncate rounded-lg px-2.5 py-2 text-left text-xs transition-colors disabled:opacity-50 ${
-                    isCurrent
-                      ? 'bg-[var(--color-primary-tint)] font-medium text-[var(--color-primary)]'
-                      : 'text-[var(--color-ink-soft)] hover:bg-[var(--color-bg-alt)]'
-                  }`}
-                >
-                  {c.title}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </>
+    <ConversationList
+      conversations={conversations}
+      conversationsLoaded={conversationsLoaded}
+      conversationId={conversationId}
+      loading={loading}
+      visibleCount={visibleConversations}
+      onShowMore={showMoreConversations}
+      onSelect={selectConversation}
+      onNewChat={startNewChat}
+    />
   );
 
   return (
