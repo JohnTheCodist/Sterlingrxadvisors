@@ -27,6 +27,7 @@ import ExecutiveBrief from '../components/overview/ExecutiveBrief';
 import TopPriorities from '../components/overview/TopPriorities';
 import AlertsPanel from '../components/overview/AlertsPanel';
 import AdvisorChat from '../components/overview/AdvisorChat';
+import BulletChart from '../components/BulletChart.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { apiFetch } from '../lib/apiClient.js';
 
@@ -289,6 +290,7 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
   const treemaps = valid.filter(w => w.chartType === 'treemap');
   const scatters = valid.filter(w => w.chartType === 'scatter');
   const stackedAreas = valid.filter(w => w.chartType === 'stacked-area');
+  const bullets = valid.filter(w => w.chartType === 'bullet');
 
   // Transform widget series format [{x, y}] to Recharts [{label, value}]
   const toRecharts = (seriesArr) => {
@@ -497,6 +499,24 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
           </div>
         );
       })}
+
+      {/* Bullet charts */}
+      {bullets.map(w => (
+        <div key={w.id} className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6 mb-4">
+          <div className="flex items-center gap-1.5 mb-3">
+            <h3 className="text-base font-semibold text-[var(--color-ink)]">{w.title}</h3>
+            {w.description && <InfoBadge description={w.description} />}
+          </div>
+          <BulletChart
+            value={w.result?.value}
+            max={w.result?.max}
+            ranges={w.result?.ranges}
+            sublabel={w.result?.sublabel}
+            interpretation={w.result?.interpretation}
+            ariaLabel={`${w.result?.label || w.title}: ${w.result?.value}%`}
+          />
+        </div>
+      ))}
 
       {/* Treemaps */}
       {treemaps.map(w => {

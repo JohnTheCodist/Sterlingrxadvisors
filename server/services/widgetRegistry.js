@@ -24,6 +24,39 @@
 const analytics = require('./analytics');
 const { classifyDrug, detectCategoryField } = require('./drugClassifier');
 
+// ---- inventory-snapshot helpers -------------------------------------------
+// The potential-value widgets all read the same three fields off a product.
+// Sharing the readers is what stops them disagreeing with each other — a
+// dashboard showing potential revenue and potential profit that were derived
+// from different subsets of the same file is worse than showing neither.
+
+/** Stock on hand. Zero and negative stock contribute nothing to sell. */
+function readStock(rec) {
+  const n = Number(rec.current_stock);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** Purchase/cost price. Same field fallback stock-value already uses. */
+function readCost(rec) {
+  const raw = rec.cost_price != null && rec.cost_price !== '' ? rec.cost_price : rec.cost;
+  const n = raw != null && raw !== '' ? Number(raw) : NaN;
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+function readSellingPrice(rec) {
+  const raw = rec.selling_price != null && rec.selling_price !== '' ? rec.selling_price : rec.unit_price;
+  const n = raw != null && raw !== '' ? Number(raw) : NaN;
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+// A margin computed over a handful of priced products describes those
+// products, not the inventory — same floor and reasoning as the sales-side
+// cost-coverage gates in analytics.js and db.js.
+const MIN_INVENTORY_COVERAGE_PCT = 20;
+
+const roundMoney = (n) => Math.round(n * 100) / 100;
+const roundPct = (n) => Math.round(n * 10) / 10;
+
 // ---- widget definitions ----------------------------------------------------
 
 const WIDGETS = [
@@ -1899,6 +1932,297 @@ const WIDGETS = [
           ? `${withCost} of ${totalProducts} products (${coveragePct}% have cost price)`
           : `${withCost} products`,
         ...(withoutCost > 0 ? { partialCostData: true, productsWithCost: withCost, totalProducts, costCoveragePct: coveragePct } : {}),
+      };
+    },
+  },
+
+  {
+    id: 'inventory-value-pareto',
+    title: 'Where Is Cash Tied Up?',
+    description: 'Products ranked by the cash locked in their stock, with the cumulative share running across. Inventory value concentrates heavily — the crossing point of the 80% line shows how few products hold most of your working capital, and those are where a stock reduction frees the most cash.',
+    dashboard: 'inventory',
+    category: 'Analysis',
+    priority: 5,
+    chartType: 'pareto',
+    requiredFields: ['product_name', 'current_stock', 'cost_price'],
+    format: 'currency',
+    compute(records) {
+      // Aggregate by product first — a file with one row per batch would
+      // otherwise rank the same drug several times and understate how
+      // concentrated the inventory really is.
+      const byProduct = new Map();
+      let withoutCost = 0;
+      let seenProducts = new Set();
+      for (const rec of records) {
+        const name = rec.product_name || rec.product;
+        if (!name) continue;
+        const key = String(name).trim();
+        if (!key) continue;
+        seenProducts.add(key);
+        const stock = readStock(rec);
+        if (stock == null) continue;
+        const cost = readCost(rec);
+        if (cost == null) continue;
+        byProduct.set(key, (byProduct.get(key) || 0) + stock * cost);
+      }
+      withoutCost = seenProducts.size - byProduct.size;
+
+      const ranked = [...byProduct.entries()]
+        .map(([label, value]) => ({ label, value: roundMoney(value) }))
+        .filter((d) => d.value > 0)
+        .sort((a, b) => b.value - a.value);
+
+      if (ranked.length === 0) {
+        return { error: 'No products have both a stock quantity and a cost price, so inventory value cannot be ranked.' };
+      }
+
+      const total = ranked.reduce((s, d) => s + d.value, 0);
+      // Charting hundreds of bars is unreadable; the Pareto point is made by
+      // the head of the distribution, and the insight line below states what
+      // the truncated tail holds so nothing is hidden.
+      const TOP_N = 15;
+      const shown = ranked.slice(0, TOP_N);
+      let running = 0;
+      const data = shown.map((d) => {
+        running += d.value;
+        return { ...d, cumulative: roundPct((running / total) * 100) };
+      });
+
+      // How many products make up 80% of the value — the actionable number.
+      let cum = 0;
+      let countTo80 = 0;
+      for (const d of ranked) {
+        cum += d.value;
+        countTo80++;
+        if (cum / total >= 0.8) break;
+      }
+      const sharePct = roundPct((countTo80 / ranked.length) * 100);
+
+      return {
+        data,
+        totalValue: roundMoney(total),
+        productCount: ranked.length,
+        insight: {
+          title: `${countTo80} of ${ranked.length} products hold 80% of your inventory cash`,
+          subtitle: `₦${roundMoney(total).toLocaleString()} is tied up in stock. That 80% sits in just ${sharePct}% of the range${shown.length < ranked.length ? `; the chart shows the top ${shown.length}` : ''}. Reducing stock on those lines frees more cash than anything you do to the long tail.${withoutCost > 0 ? ` ${withoutCost} product(s) are excluded for having no cost price.` : ''}`,
+        },
+        ...(withoutCost > 0 ? { partialCostData: true, productsWithoutCost: withoutCost } : {}),
+      };
+    },
+  },
+
+  {
+    id: 'potential-revenue',
+    title: 'Potential Revenue',
+    description: 'What this inventory would bring in if every unit on the shelf sold at its recorded selling price. A ceiling, not a forecast — it assumes complete sell-through with no expiry, damage or discounting.',
+    dashboard: 'inventory',
+    category: 'KPIs',
+    priority: 2,
+    chartType: 'kpi-card',
+    requiredFields: ['current_stock', 'selling_price'],
+    optionalFields: [],
+    format: 'currency',
+    compute(records) {
+      let total = 0;
+      let priced = 0;
+      let unpriced = 0;
+      let units = 0;
+      for (const rec of records) {
+        const stock = readStock(rec);
+        if (stock == null) continue;
+        const price = readSellingPrice(rec);
+        if (price == null) { unpriced++; continue; }
+        total += stock * price;
+        units += stock;
+        priced++;
+      }
+      if (priced === 0) {
+        return { error: 'No stocked product has a selling price, so potential revenue cannot be calculated.' };
+      }
+      const totalProducts = priced + unpriced;
+      const coveragePct = roundPct((priced / totalProducts) * 100);
+      return {
+        value: roundMoney(total),
+        label: 'Potential Revenue',
+        sublabel: unpriced > 0
+          ? `${priced} of ${totalProducts} stocked products priced (${coveragePct}% coverage)`
+          : `${units.toLocaleString()} units across ${priced} products`,
+        ...(unpriced > 0 ? { partialData: true, productsPriced: priced, totalProducts, coveragePct } : {}),
+      };
+    },
+  },
+
+  {
+    id: 'potential-gross-profit',
+    title: 'Potential Gross Profit',
+    description: 'The profit sitting on your shelves — what current stock would earn above what it cost to buy, if all of it sold at recorded prices. Products missing either price are excluded rather than counted as free.',
+    dashboard: 'inventory',
+    category: 'KPIs',
+    priority: 3,
+    chartType: 'kpi-card',
+    requiredFields: ['current_stock', 'selling_price', 'cost_price'],
+    optionalFields: [],
+    format: 'currency',
+    compute(records) {
+      let profit = 0;
+      let both = 0;
+      let incomplete = 0;
+      let belowCost = 0;
+      for (const rec of records) {
+        const stock = readStock(rec);
+        if (stock == null) continue;
+        const price = readSellingPrice(rec);
+        const cost = readCost(rec);
+        // A missing cost must never be read as zero — that would report the
+        // entire selling value as profit, the most flattering possible lie.
+        if (price == null || cost == null) { incomplete++; continue; }
+        if (price < cost) belowCost++;
+        profit += (price - cost) * stock;
+        both++;
+      }
+      if (both === 0) {
+        return { error: 'No stocked product has both a cost price and a selling price, so potential profit cannot be calculated.' };
+      }
+      const totalProducts = both + incomplete;
+      const coveragePct = roundPct((both / totalProducts) * 100);
+      return {
+        value: roundMoney(profit),
+        label: 'Potential Gross Profit',
+        sublabel: incomplete > 0
+          ? `${both} of ${totalProducts} stocked products fully priced (${coveragePct}% coverage)`
+          : `Across ${both} products${belowCost > 0 ? ` · ${belowCost} priced below cost` : ''}`,
+        alert: belowCost > 0,
+        ...(belowCost > 0 ? { productsBelowCost: belowCost } : {}),
+        ...(incomplete > 0 ? { partialCostData: true, productsFullyPriced: both, totalProducts, coveragePct } : {}),
+      };
+    },
+  },
+
+  {
+    id: 'potential-margin',
+    title: 'Potential Margin',
+    description: 'Gross margin the current inventory would return if it sold at recorded prices, measured against the 20–40% range typical for a Nigerian independent pharmacy. Both the profit and the revenue behind it are measured over the same fully-priced products, so the percentage is not diluted by stock whose cost is unknown.',
+    dashboard: 'inventory',
+    category: 'KPIs',
+    priority: 4,
+    chartType: 'bullet',
+    requiredFields: ['current_stock', 'selling_price', 'cost_price'],
+    optionalFields: [],
+    format: 'percent',
+    compute(records) {
+      // Numerator and denominator MUST come from the same products. Dividing
+      // profit-from-priced-stock by revenue-from-all-stock deflates the
+      // margin by exactly the share of stock missing a cost price — the same
+      // fault that made a real 30% margin read as 3% on the sales side.
+      let revenue = 0;
+      let profit = 0;
+      let both = 0;
+      let incomplete = 0;
+      for (const rec of records) {
+        const stock = readStock(rec);
+        if (stock == null) continue;
+        const price = readSellingPrice(rec);
+        const cost = readCost(rec);
+        if (price == null || cost == null) { incomplete++; continue; }
+        revenue += price * stock;
+        profit += (price - cost) * stock;
+        both++;
+      }
+      const totalProducts = both + incomplete;
+      if (both === 0 || revenue <= 0) {
+        return { error: 'No stocked product has both a cost price and a selling price, so potential margin cannot be calculated.' };
+      }
+
+      const coveragePct = roundPct((both / totalProducts) * 100);
+      if (coveragePct < MIN_INVENTORY_COVERAGE_PCT) {
+        return {
+          error: `Only ${both} of ${totalProducts} stocked products (${coveragePct}%) have both a cost and a selling price — too few to describe the margin of this inventory. Add prices for more products to see this.`,
+          partialCostData: true,
+          productsFullyPriced: both,
+          totalProducts,
+          coveragePct,
+        };
+      }
+
+      const marginPct = roundPct((profit / revenue) * 100);
+      const band = marginPct < 20 ? 'below' : marginPct <= 40 ? 'within' : 'above';
+      return {
+        value: marginPct,
+        label: 'Potential Margin',
+        max: Math.max(60, Math.ceil((marginPct + 10) / 10) * 10),
+        // Qualitative ranges, Cole-style: the bar is the measure, the bands
+        // are the context that makes it readable without a second chart.
+        ranges: [
+          { to: 20, label: 'Below typical' },
+          { to: 40, label: 'Typical (20–40%)' },
+          { to: 100, label: 'Above typical' },
+        ],
+        sublabel: `₦${roundMoney(profit).toLocaleString()} profit on ₦${roundMoney(revenue).toLocaleString()} of stock${incomplete > 0 ? ` · ${coveragePct}% of products priced` : ''}`,
+        interpretation: band === 'below'
+          ? 'Below the range typical for a Nigerian independent pharmacy — worth checking buying terms and pricing on your largest lines.'
+          : band === 'above'
+            ? 'Above the typical range. Confirm selling prices are recorded correctly before treating this as headroom.'
+            : 'Within the range typical for a Nigerian independent pharmacy.',
+        ...(incomplete > 0 ? { partialCostData: true, productsFullyPriced: both, totalProducts, coveragePct } : {}),
+      };
+    },
+  },
+
+  {
+    id: 'low-stock-items',
+    title: 'What Needs Reordering?',
+    description: 'Every product at or below its reorder level, ranked by how far below it has fallen. The bar is the shortfall — the units needed to bring that line back to its reorder point — so the longest bar is the largest order to place.',
+    dashboard: 'inventory',
+    category: 'Analysis',
+    priority: 6,
+    chartType: 'hbar',
+    requiredFields: ['product_name', 'current_stock', 'reorder_level'],
+    format: 'number',
+    compute(records) {
+      const byProduct = new Map();
+      let stocked = 0;
+      for (const rec of records) {
+        const name = rec.product_name || rec.product;
+        if (!name) continue;
+        const stock = Number(rec.current_stock);
+        const reorder = Number(rec.reorder_level);
+        if (!Number.isFinite(stock) || stock < 0) continue;
+        if (!Number.isFinite(reorder) || reorder < 0) continue;
+        stocked++;
+        if (stock > reorder) continue;
+        const key = String(name).trim();
+        if (!key) continue;
+        // Keep the worst position if a product appears on several rows.
+        const shortfall = reorder - stock;
+        const prev = byProduct.get(key);
+        if (!prev || shortfall > prev.value) {
+          byProduct.set(key, { label: key, value: shortfall, currentStock: stock, reorderLevel: reorder });
+        }
+      }
+
+      if (stocked === 0) {
+        return { error: 'No product has both a stock quantity and a reorder level.' };
+      }
+      const data = [...byProduct.values()].sort((a, b) => b.value - a.value);
+      if (data.length === 0) {
+        return { error: 'No products are at or below their reorder level — nothing needs reordering right now.' };
+      }
+
+      const stockouts = data.filter((d) => d.currentStock === 0).length;
+      const totalUnits = data.reduce((s, d) => s + d.value, 0);
+      const TOP_N = 20;
+
+      return {
+        data: data.slice(0, TOP_N),
+        // The renderer greys everything past this, so the eye lands on the
+        // orders worth placing first rather than reading all 20 equally.
+        highlightCount: Math.min(5, data.length),
+        lowStockCount: data.length,
+        stockouts,
+        insight: {
+          title: `${data.length} product${data.length === 1 ? '' : 's'} at or below reorder level${stockouts > 0 ? `, ${stockouts} already out of stock` : ''}`,
+          subtitle: `${totalUnits.toLocaleString()} units needed to bring every line back to its reorder point${data.length > TOP_N ? `. The chart shows the ${TOP_N} largest shortfalls` : ''}. Products already at zero are lost sales today, not a future risk.`,
+        },
       };
     },
   },
