@@ -8,6 +8,7 @@
  */
 
 const queries = require('./advisorQueries');
+const modeling = require('./advisor/businessModelingEngine');
 
 const TOOLS = [
   {
@@ -343,6 +344,42 @@ const TOOLS = [
       parameters: { type: 'object', properties: {} },
     },
   },
+  // ---- Business modeling layer -------------------------------------------
+  // Planning and simulation, as opposed to the measurement every tool above
+  // performs. These build ONLY on figures the validated tools already
+  // returned; they compute no metric of their own.
+  {
+    type: 'function',
+    function: {
+      name: 'modelGoal',
+      description: 'GOAL PLANNING — answers "how do I reach X?" / "how do I get revenue to ₦2M?" / "what would it take to double profit?". Takes a target figure and works backwards: reports the current state (from validated analytics), the gap, and the alternative levers that could close it, each sized independently — for revenue: transaction volume vs. average basket vs. both together; for profit: revenue growth vs. margin improvement vs. both. Every option carries its own explicit `assumptions` array which you MUST surface in your answer. Returns available:false naming exactly what is missing when the goal cannot be modelled (e.g. a profit goal with no trustworthy cost data). Works on inventory-only uploads too, modelling against potential revenue/profit from stock on hand. Defaults to the current upload. Do NOT use for "what is my revenue" — that is getRevenueProfitSummary.',
+      parameters: {
+        type: 'object',
+        properties: {
+          metric: { type: 'string', enum: ['revenue', 'profit'], description: 'Which figure the owner wants to move.' },
+          target: { type: 'number', description: 'The figure they want to reach, in naira.' },
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+        required: ['metric', 'target'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'modelScenario',
+      description: 'WHAT-IF SIMULATION — answers "what if I raise prices 10%?" / "what happens if sales grow 20%?" / "what if supplier costs go up 15%?". Applies ONE lever to the validated current state and returns projected revenue, gross profit and margin with deltas. Levers: price (volume held), volume, transactions, basket, cost (prices held). Every result carries an explicit `assumptions` array you MUST surface — particularly for `price`, which assumes zero customer response because this platform holds no elasticity data. When cost prices are missing or too thin, returns the revenue effect only with profitEffectAvailable:false rather than treating unknown cost as zero. Defaults to the current upload. For a per-product price change use simulatePriceChange instead; this models the whole business.',
+      parameters: {
+        type: 'object',
+        properties: {
+          lever: { type: 'string', enum: ['price', 'volume', 'transactions', 'basket', 'cost'], description: 'Which single driver changes.' },
+          changePct: { type: 'number', description: 'Percentage change to apply: 10 for +10%, -5 for a 5% cut.' },
+          scope: { type: 'string', enum: ['current', 'all'], description: "'current' (default) reads only the most recent upload. Only pass 'all' after the user has explicitly agreed to include historical/other uploads." },
+        },
+        required: ['lever', 'changePct'],
+      },
+    },
+  },
 ];
 
 const IMPLEMENTATIONS = {
@@ -371,6 +408,11 @@ const IMPLEMENTATIONS = {
   getRecommendations: queries.getRecommendations,
   getExecutiveBrief: queries.getExecutiveBrief,
   getBusinessMetric: queries.getBusinessMetric,
+  // Business modeling layer — additive, and deliberately kept in its own
+  // module rather than advisorQueries.js: everything there measures what
+  // happened, everything here projects what could.
+  modelGoal: modeling.modelGoal,
+  modelScenario: modeling.modelScenario,
 };
 
 async function runTool(organizationId, name, args) {
