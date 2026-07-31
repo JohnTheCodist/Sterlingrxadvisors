@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Fragment, useCallback } from 'react';
+import { useState, useRef, useEffect, Fragment, useCallback, cloneElement } from 'react';
 import { apiFetch } from '../../lib/apiClient.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 
@@ -49,17 +49,37 @@ const STARTER_QUESTIONS = [
 // renderer for just the subset it actually produces — not a general
 // markdown parser.
 function renderInline(text, keyPrefix) {
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return <strong key={`${keyPrefix}-${i}`} className="font-semibold text-[var(--color-ink)]">{part.slice(2, -2)}</strong>;
     }
     if (part.startsWith('`') && part.endsWith('`')) {
       return (
-        <code key={`${keyPrefix}-${i}`} className="rounded bg-[var(--color-bg-alt)] px-1.5 py-0.5 font-mono text-[0.85em] text-[var(--color-primary)]">
+        <code key={`${keyPrefix}-${i}`} className="rounded-md border border-[var(--color-line)] bg-[var(--color-bg-alt)] px-1.5 py-[1px] font-mono text-[0.84em] text-[var(--color-primary)]">
           {part.slice(1, -1)}
         </code>
       );
+    }
+    const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (link) {
+      const href = link[2];
+      // Only http(s) — a model-authored javascript:/data: URL must never
+      // become a clickable target inside the dashboard.
+      if (/^https?:\/\//i.test(href)) {
+        return (
+          <a
+            key={`${keyPrefix}-${i}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[var(--color-primary)] underline decoration-[var(--color-primary)]/30 underline-offset-2 transition-colors hover:decoration-[var(--color-primary)]"
+          >
+            {link[1]}
+          </a>
+        );
+      }
+      return <Fragment key={`${keyPrefix}-${i}`}>{link[1]}</Fragment>;
     }
     if (part.startsWith('*') && part.endsWith('*') && part.length > 1) {
       return <em key={`${keyPrefix}-${i}`} className="italic">{part.slice(1, -1)}</em>;
@@ -68,17 +88,92 @@ function renderInline(text, keyPrefix) {
   });
 }
 
-function renderMarkdownLite(text) {
+// A cell is numeric if what's left after stripping currency, separators and
+// a trailing unit is a number. Those columns get right-aligned and set in
+// tabular figures so digits line up down the column the way a finance table
+// should — the single biggest readability win in an analytics answer.
+const NUMERIC_CELL = /^[-+(]?\s*[₦$€£¥]?\s*[\d,]+(\.\d+)?\s*%?\s*\)?$/;
+const isNumericCell = (s) => NUMERIC_CELL.test(String(s).trim());
+
+// `caret` is the streaming cursor. It has to be threaded in here rather than
+// rendered after the call: every block this returns is block-level, so a
+// caret appended as a sibling lands on its own line under the text instead
+// of trailing the last word.
+function renderMarkdownLite(text, caret = null) {
   const lines = text.split('\n');
   const blocks = [];
   let i = 0;
 
+  // In markdown a paragraph runs until a blank line, but the model hard-wraps
+  // its prose, so rendering one <p> per source line chopped every answer into
+  // ragged fragments ("…up 8.4% on" / "the previous 90 days…") each carrying
+  // its own margin. Lines are joined until something that actually starts a
+  // new block turns up.
+  const startsBlock = (l) =>
+    l == null ||
+    l.trim() === '' ||
+    /^\s*(-{3,}|—{3,}|_{3,})\s*$/.test(l) ||
+    /^\s*```/.test(l) ||
+    /^\s*>\s?/.test(l) ||
+    /^\s*\|.*\|\s*$/.test(l) ||
+    /^\s*[-•*]\s+/.test(l) ||
+    /^\s*\d+\.\s+/.test(l) ||
+    /^#{1,4}\s+/.test(l);
+
   while (i < lines.length) {
     const line = lines[i];
 
-    if (/^\s*(-{3,}|—{3,})\s*$/.test(line)) {
-      blocks.push(<hr key={blocks.length} className="my-3 border-t border-[var(--color-line)]" />);
+    if (/^\s*(-{3,}|—{3,}|_{3,})\s*$/.test(line)) {
+      blocks.push(<hr key={blocks.length} className="my-4 border-t border-[var(--color-line)]" />);
       i++;
+      continue;
+    }
+
+    // Fenced code block. Previously unhandled, so the fences and everything
+    // between them rendered as literal paragraph text.
+    const fence = line.match(/^\s*```(\w*)\s*$/);
+    if (fence) {
+      i++;
+      const code = [];
+      while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) {
+        code.push(lines[i]);
+        i++;
+      }
+      if (i < lines.length) i++; // closing fence
+      blocks.push(
+        <pre key={blocks.length} className="my-3 overflow-x-auto rounded-xl border border-[var(--color-line)] bg-[var(--color-bg-alt)] px-3.5 py-3">
+          <code className="font-mono text-[12px] leading-relaxed text-[var(--color-ink)]">{code.join('\n')}</code>
+        </pre>
+      );
+      continue;
+    }
+
+    // Blockquote — the Advisor uses these for caveats and data-coverage
+    // warnings, which deserve to stand apart from the body copy.
+    if (/^\s*>\s?/.test(line)) {
+      const quoted = [];
+      while (i < lines.length && /^\s*>\s?/.test(lines[i])) {
+        quoted.push(lines[i].replace(/^\s*>\s?/, ''));
+        i++;
+      }
+      // Same wrapping problem as body copy — join until a blank quoted line.
+      const quotedParas = [];
+      let run = [];
+      for (const q of quoted) {
+        if (q.trim() === '') {
+          if (run.length) { quotedParas.push(run.join(' ')); run = []; }
+        } else {
+          run.push(q.trim());
+        }
+      }
+      if (run.length) quotedParas.push(run.join(' '));
+      blocks.push(
+        <div key={blocks.length} className="my-3 rounded-r-lg border-l-2 border-[var(--color-primary)]/40 bg-[var(--color-primary-tint)]/50 py-2 pl-3.5 pr-3">
+          {quotedParas.map((q, j) => (
+            <p key={j} className="text-[12.5px] leading-relaxed text-[var(--color-ink-soft)] [&+p]:mt-2">{renderInline(q, `bq${j}`)}</p>
+          ))}
+        </div>
+      );
       continue;
     }
 
@@ -92,23 +187,38 @@ function renderMarkdownLite(text) {
         .map((l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()))
         .filter((cells) => !cells.every((c) => /^:?-+:?$/.test(c)));
       const [header, ...body] = rows;
+      // Decide alignment per column from the body, not the header, so a
+      // "Revenue" label doesn't force its numbers left.
+      const numericCols = (header || []).map((_, j) =>
+        body.length > 0 && body.every((r) => r[j] == null || r[j] === '' || isNumericCell(r[j]))
+      );
       blocks.push(
-        <div key={blocks.length} className="my-2.5 overflow-x-auto rounded-lg border border-[var(--color-line)]">
-          <table className="w-full text-xs border-collapse">
+        <div key={blocks.length} className="my-3 overflow-x-auto rounded-xl border border-[var(--color-line)]">
+          <table className="w-full border-collapse text-[12px]">
             {header && (
               <thead>
-                <tr className="bg-[var(--color-bg-alt)]">
+                <tr>
                   {header.map((c, j) => (
-                    <th key={j} className="px-3 py-1.5 text-left font-semibold text-[var(--color-ink)] border-b border-[var(--color-line)]">{renderInline(c, `h${j}`)}</th>
+                    <th
+                      key={j}
+                      className={`whitespace-nowrap border-b border-[var(--color-line)] bg-[var(--color-bg-alt)] px-3 py-2 text-[10.5px] font-semibold uppercase tracking-wider text-[var(--color-ink-soft)] ${numericCols[j] ? 'text-right' : 'text-left'}`}
+                    >
+                      {renderInline(c, `h${j}`)}
+                    </th>
                   ))}
                 </tr>
               </thead>
             )}
             <tbody>
               {body.map((row, r) => (
-                <tr key={r} className={r % 2 === 1 ? 'bg-[var(--color-bg-alt)]/40' : ''}>
+                <tr key={r} className="transition-colors hover:bg-[var(--color-bg-alt)]/50">
                   {row.map((c, j) => (
-                    <td key={j} className="px-3 py-1.5 text-[var(--color-ink-soft)] border-b border-[var(--color-line)]/50 last:border-b-0">{renderInline(c, `r${r}c${j}`)}</td>
+                    <td
+                      key={j}
+                      className={`border-b border-[var(--color-line)]/60 px-3 py-2 text-[var(--color-ink)] ${numericCols[j] ? 'text-right tabular-nums' : 'text-left'}`}
+                    >
+                      {renderInline(c, `r${r}c${j}`)}
+                    </td>
                   ))}
                 </tr>
               ))}
@@ -119,18 +229,23 @@ function renderMarkdownLite(text) {
       continue;
     }
 
-    if (/^\s*[-•]\s+/.test(line)) {
+    if (/^\s*[-•*]\s+/.test(line)) {
       const items = [];
-      while (i < lines.length && /^\s*[-•]\s+/.test(lines[i])) {
-        items.push(lines[i].replace(/^\s*[-•]\s+/, ''));
+      while (i < lines.length && /^\s*[-•*]\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*[-•*]\s+/, '').trim());
         i++;
+        // Wrapped remainder of the same bullet.
+        while (i < lines.length && !startsBlock(lines[i])) {
+          items[items.length - 1] += ` ${lines[i].trim()}`;
+          i++;
+        }
       }
       blocks.push(
-        <ul key={blocks.length} className="my-1.5 space-y-1 pl-1">
+        <ul key={blocks.length} className="my-2.5 space-y-1.5">
           {items.map((it, j) => (
-            <li key={j} className="flex gap-2">
-              <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-[var(--color-ink-faint)]" />
-              <span>{renderInline(it, `ul${j}`)}</span>
+            <li key={j} className="flex gap-2.5">
+              <span className="mt-[8px] h-[3px] w-[3px] shrink-0 rounded-full bg-[var(--color-primary)]/60" />
+              <span className="min-w-0 flex-1">{renderInline(it, `ul${j}`)}</span>
             </li>
           ))}
         </ul>
@@ -141,15 +256,22 @@ function renderMarkdownLite(text) {
     if (/^\s*\d+\.\s+/.test(line)) {
       const items = [];
       while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
-        items.push(lines[i].replace(/^\s*\d+\.\s+/, ''));
+        items.push(lines[i].replace(/^\s*\d+\.\s+/, '').trim());
         i++;
+        // Wrapped remainder of the same numbered item.
+        while (i < lines.length && !startsBlock(lines[i])) {
+          items[items.length - 1] += ` ${lines[i].trim()}`;
+          i++;
+        }
       }
       blocks.push(
-        <ol key={blocks.length} className="my-1.5 space-y-1.5 pl-1">
+        <ol key={blocks.length} className="my-2.5 space-y-2">
           {items.map((it, j) => (
             <li key={j} className="flex gap-2.5">
-              <span className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-tint)] text-[10px] font-bold text-[var(--color-primary)]">{j + 1}</span>
-              <span className="pt-px">{renderInline(it, `ol${j}`)}</span>
+              <span className="mt-[1px] flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md bg-[var(--color-primary-tint)] text-[10px] font-bold tabular-nums text-[var(--color-primary)]">
+                {j + 1}
+              </span>
+              <span className="min-w-0 flex-1">{renderInline(it, `ol${j}`)}</span>
             </li>
           ))}
         </ol>
@@ -160,11 +282,13 @@ function renderMarkdownLite(text) {
     const heading = line.match(/^(#{1,4})\s+(.*)/);
     if (heading) {
       const level = heading[1].length;
+      // Top levels read as section titles; deeper ones as micro-labels, so
+      // a long answer has a visible hierarchy instead of uniform bold text.
       const cls = level <= 2
-        ? 'text-[13px] font-bold tracking-tight'
-        : 'text-[12px] font-semibold';
+        ? 'text-[14px] font-bold tracking-tight text-[var(--color-ink)]'
+        : 'text-[10.5px] font-semibold uppercase tracking-wider text-[var(--color-ink-soft)]';
       blocks.push(
-        <p key={blocks.length} className={`${cls} mt-3 mb-1.5 first:mt-0 text-[var(--color-ink)]`}>
+        <p key={blocks.length} className={`${cls} mt-4 mb-2 first:mt-0`}>
           {renderInline(heading[2], `hd${blocks.length}`)}
         </p>
       );
@@ -174,8 +298,29 @@ function renderMarkdownLite(text) {
 
     if (line.trim() === '') { i++; continue; }
 
-    blocks.push(<p key={blocks.length} className="my-1.5 first:mt-0 last:mb-0">{renderInline(line, `p${blocks.length}`)}</p>);
+    const para = [line.trim()];
     i++;
+    while (i < lines.length && !startsBlock(lines[i])) {
+      para.push(lines[i].trim());
+      i++;
+    }
+    blocks.push(
+      <p key={blocks.length} className="my-2 first:mt-0 last:mb-0">
+        {renderInline(para.join(' '), `p${blocks.length}`)}
+      </p>
+    );
+  }
+
+  if (caret) {
+    const last = blocks[blocks.length - 1];
+    // Tuck it inside the trailing paragraph when there is one; mid-table or
+    // mid-list there's no sensible inline home, so it stands alone.
+    if (last && last.type === 'p') {
+      const kids = Array.isArray(last.props.children) ? last.props.children : [last.props.children];
+      blocks[blocks.length - 1] = cloneElement(last, undefined, [...kids, caret]);
+    } else {
+      blocks.push(<p key="caret-line">{caret}</p>);
+    }
   }
 
   return blocks;
@@ -196,18 +341,45 @@ function Bubble({ role, content, streaming = false }) {
   if (isUser) {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[75%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-[var(--color-primary)] px-4 py-2.5 text-sm leading-relaxed text-primary-foreground shadow-sm">
+        <div className="max-w-[75%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-[var(--color-primary)] px-4 py-2.5 text-[13.5px] leading-relaxed text-primary-foreground shadow-sm">
           {content}
         </div>
       </div>
     );
   }
+  // The assistant's answer is not chat chatter — it's a report containing
+  // tables, figures and headings. Boxing it in a bubble capped it at 80% of
+  // an already narrow column and forced tables to scroll inside a card
+  // inside a panel. Setting it directly on the surface gives that content
+  // the full width and lets the type hierarchy do the separating instead.
   return (
-    <div className="flex justify-start gap-2">
+    <div className="flex justify-start gap-2.5">
       <AdvisorAvatar />
-      <div className="max-w-[80%] rounded-2xl rounded-bl-sm border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3 text-[13px] leading-relaxed text-[var(--color-ink)] shadow-sm">
-        {renderMarkdownLite(content)}
-        {streaming && <span className="ml-0.5 inline-block h-3.5 w-[2px] translate-y-[2px] animate-pulse bg-[var(--color-primary)]" />}
+      <div className="min-w-0 flex-1 pt-0.5 text-[13.5px] leading-[1.65] text-[var(--color-ink)]">
+        {renderMarkdownLite(
+          content,
+          streaming ? (
+            <span
+              key="caret"
+              className="advisor-caret ml-1 inline-block h-[14px] w-[2.5px] translate-y-[2px] rounded-full bg-[var(--color-primary)]"
+            />
+          ) : null
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Shown between sending a question and the first streamed token.
+function ThinkingIndicator() {
+  return (
+    <div className="flex justify-start gap-2.5" role="status" aria-live="polite">
+      <AdvisorAvatar />
+      <div className="flex items-center gap-2 pt-1">
+        <span className="advisor-orb h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <span className="advisor-thinking-label text-[12.5px] font-medium">
+          Analysing your data
+        </span>
       </div>
     </div>
   );
@@ -523,7 +695,9 @@ export default function AdvisorChat({ analysisContext = null }) {
         </button>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+      {/* Unboxed assistant answers need real separation between turns —
+          without the bubble outline, tight spacing runs them together. */}
+      <div ref={scrollRef} className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
         {/* Cold start (nothing cached) or mid-switch: shaped placeholders
             rather than an empty panel, so it reads as loading not broken. */}
         {(!historyLoaded || switching) && messages.length === 0 && <ChatSkeleton />}
@@ -555,18 +729,7 @@ export default function AdvisorChat({ analysisContext = null }) {
           <Bubble role="assistant" content={streamingText} streaming />
         )}
 
-        {loading && !streamingText && (
-          <div className="flex justify-start gap-2">
-            <AdvisorAvatar />
-            <div className="rounded-2xl rounded-bl-sm border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-2.5 shadow-sm">
-              <span className="flex gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ink-faint)] animate-bounce [animation-delay:-0.3s]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ink-faint)] animate-bounce [animation-delay:-0.15s]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ink-faint)] animate-bounce" />
-              </span>
-            </div>
-          </div>
-        )}
+        {loading && !streamingText && <ThinkingIndicator />}
 
         {error && (
           <div className="flex justify-start">

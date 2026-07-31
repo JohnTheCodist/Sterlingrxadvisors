@@ -375,8 +375,88 @@ p { margin: 0; }
   100% { background-position: 0 50%; }
 }
 
+/* ---- Advisor thinking state ------------------------------------------ */
+/* Replaces the three bouncing dots. Bouncing dots imitate a person typing,
+   which misrepresents what is happening — the Advisor is querying the data,
+   not composing prose. A sweeping shimmer over a label reads as computation
+   and matches the shimmer language the skeletons already use. */
+
+.advisor-thinking-label {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-ink-faint) 30%,
+    var(--color-ink) 48%,
+    var(--color-ink) 52%,
+    var(--color-ink-faint) 70%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: advisor-thinking-sweep 1.9s ease-in-out infinite;
+}
+
+@keyframes advisor-thinking-sweep {
+  0%   { background-position: 160% 50%; }
+  100% { background-position: -60% 50%; }
+}
+
+/* A thin arc tracing a circle — one continuously moving element instead of
+   three staggered ones, so the eye reads a single process rather than a
+   metronome. The inner disc masks the centre into a ring. */
+.advisor-orb {
+  position: relative;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 200deg,
+    oklch(from var(--color-primary) l c h / 0.35) 300deg,
+    var(--color-primary) 360deg
+  );
+  animation: advisor-orb-spin 0.9s linear infinite;
+}
+
+.advisor-orb::after {
+  content: '';
+  position: absolute;
+  inset: 1.6px;
+  border-radius: 9999px;
+  background: var(--color-surface);
+}
+
+@keyframes advisor-orb-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Streaming caret. A rounded bar that breathes rather than hard-blinks —
+   a hard blink next to streaming text reads as a rendering glitch. */
+.advisor-caret {
+  animation: advisor-caret-breathe 1.15s ease-in-out infinite;
+}
+
+@keyframes advisor-caret-breathe {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .advisor-shimmer { animation: none; }
+  .advisor-shimmer,
+  .advisor-thinking-label,
+  .advisor-orb,
+  .advisor-caret {
+    animation: none;
+  }
+  /* Without the sweep the clipped gradient would leave the label invisible,
+     so it reverts to flat text — and the gradient has to be dropped too, or
+     un-clipping it repaints it as a block behind the words. */
+  .advisor-thinking-label {
+    background-image: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    color: var(--color-ink-soft);
+  }
+  .advisor-caret { opacity: 1; }
 }
 
 /* The sign-out control is a <button>, not a link — it performs an action
