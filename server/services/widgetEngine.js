@@ -134,6 +134,10 @@ function evaluate(records, options = {}) {
           title: widget.title,
           description: widget.description || null,
           category: widget.category,
+          // Presentation metadata: which executive section a dashboard that
+          // groups by meaning (rather than by chart form) should file this
+          // under. Null for dashboards that render by chart type.
+          section: widget.section || null,
           priority: widget.priority,
           chartType: widget.chartType,
           format: widget.format || null,
@@ -145,6 +149,7 @@ function evaluate(records, options = {}) {
           title: widget.title,
           description: widget.description || null,
           category: widget.category,
+          section: widget.section || null,
           priority: widget.priority,
           chartType: widget.chartType,
           missingFields: widget.requiredFields.filter((f) => !availableFields.has(f)),

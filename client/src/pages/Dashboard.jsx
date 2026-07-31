@@ -267,18 +267,18 @@ function LineChartWidget({ widget, toRecharts }) {
   );
 }
 
-function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOverride }) {
-  if (!data || !data.available || data.available.length === 0) return null;
-
-  const available = idFilter ? data.available.filter(w => idFilter.has(w.id)) : data.available;
-  if (available.length === 0) return null;
-
-  const labels = { sales: 'Sales', inventory: 'Inventory', expiry: 'Expiry', supplier: 'Supplier', customer: 'Customer' };
-  const title = titleOverride || labels[dashboardKey] || dashboardKey;
-
-  // Filter widgets that have valid results (not errored)
-  const valid = available.filter(w => !w.result?.error);
-  const errored = available.filter(w => w.result?.error);
+/**
+ * Chart-type layout — the platform's original presentation strategy, and the
+ * one the Sales dashboard has always used: widgets grouped by how they draw,
+ * then rendered in a fixed order of forms (KPIs, lines, bars, tables, ...).
+ *
+ * Moved here verbatim out of DashboardSection. Sales still renders through
+ * exactly this code, which is what keeps that dashboard byte-identical. It is
+ * also what each section of a sectioned dashboard delegates to, so chart
+ * rendering exists in one place rather than once per layout.
+ */
+function ChartTypeLayout({ widgets, totalRevenue }) {
+  const valid = widgets;
 
   // Group widgets by chartType
   const kpiCards = valid.filter(w => w.chartType === 'kpi-card');
@@ -301,13 +301,8 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
     const s = seriesArr[0];
     return (s.data || []).map(d => ({ label: d.x || d.label || '', value: d.y || d.value || 0 }));
   };
-
   return (
-    <div className="mb-10">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="h-7 w-1 rounded-full bg-[var(--color-primary)]" />
-        <h2 className="text-lg font-semibold text-[var(--color-ink)]">{title}</h2>
-      </div>
+    <>
 
       {/* Growth Rate Widget */}
       {lineCharts.some(w => w.id === 'sales-growth-rate') && (
@@ -873,6 +868,105 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
           </div>
         );
       })}
+    </>
+  );
+}
+
+/**
+ * The executive sections a stock-side dashboard is read in, in the order an
+ * owner needs them: what the inventory is worth, what threatens it, what to
+ * do about it this week, and where next quarter's money should go.
+ *
+ * Section membership is declared by each widget, never listed here. A new
+ * metric appears in the right place by carrying `section` metadata, with no
+ * change to this file.
+ */
+const EXECUTIVE_SECTIONS = [
+  { id: 'Financial', title: 'Financial', blurb: 'Capital invested, and the profit opportunity it carries.' },
+  { id: 'Risk', title: 'Risk', blurb: 'Where money is being lost, or is about to be.' },
+  { id: 'Operations', title: 'Operations', blurb: 'Day-to-day purchasing and stock decisions.' },
+  { id: 'Strategy', title: 'Strategy', blurb: 'Long-term inventory optimisation and investment.' },
+];
+
+/**
+ * Sectioned layout — groups widgets by business meaning instead of chart
+ * form, then hands each group to ChartTypeLayout to draw.
+ *
+ * An executive reads a stock position by question ("what is at risk?"), not
+ * by shape ("show me the bar charts"), which is what the chart-type layout
+ * implicitly assumes.
+ */
+function SectionedLayout({ widgets, totalRevenue }) {
+  const bySection = new Map();
+  for (const w of widgets) {
+    const key = w.section || 'Other';
+    if (!bySection.has(key)) bySection.set(key, []);
+    bySection.get(key).push(w);
+  }
+
+  const known = EXECUTIVE_SECTIONS.filter(s => bySection.has(s.id));
+  // A widget must never disappear because its section is new or absent, so
+  // anything unrecognised still renders, after the known sections.
+  const extra = [...bySection.keys()]
+    .filter(k => !EXECUTIVE_SECTIONS.some(s => s.id === k))
+    .map(k => ({ id: k, title: k === 'Other' ? 'Other Metrics' : k, blurb: null }));
+
+  return (
+    <>
+      {[...known, ...extra].map(s => (
+        <section key={s.id} className="mb-8">
+          <div className="mb-4 border-b border-[var(--color-line)] pb-2">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-ink)]">{s.title}</h3>
+            {s.blurb && <p className="mt-0.5 text-xs text-[var(--color-ink-faint)]">{s.blurb}</p>}
+          </div>
+          <ChartTypeLayout widgets={bySection.get(s.id)} totalRevenue={totalRevenue} />
+        </section>
+      ))}
+    </>
+  );
+}
+
+/**
+ * Which presentation strategy each dashboard uses. Adding a dashboard type
+ * here is the whole cost of giving it its own layout — the widget engine,
+ * registry and calculations are untouched by the choice.
+ */
+const DASHBOARD_LAYOUTS = {
+  inventory: SectionedLayout,
+  expiry: SectionedLayout,
+  supplier: SectionedLayout,
+};
+
+const layoutFor = (dashboardKey) => DASHBOARD_LAYOUTS[dashboardKey] || ChartTypeLayout;
+
+/**
+ * Dashboard router. Owns everything common to every dashboard — the title,
+ * the valid/errored split — and delegates the arrangement of the widgets
+ * themselves to whichever layout that dashboard type declares.
+ */
+function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOverride }) {
+  if (!data || !data.available || data.available.length === 0) return null;
+
+  const available = idFilter ? data.available.filter(w => idFilter.has(w.id)) : data.available;
+  if (available.length === 0) return null;
+
+  const labels = { sales: 'Sales', inventory: 'Inventory', expiry: 'Expiry', supplier: 'Supplier', customer: 'Customer' };
+  const title = titleOverride || labels[dashboardKey] || dashboardKey;
+
+  // Filter widgets that have valid results (not errored)
+  const valid = available.filter(w => !w.result?.error);
+  const errored = available.filter(w => w.result?.error);
+
+  const Layout = layoutFor(dashboardKey);
+
+  return (
+    <div className="mb-10">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="h-7 w-1 rounded-full bg-[var(--color-primary)]" />
+        <h2 className="text-lg font-semibold text-[var(--color-ink)]">{title}</h2>
+      </div>
+
+      <Layout widgets={valid} totalRevenue={totalRevenue} />
 
       {/* Errored widgets — shown as unavailable */}
       {errored.length > 0 && (

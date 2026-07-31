@@ -218,7 +218,11 @@ test('notes never contain unrendered placeholders or NaN', () => {
 section('Sections and gating');
 
 test('every stock-side widget belongs to one of the four sections', () => {
-  const SECTIONS = ['Financial Health', 'Inventory Risk', 'Operational Performance', 'Strategic Allocation'];
+  // These names are the contract between the registry and the sectioned
+  // dashboard layout, which groups purely on this metadata. A widget with a
+  // section the layout does not know still renders, but under "Other" —
+  // which is a bug, not a feature, for a widget shipped in the product.
+  const SECTIONS = ['Financial', 'Risk', 'Operations', 'Strategy'];
   const stock = WIDGETS.filter((w) => ['inventory', 'expiry', 'supplier'].includes(w.dashboard));
   for (const w of stock) {
     assert(SECTIONS.includes(w.section), `${w.id} has section '${w.section}'`);
