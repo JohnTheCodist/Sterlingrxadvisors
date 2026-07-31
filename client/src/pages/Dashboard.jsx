@@ -933,8 +933,12 @@ function SectionedLayout({ widgets, totalRevenue }) {
  */
 const DASHBOARD_LAYOUTS = {
   inventory: SectionedLayout,
-  expiry: SectionedLayout,
-  supplier: SectionedLayout,
+  // Expiry and Supplier stay on the chart-type layout. Sectioning earns its
+  // keep when a dashboard spans several kinds of question; these two do not
+  // — every expiry widget is a Risk widget, so a "Risk" heading above them
+  // labels the whole dashboard twice and says nothing the title has not.
+  // They keep their `section` metadata, so moving them here is all it takes
+  // if either grows into more than one question.
 };
 
 const layoutFor = (dashboardKey) => DASHBOARD_LAYOUTS[dashboardKey] || ChartTypeLayout;
