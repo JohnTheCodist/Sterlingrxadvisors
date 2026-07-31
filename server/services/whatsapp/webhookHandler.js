@@ -11,7 +11,10 @@ const { getSql } = require('../db');
 const { resolveContact } = require('./phoneResolver');
 const { handleOnboarding } = require('./onboarding');
 const { downloadMedia } = require('./mediaDownloader');
-const { processUpload } = require('./uploadPipeline');
+const { processUpload, readWorkbook } = require('./uploadPipeline');
+const { findAmbiguity, buildQuestionText, parseAnswer } = require('./mappingClarifier');
+const { savePending, getPending, clearPending } = require('./pendingUpload');
+const { resolveKnownColumns, recordAlias } = require('../columnAlias');
 const { buildSummaryText } = require('./summaryText');
 const { buildSummaryPdf } = require('./pdfSummary');
 const { storePdfExport, buildPublicUrl, fetchPdfExport } = require('./pdfLink');
@@ -45,15 +48,13 @@ async function getOrganizationName(organizationId) {
   return org?.name || 'Your Pharmacy';
 }
 
-async function handleFileUpload(organizationId, phoneNumber, body) {
-  await sendTypingIndicator(body.MessageSid);
-  // processUpload can take a while on a real file (many rows, network
-  // round-trips to Postgres) — without this, a question asked mid-upload
-  // finds no data yet and reads as a silent failure, not a job in progress.
-  await sendWhatsappMessage(phoneNumber, "Got your file — analyzing it now, this'll take a moment. I'll send your summary as soon as it's ready.");
-
-  const buffer = await downloadMedia(body.MediaUrl0, body.MediaContentType0);
-  const result = await processUpload(organizationId, buffer);
+/**
+ * Run the file through the pipeline and send back the summary and PDF.
+ * Shared by the straight-through path and the resume-after-an-answer path, so
+ * a clarified upload finishes exactly the way an unambiguous one does.
+ */
+async function analyzeAndReply(organizationId, phoneNumber, buffer, filename, userMapping, parsed = null) {
+  const result = await processUpload(organizationId, buffer, filename, { userMapping, parsed });
 
   const pharmacyName = await getOrganizationName(organizationId);
   const summaryText = buildSummaryText(result);
@@ -63,6 +64,95 @@ async function handleFileUpload(organizationId, phoneNumber, body) {
   const pdfUrl = buildPublicUrl(exportId);
 
   await sendWhatsappMessage(phoneNumber, summaryText, pdfUrl);
+}
+
+async function handleFileUpload(organizationId, phoneNumber, body) {
+  await sendTypingIndicator(body.MessageSid);
+  // processUpload can take a while on a real file (many rows, network
+  // round-trips to Postgres) — without this, a question asked mid-upload
+  // finds no data yet and reads as a silent failure, not a job in progress.
+  await sendWhatsappMessage(phoneNumber, "Got your file — analyzing it now, this'll take a moment. I'll send your summary as soon as it's ready.");
+
+  const buffer = await downloadMedia(body.MediaUrl0, body.MediaContentType0);
+  const filename = body.MediaFileName0 || 'whatsapp-upload.xlsx';
+
+  // Columns this pharmacy has already explained, whichever channel they
+  // explained them on. These are applied silently and are never asked about
+  // again — that is the entire point of having asked once.
+  const parsed = readWorkbook(buffer);
+  const { sheets, workbook } = parsed;
+  const rows = sheets[workbook.SheetNames[0]] || [];
+  const rawHeaders = rows.length > 0 ? Object.keys(rows[0]) : [];
+  const known = await resolveKnownColumns(organizationId, rawHeaders);
+
+  // Only genuinely ambiguous, high-impact columns are worth interrupting for;
+  // see mappingClarifier for where that bar is set. Everything else is
+  // resolved by the detector and caught, if wrong, by the coherence checks.
+  const question = findAmbiguity(rows, known);
+  if (question) {
+    await savePending(organizationId, phoneNumber, {
+      fileData: buffer,
+      filename,
+      question: { ...question, knownColumns: known },
+    });
+    await sendWhatsappMessage(phoneNumber, buildQuestionText(question));
+    return;
+  }
+
+  await analyzeAndReply(organizationId, phoneNumber, buffer, filename, known, parsed);
+}
+
+/**
+ * A reply arrived while a file was parked waiting on an answer.
+ *
+ * Whatever happens, the file gets processed — an unanswered question must
+ * never leave an upload stranded, so an unreadable reply falls back to the
+ * detector's own best guess rather than asking again and again.
+ *
+ * @returns {Promise<boolean>} true if the message was consumed as an answer.
+ */
+async function handlePendingAnswer(phoneNumber, messageBody) {
+  const pending = await getPending(phoneNumber);
+  if (!pending) return false;
+
+  const { organizationId, fileData, filename, question } = pending;
+  const known = question.knownColumns || {};
+  const answer = parseAnswer(question, messageBody);
+
+  // Clear first: if analysis then fails, the owner gets an error rather than a
+  // question that reappears against every later message.
+  await clearPending(phoneNumber);
+
+  if (answer && answer.category) {
+    // Remembered against the header, not the file, so the next upload knows
+    // it regardless of what else changed in the spreadsheet.
+    await recordAlias(organizationId, question.rawHeader, answer.category, {
+      overridden: true,
+      source: 'whatsapp',
+    });
+    const label = (question.options.find((o) => o.category === answer.category) || {}).label;
+    await sendWhatsappMessage(
+      phoneNumber,
+      `Got it — "${question.rawHeader}" is ${label ? label.toLowerCase() : answer.category}. `
+      + `I'll remember that. Finishing your summary now.`,
+    );
+    await analyzeAndReply(organizationId, phoneNumber, fileData, filename,
+      { ...known, [question.rawHeader]: answer.category });
+    return true;
+  }
+
+  // No usable answer — say so plainly and carry on rather than blocking.
+  // A guess that is announced can be corrected; a guess that is hidden cannot.
+  await sendWhatsappMessage(
+    phoneNumber,
+    `No problem — I'll go with my best reading of "${question.rawHeader}" for now `
+    + `and finish your summary.`,
+  );
+  await analyzeAndReply(organizationId, phoneNumber, fileData, filename, known);
+
+  // An unreadable reply was probably a real message, not an answer — let the
+  // caller handle it normally once the summary is on its way.
+  return !!(answer && answer.skip);
 }
 
 async function handleTextQuestion(organizationId, phoneNumber, messageBody, messageSid) {
@@ -103,10 +193,21 @@ async function processIncomingMessage(body) {
   const numMedia = parseInt(body.NumMedia || '0', 10);
 
   if (numMedia > 0) {
+    // A new file supersedes any question still waiting — savePending is keyed
+    // by phone number, but clearing here means an ignored question can't be
+    // answered later against a file the owner has already replaced.
+    await clearPending(phoneNumber);
     await handleFileUpload(organizationId, phoneNumber, body);
-  } else {
-    await handleTextQuestion(organizationId, phoneNumber, body.Body || '', body.MessageSid);
+    return;
   }
+
+  // A parked file gets first claim on this message. If the reply turns out not
+  // to be an answer, the upload still completes and the message falls through
+  // to be treated as an ordinary question.
+  const consumed = await handlePendingAnswer(phoneNumber, body.Body || '');
+  if (consumed) return;
+
+  await handleTextQuestion(organizationId, phoneNumber, body.Body || '', body.MessageSid);
 }
 
 /**

@@ -164,6 +164,62 @@ async function upsertDimension(organizationId, tableName, record, naturalKey) {
 }
 
 /**
+ * upsertDimension for a whole dimension at once.
+ *
+ * The single-row version costs two sequential round-trips per row (a lookup,
+ * then an insert or update). Callers loop it over every distinct product,
+ * customer, supplier and date in a file, so a sheet with thousands of
+ * distinct products spent thousands of round-trips here — on its own more
+ * wall-clock time than parsing, normalizing and loading the file combined.
+ *
+ * Replace-by-key rather than lookup-then-branch: upsertDimension overwrites
+ * the entire payload when a key already exists, so deleting the keys in this
+ * batch and re-inserting them lands in exactly the same state, in two
+ * statements per batch instead of two per row. Row ids are reassigned, which
+ * nothing reads — dimension rows are only ever matched on the naturalKey
+ * inside their payload.
+ *
+ * @param {Array<{naturalKey: string, record: object}>} entries
+ * @returns {Promise<number>} rows written
+ */
+async function upsertDimensions(organizationId, tableName, entries) {
+  assertOrgId(organizationId);
+  if (!entries || entries.length === 0) return 0;
+  const db = getSql();
+
+  // Later entry wins on a repeated key, matching what sequential upserts did.
+  const merged = new Map();
+  for (const e of entries) merged.set(e.naturalKey, e.record);
+
+  const ingestedAt = new Date().toISOString();
+  const list = [...merged.entries()];
+  const CHUNK = 500;
+  let written = 0;
+
+  for (let i = 0; i < list.length; i += CHUNK) {
+    const chunk = list.slice(i, i + CHUNK);
+    const keys = chunk.map(([key]) => key);
+
+    await db`
+      delete from widget_fact
+      where organization_id = ${organizationId}
+        and table_name = ${tableName}
+        and payload->>'naturalKey' in ${db(keys)}
+    `;
+
+    const rows = chunk.map(([naturalKey, record]) => ({
+      organization_id: organizationId,
+      table_name: tableName,
+      payload: db.json({ ...record, naturalKey, _ingestedAt: ingestedAt }),
+    }));
+    await db`insert into widget_fact ${db(rows, 'organization_id', 'table_name', 'payload')}`;
+    written += chunk.length;
+  }
+
+  return written;
+}
+
+/**
  * Remove FactSales records for datasets where the classifier
  * (or hasTransactionCapability) says sales is NOT a capability.
  * Called on server startup and before multi-dataset widget evaluation.
@@ -198,4 +254,7 @@ async function purgeStaleFactSales(organizationId) {
   } catch (_) { /* non-fatal */ }
 }
 
-module.exports = { append, query, queryAll, summary, count, clear, upsertDimension, purgeStaleFactSales };
+module.exports = {
+  append, query, queryAll, summary, count, clear,
+  upsertDimension, upsertDimensions, purgeStaleFactSales,
+};

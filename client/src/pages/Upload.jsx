@@ -134,6 +134,46 @@ for (const group of FIELD_GROUPS) {
   }
 }
 
+// Flat, de-duplicated list backing the field picker. A few fields appear under
+// more than one group in FIELD_GROUPS (supplier, warehouse, expiry_date), which
+// is right for browsing and wrong for searching — a filtered list that shows
+// "Supplier" twice reads like a bug.
+const ALL_FIELDS = (() => {
+  const seen = new Map();
+  for (const group of FIELD_GROUPS) {
+    for (const opt of group.options) {
+      if (!seen.has(opt.value)) seen.set(opt.value, { ...opt, group: group.label });
+    }
+  }
+  return [...seen.values()];
+})();
+
+// Short plain-language glosses for the fields people actually confuse. Only
+// where the label alone leaves a real question — annotating every field would
+// bury the handful that need it.
+const FIELD_HINTS = {
+  cost_price: 'what you pay your supplier, per unit',
+  selling_price: 'what you charge the customer, per unit',
+  revenue: 'the total for the line — price x quantity',
+  quantity: 'units sold on this line',
+  current_stock: 'units you still have on the shelf',
+  transaction_date: 'when the sale happened',
+  expiry_date: 'when the medicine expires',
+  reorder_level: 'the level at which you reorder',
+  batch_number: 'manufacturer batch or lot code',
+  invoice_number: 'receipt or invoice reference',
+};
+
+function searchFields(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return ALL_FIELDS;
+  return ALL_FIELDS.filter((f) =>
+    f.label.toLowerCase().includes(q)
+    || f.value.replace(/_/g, ' ').includes(q)
+    || (FIELD_HINTS[f.value] || '').includes(q)
+    || f.group.toLowerCase().includes(q));
+}
+
 // Required fields for badges — will be overridden per-file based on capabilities
 const DEFAULT_REQUIRED_FIELDS = new Set(['product_name']);
 
@@ -276,18 +316,43 @@ function AutoAcceptedPanel({ columns, expanded, onToggle }) {
 }
 
 // Single-card review queue — one column at a time, swipe (or button) to
-// advance. Only ever offers the top 2 algorithmic guesses; a third path,
-// "Something else", lets the user describe the column in their own words
-// and asks the LLM to re-read it with that hint. No full field list is
-// ever shown — if the hint doesn't land on a confident match, the column
-// is skipped rather than forcing a guess.
+// advance.
+//
+// The top 2 guesses are offered first because they are usually right. When
+// they are not, the user picks from the full field list, filtered as they
+// type. That ordering matters: at this point the user KNOWS what the column
+// is, and the system's only job is to accept the answer. Asking them to
+// describe it in prose so a model can map the description back onto a fixed
+// list of 25 fields is slower, can fail, and needs a network round trip to do
+// a lookup.
+//
+// The LLM re-read is kept, demoted to what it is good at — when the typed text
+// matches no field name, it can still work out the meaning ("what the supplier
+// charged me" -> cost_price). It is a fallback behind the list, not the only
+// way through, so the path still works with no LLM configured.
+//
+// Nothing here ever skips a column on the user's behalf. Dropping a column
+// while someone is actively trying to map it is the worst available outcome.
 function MappingCard({ column, index, total, onResolve }) {
   const [exiting, setExiting] = useState(false);
-  const [mode, setMode] = useState('idle'); // idle | loading | match | nomatch
+  const [mode, setMode] = useState('idle'); // idle | browse | loading | match
   const [hint, setHint] = useState('');
   const [matchResult, setMatchResult] = useState(null);
+  const [interpretFailed, setInterpretFailed] = useState(false);
   const cardRef = useRef(null);
   const dragRef = useRef({ startX: 0, dx: 0, dragging: false });
+
+  const matches = searchFields(hint);
+  const samples = (column.sampleValues || []).filter((v) => v != null && v !== '').slice(0, 4);
+
+  // Focusing the search box makes the browser scroll it into view, which drags
+  // the list underneath it along too — so the picker opened part-way down and
+  // the most likely fields were above the fold. Pin it back to the top
+  // whenever the list opens or the filter changes the results.
+  const listRef = useRef(null);
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = 0;
+  }, [mode, hint]);
 
   const tier = column.tier === 'review' ? 'review' : 'confirm';
   const confidence = column.bestGuess?.confidence || column.detections?.[0]?.confidence || 0;
@@ -322,9 +387,13 @@ function MappingCard({ column, index, total, onResolve }) {
     if (dx < -90) commit('');
   };
 
+  // Only reachable when the typed text matches no field in the list — at that
+  // point the user has described something rather than named it, which is
+  // exactly what the model is good at reading.
   const submitHint = async () => {
     if (!hint.trim()) return;
     setMode('loading');
+    setInterpretFailed(false);
     try {
       const res = await apiFetch('/api/reinterpret-column', {
         method: 'POST',
@@ -335,14 +404,16 @@ function MappingCard({ column, index, total, onResolve }) {
       if (data.matched) {
         setMatchResult({ category: data.category });
         setMode('match');
-      } else {
-        setMode('nomatch');
-        setTimeout(() => commit(''), 1000);
+        return;
       }
     } catch (_) {
-      setMode('nomatch');
-      setTimeout(() => commit(''), 1000);
+      // fall through — a failed interpretation is not a reason to lose the column
     }
+    // Back to the list with the search cleared, rather than skipping the
+    // column out from under the user.
+    setInterpretFailed(true);
+    setHint('');
+    setMode('browse');
   };
 
   return (
@@ -363,10 +434,21 @@ function MappingCard({ column, index, total, onResolve }) {
 
       <p className="map-col-title">&ldquo;{column.rawHeader}&rdquo;</p>
 
+      {/* Real cells from the file. A header alone often cannot identify a
+          column — "Col7" means nothing, four of its values usually mean
+          everything — and these were already in the payload, unused. */}
+      {samples.length > 0 && (
+        <div className="map-samples">
+          {samples.map((v, i) => (
+            <span key={i} className="map-sample">{String(v)}</span>
+          ))}
+        </div>
+      )}
+
       {mode === 'idle' && (
         <>
           <p className="map-question">
-            {bestLabel ? 'Which field is this?' : "I couldn't find a match — describe it below, or skip."}
+            {bestLabel ? 'Which field is this?' : "I couldn't place this one — pick the field it belongs to."}
           </p>
           {(bestLabel || secondLabel) && (
             <div className="map-actions">
@@ -383,19 +465,66 @@ function MappingCard({ column, index, total, onResolve }) {
               )}
             </div>
           )}
+          <button type="button" onClick={() => setMode('browse')} className="map-else-link">
+            {bestLabel ? 'Neither — choose a field' : 'Choose a field'}
+          </button>
+        </>
+      )}
+
+      {mode === 'browse' && (
+        <>
+          {interpretFailed && (
+            <p className="map-question map-question--muted">
+              I couldn&apos;t work that one out. Pick the field from the list instead.
+            </p>
+          )}
           <div className="map-hint-row">
             <input
               type="text"
               value={hint}
+              autoFocus
               onChange={(e) => setHint(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') submitHint(); }}
-              placeholder="Or describe what this column actually is…"
+              onKeyDown={(e) => {
+                // Enter takes the single remaining match — the fastest path
+                // once typing has narrowed the list to one.
+                if (e.key !== 'Enter') return;
+                if (matches.length === 1) commit(matches[0].value);
+                else if (matches.length === 0 && hint.trim()) submitHint();
+              }}
+              placeholder="Search fields, or describe the column…"
               className="map-hint-input"
             />
-            <button type="button" onClick={submitHint} disabled={!hint.trim()} className="map-btn map-btn--primary map-btn--find">
-              Find match
-            </button>
           </div>
+
+          {matches.length > 0 ? (
+            <div className="map-field-list" ref={listRef}>
+              {matches.map((f) => (
+                <button
+                  key={f.value}
+                  type="button"
+                  onClick={() => commit(f.value)}
+                  className="map-field-option"
+                >
+                  <span className="map-field-label">{f.label}</span>
+                  {FIELD_HINTS[f.value] && <span className="map-field-hint">{FIELD_HINTS[f.value]}</span>}
+                  <span className="map-field-group">{f.group}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            // Nothing in the list matches what they typed — this is the one
+            // case where asking the model to interpret it genuinely helps.
+            <div className="map-field-empty">
+              <p className="map-question">No field matches &ldquo;{hint}&rdquo;.</p>
+              <button type="button" onClick={submitHint} className="map-btn map-btn--primary">
+                Work out what I mean
+              </button>
+            </div>
+          )}
+
+          <button type="button" onClick={() => { setHint(''); setInterpretFailed(false); setMode('idle'); }} className="map-else-link">
+            Back
+          </button>
         </>
       )}
 
@@ -413,15 +542,11 @@ function MappingCard({ column, index, total, onResolve }) {
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
               {FIELD_LABEL_MAP[matchResult.category] || formatCategoryLabel(matchResult.category)}
             </button>
-            <button type="button" onClick={() => setMode('idle')} className="map-btn map-btn--skip">
-              Try again
+            <button type="button" onClick={() => { setHint(''); setMode('browse'); }} className="map-btn map-btn--skip">
+              Not that — show the list
             </button>
           </div>
         </>
-      )}
-
-      {mode === 'nomatch' && (
-        <p className="map-question">Couldn&apos;t find a clear match — skipping this column.</p>
       )}
 
       <div className="map-card-footer">
@@ -667,6 +792,12 @@ export default function Upload() {
       const formData = new FormData();
       formData.append('file', f);
       formData.append('mapping', JSON.stringify(userMapping));
+      // Which of these the user actually decided, as opposed to accepted
+      // automatically. A column the user OVERRODE is the strongest signal the
+      // system can get — a person correcting the detector about one specific
+      // column — and until now it was computed here and then dropped, so the
+      // same mistake was repeated on every future file.
+      formData.append('reviewStatuses', JSON.stringify(reviewStatuses));
 
       const res = await apiFetch('/api/confirm-mapping', { method: 'POST', body: formData });
       const data = await res.json();

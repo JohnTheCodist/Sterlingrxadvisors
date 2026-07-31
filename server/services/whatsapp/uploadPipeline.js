@@ -27,15 +27,32 @@ const { generateInsights } = require('../recommendations');
  *   bizHealth: object, bizInsights: object
  * }>}
  */
-async function processUpload(organizationId, fileBuffer, filename = 'whatsapp-upload.xlsx') {
+function readWorkbook(fileBuffer) {
   const xlsx = require('xlsx');
   const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
   const sheets = {};
   workbook.SheetNames.forEach((name) => {
     sheets[name] = xlsx.utils.sheet_to_json(workbook.Sheets[name], { defval: null });
   });
+  return { workbook, sheets };
+}
 
-  const result = await normalizeFromSheets(sheets, { organizationId });
+/**
+ * @param {object} [options]
+ * @param {Record<string, string>} [options.userMapping] rawHeader -> category.
+ *   Carries two things the detector cannot work out on its own: columns this
+ *   pharmacy has already told us the meaning of, and the answer to whatever
+ *   clarifying question was asked about this file. Same override channel the
+ *   web mapping screen uses, so both channels resolve a column the same way.
+ */
+async function processUpload(organizationId, fileBuffer, filename = 'whatsapp-upload.xlsx', options = {}) {
+  const { userMapping, parsed } = options;
+  // The caller inspects the sheets before deciding whether to ask a question,
+  // so it can hand the parse back rather than making us redo it — parsing a
+  // large workbook twice is pure waste on the slowest part of the upload.
+  const { workbook, sheets } = parsed || readWorkbook(fileBuffer);
+
+  const result = await normalizeFromSheets(sheets, { organizationId, userMapping });
   if (result.normalized.length === 0) {
     throw new Error('The file contains no processable data rows.');
   }
@@ -122,4 +139,4 @@ async function processUpload(organizationId, fileBuffer, filename = 'whatsapp-up
   };
 }
 
-module.exports = { processUpload };
+module.exports = { processUpload, readWorkbook };

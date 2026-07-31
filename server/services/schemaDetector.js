@@ -1200,6 +1200,46 @@ function detectSchema(rows, sampleSize = 50) {
  * confidence — so the strongest signal wins the top slot regardless of
  * which source produced it.
  */
+// Confidence is earned by CORROBORATION, not claimed. These constants encode
+// what it is worth when two independent methods land on the same answer, and
+// what it costs when they don't. They are read against the tiers in
+// columnMapper.js: >= 0.95 auto-applies, >= 0.70 asks the user to review,
+// below that the pipeline says it is unsure.
+const AGREE_FLOOR = 0.85;   // agreement is worth at least this on its own
+const AGREE_BONUS = 0.12;   // ...plus this, so a decent rule score clears 0.95
+const AGREE_CEIL = 0.99;    // never certain; a file can always be strange
+const RANKING_DISPUTE = 0.78; // both found it, they rank it differently -> review
+const CONFLICT = 0.72;      // they name different fields -> a human decides
+const CONFLICT_PENALTY = 0.8; // ...and the rule's own pick loses standing too
+
+/**
+ * Fold the LLM's answer into the rule-based detections.
+ *
+ * The previous version took whichever of the two claimed the higher number.
+ * That treats a self-reported score as if it were measured, which is the one
+ * thing an LLM's confidence is not — it is a predicted token, so a fluent
+ * wrong answer scores just as high as a right one and auto-applied.
+ *
+ * What IS informative is whether two methods that work in completely different
+ * ways — string/value heuristics on one side, semantic knowledge on the other —
+ * independently reach the same field. So the number is computed here, from
+ * their relationship:
+ *
+ *   agree on the top pick   -> high; clears the auto bar even if neither
+ *                              method was individually certain
+ *   agree it is a candidate,
+ *   but rank it differently -> review; both saw it, they disagree on primacy
+ *   name different fields   -> review, and the rule's pick is demoted too;
+ *                              a genuine disagreement is exactly the case a
+ *                              person should look at, so neither side gets to
+ *                              auto-apply by outshouting the other
+ *
+ * Corroboration is only claimed for a genuinely independent source. The local
+ * heuristic fallback in llmMapper.js arrives through this same path but marks
+ * its detections as scored rather than `unverified`; being another header/value
+ * heuristic, it shares failure modes with the rule detector and its agreement
+ * would be self-congratulation. Those keep the old take-the-higher behaviour.
+ */
 function mergeLlmResults(schemaColumns, llmColumns) {
   if (!llmColumns || llmColumns.length === 0) return schemaColumns;
 
@@ -1209,36 +1249,279 @@ function mergeLlmResults(schemaColumns, llmColumns) {
     const llmCol = llmMap.get(col.rawHeader);
     if (!llmCol || !llmCol.mappedTo) return col;
 
+    const primary = (llmCol.detections || []).find(
+      (d) => d.category === llmCol.mappedTo && !/second choice/i.test(d.source || ''),
+    );
+    const independent = primary ? primary.unverified === true : false;
+    const why = primary && primary.why ? primary.why : null;
+
+    const ruleDetections = col.detections || [];
+    const ruleTop = ruleDetections[0] || null;
+    const ruleMatch = ruleDetections.find((d) => d.category === llmCol.mappedTo) || null;
+
+    // Not independent evidence — preserve the original take-the-higher merge.
+    if (!independent) {
+      const llmDet = { category: llmCol.mappedTo, confidence: llmCol.confidence, source: 'LLM semantic mapping' };
+      const merged = [];
+      let seen = false;
+      for (const d of ruleDetections) {
+        if (d.category === llmDet.category) { merged.push(d.confidence >= llmDet.confidence ? d : llmDet); seen = true; }
+        else merged.push(d);
+      }
+      if (!seen) merged.push(llmDet);
+      merged.sort((a, b) => b.confidence - a.confidence);
+      return { ...col, detections: merged };
+    }
+
+    const round = (n) => Math.round(Math.min(n, AGREE_CEIL) * 100) / 100;
+    let agreement;
+    let confidence;
+
+    if (ruleTop && ruleTop.category === llmCol.mappedTo) {
+      agreement = 'corroborated';
+      confidence = round(Math.max(ruleTop.confidence, AGREE_FLOOR) + AGREE_BONUS);
+    } else if (ruleMatch) {
+      agreement = 'ranking-dispute';
+      confidence = round(Math.max(ruleMatch.confidence, RANKING_DISPUTE));
+    } else if (ruleTop) {
+      agreement = 'conflict';
+      confidence = CONFLICT;
+    } else {
+      agreement = 'llm-only';
+      confidence = CONFLICT;
+    }
+
     const llmDet = {
       category: llmCol.mappedTo,
-      confidence: llmCol.confidence,
-      source: 'LLM semantic mapping',
+      confidence,
+      source: agreement === 'corroborated'
+        ? 'rule detector and semantic mapping agree'
+        : 'LLM semantic mapping',
+      agreement,
+      ...(why ? { why } : {}),
     };
 
     const merged = [];
-    let llmMerged = false;
-    for (const d of col.detections) {
-      if (d.category === llmDet.category) {
-        merged.push(d.confidence >= llmDet.confidence ? d : llmDet);
-        llmMerged = true;
-      } else {
-        merged.push(d);
+    let replaced = false;
+    for (const d of ruleDetections) {
+      if (d.category === llmDet.category) { merged.push(llmDet); replaced = true; continue; }
+      // On a genuine conflict the rule's own top pick is no longer trustworthy
+      // enough to auto-apply either — demote it so the column reaches a human
+      // instead of one side winning by default.
+      if (agreement === 'conflict' && d === ruleTop) {
+        merged.push({ ...d, confidence: Math.round(d.confidence * CONFLICT_PENALTY * 100) / 100, agreement: 'conflict' });
+        continue;
       }
+      merged.push(d);
     }
-    if (!llmMerged) merged.push(llmDet);
+    if (!replaced) merged.push(llmDet);
+
+    // The model's runner-up is kept as a visible alternative so the review UI
+    // can offer it, but never at a confidence that could win on its own.
+    for (const d of llmCol.detections || []) {
+      if (!/second choice/i.test(d.source || '')) continue;
+      if (merged.some((m) => m.category === d.category)) continue;
+      merged.push({ ...d });
+    }
 
     merged.sort((a, b) => b.confidence - a.confidence);
-
-    return {
-      ...col,
-      detections: merged,
-    };
+    return { ...col, detections: merged, agreement };
   });
+}
+
+// ---- set-level coherence ------------------------------------------------
+
+const COHERENCE_SAMPLE = 300;   // rows read per check; enough to be decisive
+const MIN_COMPARABLE = 8;       // below this a "most rows" verdict is noise
+const CONFIRMED = 0.95;         // arithmetic agreement earns the auto tier
+const DEMOTE_HARD = 0.5;        // the column contradicts what it was mapped to
+const DEMOTE_SOFT = 0.6;        // two columns are coherent only if swapped
+
+/**
+ * Check a resolved mapping against the data it claims to describe.
+ *
+ * Every check up to this point reasons about ONE column — its header, its
+ * values, its own plausibility. But several fields are only meaningful in
+ * relation to each other, and those relationships are where mapping mistakes
+ * actually show up: cost and selling price swapped reads perfectly at the
+ * column level and is obviously wrong the moment you compare them row by row.
+ *
+ * So this runs after a mapping is resolved and asks whether the set holds
+ * together arithmetically. It never rewrites a mapping — a wrong guess here
+ * would be worse than the one it replaced. It only moves confidence, which
+ * moves the column between the auto / review / unsure tiers:
+ *
+ *   - an identity that holds (revenue = quantity x selling price) is strong
+ *     corroboration across three columns at once, and lifts all three to auto
+ *   - a relationship that holds only inverted (cost above selling on most
+ *     rows) demotes both, because the likeliest reading is that they are
+ *     swapped and a person should confirm which is which
+ *   - a column whose values won't parse as what it was mapped to is demoted
+ *     on its own evidence
+ *
+ * @returns {{columns, checks}} columns with adjusted confidences, and a
+ *          human-readable record of what was checked and what it found.
+ */
+function checkMappingCoherence(schemaColumns, mapping, rows) {
+  const checks = [];
+  if (!rows || rows.length === 0 || !mapping) return { columns: schemaColumns, checks };
+
+  const sample = rows.slice(0, COHERENCE_SAMPLE);
+  const headerFor = (cat) => (mapping[cat] && mapping[cat].rawHeader) || null;
+  const num = (v) => {
+    if (v == null || v === '') return null;
+    const n = Number(String(v).replace(/[^0-9.\-]/g, ''));
+    return Number.isFinite(n) ? n : null;
+  };
+  const valuesOf = (cat) => {
+    const h = headerFor(cat);
+    return h ? sample.map((r) => r[h]) : null;
+  };
+
+  // Confidence adjustments, collected then applied once so a column touched by
+  // two checks takes the harshest verdict rather than a compounding product.
+  const adjust = new Map(); // category -> { factor?, floor? }
+  const demote = (cat, factor, reason) => {
+    if (!headerFor(cat)) return;
+    const prev = adjust.get(cat) || {};
+    adjust.set(cat, { ...prev, factor: Math.min(prev.factor ?? 1, factor), reason });
+  };
+  const confirm = (cat, floor, reason) => {
+    if (!headerFor(cat)) return;
+    const prev = adjust.get(cat) || {};
+    adjust.set(cat, { ...prev, floor: Math.max(prev.floor ?? 0, floor), reason });
+  };
+
+  // --- cost vs selling price -------------------------------------------
+  const costs = valuesOf('cost_price');
+  const sells = valuesOf('selling_price');
+  if (costs && sells) {
+    let inverted = 0, comparable = 0;
+    for (let i = 0; i < sample.length; i++) {
+      const c = num(costs[i]), s = num(sells[i]);
+      if (c == null || s == null || c <= 0 || s <= 0) continue;
+      comparable++;
+      if (c > s) inverted++;
+    }
+    if (comparable >= MIN_COMPARABLE) {
+      const pct = inverted / comparable;
+      if (pct > 0.5) {
+        demote('cost_price', DEMOTE_SOFT, 'cost above selling price on most rows');
+        demote('selling_price', DEMOTE_SOFT, 'cost above selling price on most rows');
+        checks.push({
+          check: 'cost_vs_selling', passed: false, severity: 'high',
+          message: `Cost is higher than selling price on ${Math.round(pct * 100)}% of rows — these two columns may be swapped.`,
+        });
+      } else {
+        checks.push({ check: 'cost_vs_selling', passed: true, message: 'Cost sits below selling price, as expected.' });
+      }
+    }
+  }
+
+  // --- revenue = quantity x selling price -------------------------------
+  const revs = valuesOf('revenue');
+  const qtys = valuesOf('quantity');
+  if (revs && qtys && sells) {
+    let holds = 0, comparable = 0;
+    for (let i = 0; i < sample.length; i++) {
+      const r = num(revs[i]), q = num(qtys[i]), s = num(sells[i]);
+      if (r == null || q == null || s == null || r <= 0 || q <= 0 || s <= 0) continue;
+      comparable++;
+      // 2% tolerance absorbs rounding and per-line discounts.
+      if (Math.abs(r - q * s) / r <= 0.02) holds++;
+    }
+    if (comparable >= MIN_COMPARABLE) {
+      const pct = holds / comparable;
+      if (pct >= 0.8) {
+        for (const cat of ['revenue', 'quantity', 'selling_price']) {
+          confirm(cat, CONFIRMED, 'revenue equals quantity x selling price');
+        }
+        checks.push({
+          check: 'revenue_identity', passed: true, severity: 'info',
+          message: `Revenue equals quantity x selling price on ${Math.round(pct * 100)}% of rows — three columns confirm each other.`,
+        });
+      } else if (pct < 0.2) {
+        checks.push({
+          check: 'revenue_identity', passed: false, severity: 'medium',
+          message: `Revenue does not equal quantity x selling price on ${Math.round((1 - pct) * 100)}% of rows — one of the three may be mapped to the wrong column.`,
+        });
+      }
+    }
+  }
+
+  // --- the date column has to read as dates -----------------------------
+  for (const cat of ['transaction_date', 'date', 'expiry_date']) {
+    const vals = valuesOf(cat);
+    if (!vals) continue;
+    let parsed = 0, present = 0;
+    for (const v of vals) {
+      if (v == null || v === '') continue;
+      present++;
+      if (isDateString(v) || isExcelSerialDate(v) || isYYYYMMDD(v)) parsed++;
+    }
+    if (present >= MIN_COMPARABLE) {
+      const pct = parsed / present;
+      if (pct < 0.9) {
+        demote(cat, DEMOTE_HARD, 'values do not read as dates');
+        checks.push({
+          check: `${cat}_parses`, passed: false, severity: 'high',
+          message: `Only ${Math.round(pct * 100)}% of values in the ${cat.replace(/_/g, ' ')} column read as dates.`,
+        });
+      } else {
+        checks.push({ check: `${cat}_parses`, passed: true, message: `Values in the ${cat.replace(/_/g, ' ')} column read as dates.` });
+      }
+    }
+  }
+
+  // --- quantity has to be a count ---------------------------------------
+  if (qtys) {
+    let ok = 0, present = 0;
+    for (const v of qtys) {
+      if (v == null || v === '') continue;
+      present++;
+      const n = num(v);
+      if (n != null && n > 0) ok++;
+    }
+    if (present >= MIN_COMPARABLE && ok / present < 0.9) {
+      demote('quantity', DEMOTE_SOFT, 'values are not positive counts');
+      checks.push({
+        check: 'quantity_is_count', passed: false, severity: 'medium',
+        message: `Only ${Math.round((ok / present) * 100)}% of quantity values are positive numbers.`,
+      });
+    }
+  }
+
+  if (adjust.size === 0) return { columns: schemaColumns, checks };
+
+  // Apply to the detections of the specific column each category resolved to,
+  // so an adjustment can never spill onto a column that was not being judged.
+  const byHeader = new Map();
+  for (const [cat, a] of adjust) {
+    const h = headerFor(cat);
+    if (h) byHeader.set(h, { ...a, category: cat });
+  }
+
+  const columns = schemaColumns.map((col) => {
+    const a = byHeader.get(col.rawHeader);
+    if (!a) return col;
+    const detections = (col.detections || []).map((d) => {
+      if (d.category !== a.category) return d;
+      let c = d.confidence;
+      if (a.factor != null) c = c * a.factor;
+      if (a.floor != null) c = Math.max(c, a.floor);
+      return { ...d, confidence: Math.round(Math.min(c, AGREE_CEIL) * 100) / 100, coherence: a.reason };
+    });
+    detections.sort((x, y) => y.confidence - x.confidence);
+    return { ...col, detections };
+  });
+
+  return { columns, checks };
 }
 
 module.exports = {
   detectSchema,
   mergeLlmResults,
+  checkMappingCoherence,
   normalizeHeader,
   textSimilarity,
   isExcelSerialDate,

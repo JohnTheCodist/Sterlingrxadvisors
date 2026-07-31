@@ -22,6 +22,16 @@ const { DICTIONARY } = require('./dictionary');
 // ---- configuration ------------------------------------------------------
 
 const LLM_API_KEY = process.env.LLM_API_KEY || '';
+
+// Placeholder confidence for an LLM answer that has not yet been checked
+// against the rule detector. It sits in the 'review' band on purpose: if the
+// corroboration step in mergeLlmResults never runs, an unverified answer must
+// reach a human rather than auto-apply.
+const LLM_UNSCORED = 0.75;
+// A named runner-up is real evidence that the column is ambiguous, but it is
+// explicitly the model's second pick — low enough to stay out of the way
+// unless corroborated by the rule detector.
+const LLM_SECOND_CHOICE = 0.45;
 const LLM_API_URL = process.env.LLM_API_URL || 'https://api.openai.com/v1/chat/completions';
 const LLM_MODEL = process.env.LLM_MODEL || 'gpt-4o-mini';
 const LLM_TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT_MS || '15000', 10);
@@ -164,8 +174,16 @@ ${schemaDesc}
    - Columns about purchasing from suppliers (e.g. "PurchaseCost", "SupplierPrice", "BuyingPrice", "AcquisitionCost") → cost_price.
    - Compound terms like "MarginCost", "Margin Cost", "Markup" are neither cost_price nor selling_price — map these to null unless the sample values clearly indicate one or the other.
 8. Product/medicine names contain alphabetic characters, not just numbers.
-9. Be conservative: if unsure, give a lower confidence score.
-10. Return ONLY valid JSON, no markdown, no explanation outside the JSON.`;
+9. Decide the columns TOGETHER, not one at a time. Several fields are defined
+   relative to each other, so the right answer is the assignment that makes the
+   whole set coherent — two numeric columns where one runs consistently below
+   the other are cost_price and selling_price, and which is which follows from
+   that relationship, not from either header alone.
+10. For every column you map, also name your SECOND choice — the field you would
+    have picked if your first were wrong — or null if nothing else is plausible.
+    Do not report a confidence score; the caller measures confidence by checking
+    your answer against an independent detector.
+11. Return ONLY valid JSON, no markdown, no explanation outside the JSON.`;
 }
 
 /**
@@ -186,18 +204,16 @@ function buildUserPrompt(headers, sampleValues) {
 Columns:
 ${columns}
 
-Return a JSON object mapping each original header to either a canonical field name or null:
+Return a JSON object keyed by the ORIGINAL header. For each column give the
+field you chose, a one-line reason, and your second choice:
 {
-  "Original Header 1": "canonical_field",
-  "Original Header 2": null,
+  "Original Header 1": {
+    "field": "canonical_field",
+    "why": "short reason, referring to the header and the sample values",
+    "second_choice": "next_best_field_or_null"
+  },
+  "Original Header 2": { "field": null, "why": "matches no canonical field", "second_choice": null },
   ...
-}
-
-Also include a "_confidence" object with confidence scores (0.0-1.0) for each non-null mapping:
-{
-  "Original Header 1": "canonical_field",
-  ...
-  "_confidence": { "Original Header 1": 0.95, ... }
 }
 
 Only return the JSON object, nothing else.`;
@@ -243,45 +259,65 @@ function parseLlmResponse(text) {
 
 /**
  * Validate the LLM response against the canonical schema.
- * Returns { mapping: {}, confidence: {}, raw: originalResponse }
+ *
+ * The model is asked for `{ field, why, second_choice }` per header, but two
+ * older shapes still turn up — a bare `"Header": "field"` string, and the
+ * `_confidence` sidecar the prompt used to request — because cached entries
+ * predate the change and models drift back to familiar formats. All three are
+ * accepted; only the shape differs, never the meaning.
+ *
+ * No confidence is read from the model even when it volunteers one. A
+ * self-reported score is a predicted token, not a measured probability, and
+ * treating it as calibrated is what let a confident wrong answer through. The
+ * real number is computed later, from whether this agrees with the rule-based
+ * detector — see mergeLlmResults in schemaDetector.js.
+ *
+ * @returns {{mapping, reasons, secondChoices, invalidCount}}
  */
 function validateLlmMapping(parsed, headers) {
   const validFields = new Set(Object.keys(CANONICAL_SCHEMA));
   const mapping = {};
-  const confidence = {};
+  const reasons = {};
+  const secondChoices = {};
   let invalidCount = 0;
 
-  const llmConfidence = parsed._confidence || {};
   delete parsed._confidence;
 
-  for (const header of headers) {
-    const mapped = parsed[header];
+  const resolve = (raw) => {
+    if (raw === null || raw === undefined || raw === '') return null;
+    if (validFields.has(raw)) return raw;
+    const fuzzy = findClosestField(String(raw), validFields);
+    return fuzzy || null;
+  };
 
-    if (mapped === null || mapped === undefined || mapped === '') {
+  for (const header of headers) {
+    const entry = parsed[header];
+    if (entry === null || entry === undefined || entry === '') {
       mapping[header] = null;
       continue;
     }
 
-    if (validFields.has(mapped)) {
-      mapping[header] = mapped;
-      const conf = typeof llmConfidence[header] === 'number'
-        ? llmConfidence[header]
-        : 0.7;
-      confidence[header] = Math.max(0, Math.min(1, conf));
-    } else {
-      // LLM returned an invalid field name — try to match heuristically
+    const isObject = typeof entry === 'object' && !Array.isArray(entry);
+    const rawField = isObject ? entry.field : entry;
+
+    if (rawField !== null && rawField !== undefined && rawField !== '' && !validFields.has(rawField)) {
       invalidCount++;
-      const fuzzyMatch = findClosestField(mapped, validFields);
-      if (fuzzyMatch) {
-        mapping[header] = fuzzyMatch;
-        confidence[header] = 0.4;
-      } else {
-        mapping[header] = null;
+    }
+
+    const field = resolve(rawField);
+    mapping[header] = field;
+    if (!field) continue;
+
+    if (isObject) {
+      if (typeof entry.why === 'string' && entry.why.trim()) {
+        reasons[header] = entry.why.trim().slice(0, 300);
       }
+      const second = resolve(entry.second_choice);
+      if (second && second !== field) secondChoices[header] = second;
     }
   }
 
-  return { mapping, confidence, invalidCount };
+  return { mapping, reasons, secondChoices, invalidCount };
 }
 
 function findClosestField(name, validFields) {
@@ -636,7 +672,10 @@ async function mapColumns(headers, sampleValues, options = {}) {
 
     if (llmResult) {
       const validated = validateLlmMapping(llmResult, headers);
-      const columns = buildColumnsFromMapping(headers, validated.mapping, validated.confidence, sampleValues, 'LLM semantic match');
+      const columns = buildColumnsFromMapping(headers, validated.mapping, {
+        reasons: validated.reasons,
+        secondChoices: validated.secondChoices,
+      }, sampleValues, 'LLM semantic match');
 
       const result = { source: 'llm', columns, rawLlm: llmResult };
       cacheResult(fp, { source: 'llm', columns });
@@ -646,7 +685,9 @@ async function mapColumns(headers, sampleValues, options = {}) {
 
   // Fall back to local mode
   const localResult = localMap(headers, sampleValues);
-  const columns = buildColumnsFromMapping(headers, localResult.mapping, localResult.confidence, sampleValues, 'Local heuristic match');
+  // The local path measures its own scores, so they are kept as-is.
+  const columns = buildColumnsFromMapping(headers, localResult.mapping,
+    { confidence: localResult.confidence }, sampleValues, 'Local heuristic match');
 
   const result = { source: 'local', columns };
   cacheResult(fp, { source: 'local', columns });
@@ -656,10 +697,24 @@ async function mapColumns(headers, sampleValues, options = {}) {
 /**
  * Build the standard column detection output format from a raw mapping.
  */
-function buildColumnsFromMapping(headers, mapping, confidence, sampleValues, sourceLabel = 'LLM semantic match') {
+/**
+ * @param {object} meta
+ *   - confidence: per-header scores. The local heuristic path measures these,
+ *     so they are used as-is. The LLM path has none by design and instead gets
+ *     LLM_UNSCORED — a placeholder carried on the detection as `unverified`,
+ *     which mergeLlmResults replaces with a real number once it can compare
+ *     the answer against the rule detector.
+ *   - reasons / secondChoices: the model's own account of the decision, kept
+ *     so the review UI can show WHY a column was mapped rather than only what
+ *     it was mapped to.
+ */
+function buildColumnsFromMapping(headers, mapping, meta, sampleValues, sourceLabel = 'LLM semantic match') {
+  const { confidence = null, reasons = {}, secondChoices = {} } = meta || {};
+
   return headers.map((header, i) => {
     const mappedTo = mapping[header] || null;
-    const conf = mappedTo ? (confidence[header] || 0.5) : 0;
+    const scored = confidence !== null;
+    const conf = mappedTo ? (scored ? (confidence[header] || 0.5) : LLM_UNSCORED) : 0;
     const samples = (sampleValues[i] || []).filter((v) => v != null && v !== '');
 
     // Build detections array for UI compatibility
@@ -669,11 +724,22 @@ function buildColumnsFromMapping(headers, mapping, confidence, sampleValues, sou
         category: mappedTo,
         confidence: conf,
         source: sourceLabel,
+        ...(scored ? {} : { unverified: true }),
+        ...(reasons[header] ? { why: reasons[header] } : {}),
       });
+
+      if (secondChoices[header]) {
+        detections.push({
+          category: secondChoices[header],
+          confidence: Math.round(LLM_SECOND_CHOICE * 100) / 100,
+          source: `${sourceLabel} (second choice)`,
+          unverified: true,
+        });
+      }
 
       // Add alternative detections from value patterns
       for (const [field] of Object.entries(DICTIONARY)) {
-        if (field === mappedTo) continue;
+        if (field === mappedTo || field === secondChoices[header]) continue;
         const valueScore = scoreValuePattern(field, samples, header);
         if (valueScore > 0.3) {
           detections.push({

@@ -7,9 +7,10 @@ const fs = require('fs');
 const multer = require('multer');
 const { normalize, normalizeFromSheets } = require('./services/normalizer');
 const { analyze } = require('./services/analytics');
-const { detectSchema, mergeLlmResults } = require('./services/schemaDetector');
+const { detectSchema, mergeLlmResults, checkMappingCoherence } = require('./services/schemaDetector');
 const { resolveMapping, saveMapping, loadMapping, loadPharmacyMappings } = require('./services/columnMapper');
-const { loadFactRecords, queryAnalytics, populateProductAttributes, getSql, computeProductNaturalKey, getActiveConversationId, startNewConversation, listConversations, resolveOwnedConversationId, getConversationMessages, appendAdvisorMessage, getMembershipsForUser } = require('./services/db');
+const { recordMapping } = require('./services/columnAlias');
+const { loadFactRecords, queryAnalytics, populateProductAttributes, getSql, computeProductNaturalKey, purgeDataset, getActiveConversationId, startNewConversation, listConversations, resolveOwnedConversationId, getConversationMessages, appendAdvisorMessage, getMembershipsForUser } = require('./services/db');
 const { validate } = require('./services/validator');
 const { joinSheets } = require('./services/sheetJoiner');
 const { profitByCategory, abcAnalysis, abcSummary, fastSlowMovers, fastSlowSummary, expirySummary, inventoryTurnover } = require('./services/insights');
@@ -470,6 +471,17 @@ app.post('/api/detect-schema', async (req, res) => {
         }
       }
 
+      // Resolve once to learn which column each field landed on, check that
+      // set against the actual rows, then resolve again on the adjusted
+      // confidences. Coherence can only be judged after an assignment exists —
+      // "is cost below selling price?" is not a question about either column
+      // alone — and its verdict moves columns between the auto/review tiers,
+      // so the second pass is what actually applies it. resolveMapping is a
+      // pure function over the schema, so running it twice costs nothing.
+      const provisional = resolveMapping(schema);
+      const coherence = checkMappingCoherence(schema, provisional.mapping, rows);
+      schema = coherence.columns;
+
       // Resolve mapping
       const {
         mapping, tiers, unmapped, unmappedRequired, unmappedOptional, priceFulfilled,
@@ -507,12 +519,7 @@ app.post('/api/detect-schema', async (req, res) => {
 
       // Update the Dataset Registry with schema detection results
       const fp = datasetRegistry.computeFingerprint(file.buffer, file.originalname);
-      const all = await datasetRegistry.list(req.organizationId, { limit: 500 });
-      let entry = null;
-      for (const d of all) {
-        const full = await datasetRegistry.get(req.organizationId, d.datasetId);
-        if (full && full.fingerprint === fp) { entry = full; break; }
-      }
+      const entry = await datasetRegistry.findByFingerprint(req.organizationId, fp);
       if (entry) {
         await datasetRegistry.update(req.organizationId, entry.datasetId, {
           processingStatus: 'schema_detected',
@@ -546,6 +553,11 @@ app.post('/api/detect-schema', async (req, res) => {
           source: llmSource || 'rule-based',
           config: isLlmAvailable() ? getLlmConfig() : null,
         },
+        // What the mapping was checked against once assembled, and what those
+        // checks found. Surfaced so the review screen can say WHY a column
+        // needs a second look ("cost is above selling price on 94% of rows")
+        // rather than only that its confidence happens to be low.
+        coherenceChecks: coherence.checks,
       });
     } catch (parseErr) {
       return res.status(400).json({ error: `Failed to parse file: ${parseErr.message}` });
@@ -655,11 +667,36 @@ app.post('/api/confirm-mapping', (req, res) => {
       return res.status(400).json({ error: 'Invalid mapping format. Must be a JSON object.' });
     }
 
+    // Which columns the user personally decided. Sent separately from the
+    // mapping itself because the mapping also contains columns that were
+    // auto-accepted without anyone looking — recording those as though a human
+    // had confirmed them would turn a detector guess into permanent memory.
+    let reviewStatuses = {};
     try {
-      const sheets = parseSheet(file.buffer);
+      reviewStatuses = typeof req.body.reviewStatuses === 'string'
+        ? JSON.parse(req.body.reviewStatuses)
+        : (req.body.reviewStatuses || {});
+    } catch (_) {
+      reviewStatuses = {}; // absent or malformed: record nothing, never guess
+    }
+
+    // Stage timing. A slow upload is almost always one stage, and without
+    // this the only way to find out which is to guess and re-measure — so
+    // every stage that can touch the network or the database is timed, and
+    // the breakdown is logged once at the end.
+    const timings = [];
+    const timed = async (label, fn) => {
+      const t0 = Date.now();
+      try { return await fn(); }
+      finally { timings.push([label, Date.now() - t0]); }
+    };
+
+    try {
+      const sheets = await timed('parseSheet', async () => parseSheet(file.buffer));
 
       // Auto-join dimension tables and normalize
-      const result = await normalizeFromSheets(sheets, { organizationId, userMapping });
+      const result = await timed('normalizeFromSheets', () =>
+        normalizeFromSheets(sheets, { organizationId, userMapping }));
 
       if (result.normalized.length === 0) {
         return res.status(400).json({ error: 'The file contains no processable data rows.' });
@@ -669,20 +706,52 @@ app.post('/api/confirm-mapping', (req, res) => {
       // the dataset id to replace this file's own rows rather than stack a
       // duplicate set on top of them when the same file is processed again.
       const fp = datasetRegistry.computeFingerprint(file.buffer, file.originalname);
-      const all = await datasetRegistry.list(organizationId, { limit: 500 });
-      let regEntry = null;
-      for (const d of all) {
-        const full = await datasetRegistry.get(organizationId, d.datasetId);
-        if (full && full.fingerprint === fp) { regEntry = full; break; }
+      let regEntry = await timed('findByFingerprint', () =>
+        datasetRegistry.findByFingerprint(organizationId, fp));
+
+      // Facts must never be written without a dataset id. Rows stored with a
+      // null one belong to no upload, so no later upload can replace them —
+      // they simply accumulate, and nothing in the system can tell they are a
+      // second copy. Registering here guarantees this file owns its rows.
+      if (!regEntry) {
+        regEntry = await datasetRegistry.register(organizationId, {
+          buffer: file.buffer,
+          filename: file.originalname,
+          mimeType: file.mimetype,
+        });
       }
 
-      // Persist into dimensional model
-      const inserted = await loadFactRecords(organizationId, result.normalized, {
-        datasetId: regEntry?.datasetId || null,
+      // The same rows arriving as a different file REPLACE the earlier copy
+      // rather than adding to it. The byte fingerprint above cannot see this:
+      // it hashes the filename and the raw bytes, so a repeat download
+      // ("report (1).xlsx") or a re-export from the same POS reads as a new
+      // dataset, and the previous copy's rows stay behind — every total then
+      // counts the same sales twice.
+      const contentFp = datasetRegistry.computeContentFingerprint(sheets);
+      const superseded = await timed('replaceDuplicates', async () => {
+        if (!contentFp) return [];
+        const stale = await datasetRegistry.findSupersededByContent(
+          organizationId, contentFp, regEntry.datasetId,
+        );
+        for (const old of stale) {
+          const removed = await purgeDataset(organizationId, old.datasetId);
+          await datasetRegistry.remove(organizationId, old.datasetId);
+          console.log(
+            `[confirm-mapping] replaced earlier copy "${old.filename}" `
+            + `(${removed.sales} sales, ${removed.facts} fact rows removed)`,
+          );
+        }
+        return stale;
       });
 
+      // Persist into dimensional model
+      const inserted = await timed('loadFactRecords', () =>
+        loadFactRecords(organizationId, result.normalized, {
+          datasetId: regEntry.datasetId,
+        }));
+
       // Query analytics from the star schema (same shape dashboard expects)
-      const analyticsResult = await queryAnalytics(organizationId);
+      const analyticsResult = await timed('queryAnalytics', () => queryAnalytics(organizationId));
 
       // Compute verified metrics (Phase 5) — use valid records only
       const metrics = computeAllMetrics(result.validRecords || result.normalized, {
@@ -693,7 +762,8 @@ app.post('/api/confirm-mapping', (req, res) => {
       });
 
       // Business Health — computed from the same metrics the KPIs use
-      const { inventoryStats, customerStats } = await computeHealthStats(organizationId);
+      const { inventoryStats, customerStats } = await timed('computeHealthStats', () =>
+        computeHealthStats(organizationId));
       const bizHealthOpts = {};
       if (inventoryStats) bizHealthOpts.inventoryStats = inventoryStats;
       if (customerStats) bizHealthOpts.customerStats = customerStats;
@@ -703,18 +773,20 @@ app.post('/api/confirm-mapping', (req, res) => {
       // Weather signal is fully optional — a fetch/config problem here must
       // never break the upload flow, so it's isolated in its own try/catch
       // and simply omitted (generateInsights runs unchanged without it).
-      try {
-        const { state } = await require('./services/pharmacyProfile').get(organizationId);
-        if (state) {
-          const weatherSignal = await require('./services/weather/weatherCache').getOrFetch(organizationId, state);
-          if (weatherSignal) {
-            const demandRules = await require('./services/weatherDecisionRules').evaluateWeatherDemandRules(organizationId, weatherSignal);
-            bizHealthOpts.weatherSignals = { ...weatherSignal, demandRules };
+      await timed('weatherSignal', async () => {
+        try {
+          const { state } = await require('./services/pharmacyProfile').get(organizationId);
+          if (state) {
+            const weatherSignal = await require('./services/weather/weatherCache').getOrFetch(organizationId, state);
+            if (weatherSignal) {
+              const demandRules = await require('./services/weatherDecisionRules').evaluateWeatherDemandRules(organizationId, weatherSignal);
+              bizHealthOpts.weatherSignals = { ...weatherSignal, demandRules };
+            }
           }
+        } catch (weatherErr) {
+          console.warn('[confirm-mapping] weather signal unavailable:', weatherErr.message);
         }
-      } catch (weatherErr) {
-        console.warn('[confirm-mapping] weather signal unavailable:', weatherErr.message);
-      }
+      });
 
       // Calendar signal — Calendar Intelligence is read-only and has no
       // external dependencies, so this can't meaningfully fail, but it's
@@ -748,28 +820,32 @@ app.post('/api/confirm-mapping', (req, res) => {
       if (isSalesFile) effectiveDashboards.push('sales');
 
       // Generate widget manifest from normalized records, respecting capabilities
-      const widgetManifest = evaluateWidgets(result.validRecords || result.normalized, {
-        dashboards: effectiveDashboards,
-      });
+      const widgetManifest = await timed('evaluateWidgets', async () =>
+        evaluateWidgets(result.validRecords || result.normalized, {
+          dashboards: effectiveDashboards,
+        }));
 
-      if (regEntry) {
-        await datasetRegistry.update(organizationId, regEntry.datasetId, {
-          processingStatus: 'processed',
-          capabilities: caps,
-          recommended_dashboards: dashFromCaps,
-          mappedColumns: userMapping,
-          normalizedSchema: result.schema || null,
-          rowCount: result.normalized.length,
-          sheetNames: Object.keys(sheets),
-        });
-      }
+      await datasetRegistry.update(organizationId, regEntry.datasetId, {
+        processingStatus: 'processed',
+        capabilities: caps,
+        recommended_dashboards: dashFromCaps,
+        mappedColumns: userMapping,
+        normalizedSchema: result.schema || null,
+        rowCount: result.normalized.length,
+        sheetNames: Object.keys(sheets),
+        // Stored so the NEXT upload of this same data can recognise it, even
+        // arriving under a different filename or re-exported byte-for-byte
+        // differently.
+        contentFingerprint: contentFp,
+      });
 
       // Write normalized records into the Fact Store so the Widget Engine
       // can read from all registered datasets, not just the latest upload.
       const records = result.validRecords || result.normalized;
 
-      // Extract dimension data from normalized records
-      const _assetId = regEntry?.datasetId || null;
+      // Extract dimension data from normalized records. Always a real id now,
+      // so factStore.append can scope its replace to this upload.
+      const _assetId = regEntry.datasetId;
       const dimProducts = new Map();
       const dimCustomers = new Map();
       const dimSuppliers = new Map();
@@ -811,10 +887,16 @@ app.post('/api/confirm-mapping', (req, res) => {
         }
       }
 
-      for (const [key, dim] of dimProducts) await factStore.upsertDimension(organizationId, 'DimProduct', dim, key);
-      for (const [key, dim] of dimCustomers) await factStore.upsertDimension(organizationId, 'DimCustomer', dim, key);
-      for (const [key, dim] of dimSuppliers) await factStore.upsertDimension(organizationId, 'DimSupplier', dim, key);
-      for (const [key, dim] of dimDates) await factStore.upsertDimension(organizationId, 'DimDate', dim, key);
+      // Batched: one round-trip per 500 dimension rows rather than two per
+      // row. A file with thousands of distinct products used to spend most of
+      // its upload time in these four lines.
+      const asEntries = (m) => [...m].map(([naturalKey, record]) => ({ naturalKey, record }));
+      await timed('upsertDimensions', async () => {
+        await factStore.upsertDimensions(organizationId, 'DimProduct', asEntries(dimProducts));
+        await factStore.upsertDimensions(organizationId, 'DimCustomer', asEntries(dimCustomers));
+        await factStore.upsertDimensions(organizationId, 'DimSupplier', asEntries(dimSuppliers));
+        await factStore.upsertDimensions(organizationId, 'DimDate', asEntries(dimDates));
+      });
 
       // Write each dataset's rows into the fact store EXACTLY ONCE.
       //
@@ -832,8 +914,36 @@ app.post('/api/confirm-mapping', (req, res) => {
       const hasStockSideData = !!(caps?.inventory || caps?.expiry || caps?.supplier);
       const factTable = isSalesFile ? 'FactSales' : (hasStockSideData ? 'FactInventory' : null);
       if (factTable) {
-        const insertedFacts = await factStore.append(organizationId, factTable, records, _assetId);
+        const insertedFacts = await timed('factStore.append', () =>
+          factStore.append(organizationId, factTable, records, _assetId));
         if (insertedFacts > 0) console.log(`[factStore] +${insertedFacts} ${factTable} records`);
+      }
+
+      const totalMs = timings.reduce((a, [, ms]) => a + ms, 0);
+      console.log(
+        `[confirm-mapping] ${result.normalized.length} rows in ${(totalMs / 1000).toFixed(1)}s — `
+        + timings.filter(([, ms]) => ms >= 50)
+          .sort((a, b) => b[1] - a[1])
+          .map(([label, ms]) => `${label} ${(ms / 1000).toFixed(1)}s`)
+          .join(', '),
+      );
+
+      // Remember only the columns a person actually decided on, keyed per
+      // column rather than per file, so the answer survives a spreadsheet that
+      // gains or loses columns next month — and so the WhatsApp channel, which
+      // has no mapping screen, never asks about a column already settled here.
+      const decided = {};
+      const overrides = {};
+      for (const [rawHeader, status] of Object.entries(reviewStatuses)) {
+        if (status !== 'user_confirmed' && status !== 'user_overridden') continue;
+        const category = userMapping[rawHeader];
+        if (!category) continue;
+        decided[rawHeader] = category;
+        overrides[rawHeader] = status === 'user_overridden';
+      }
+      if (Object.keys(decided).length > 0) {
+        await recordMapping(organizationId, decided, overrides, 'web')
+          .catch((e) => console.warn('[confirm-mapping] could not record column aliases:', e.message));
       }
 
       // A fresh upload is a new analysis context — start a new Advisor
@@ -842,7 +952,13 @@ app.post('/api/confirm-mapping', (req, res) => {
       await startNewConversation(organizationId).catch((e) => console.error('[advisor-chat] failed to start new conversation:', e));
 
       return res.json({
-        datasetId: regEntry ? regEntry.datasetId : null,
+        datasetId: regEntry.datasetId,
+        // Earlier uploads holding these same rows, now removed rather than
+        // added to. Surfaced so the UI can say "this replaced March.xlsx"
+        // instead of silently changing the totals the owner just saw.
+        replacedDatasets: superseded.map((d) => ({
+          datasetId: d.datasetId, fileName: d.filename, rowCount: d.rowCount,
+        })),
         fileName: file.originalname,
         sheetName: Object.keys(sheets)[0] || null,
         widgetManifest,

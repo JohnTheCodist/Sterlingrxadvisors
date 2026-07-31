@@ -180,6 +180,169 @@ async function upsertProduct(organizationId, name, attrs = {}, dbClient = null) 
   return inserted.id;
 }
 
+/**
+ * The same resolution upsertProduct performs, for many products at once.
+ *
+ * upsertProduct costs two sequential round-trips per product (a SELECT, then
+ * an INSERT or UPDATE). That is fine for one product and ruinous for a file:
+ * a 6,000-line inventory sheet is mostly *distinct* products, so the per-row
+ * path spent ~12,000 round-trips resolving names before a single sale row was
+ * written. Over a pooled connection to a hosted database that is measured in
+ * tens of minutes, not seconds.
+ *
+ * This resolves the whole set in three statements per chunk regardless of how
+ * many products the chunk holds. The semantics are deliberately identical to
+ * upsertProduct, including the two places it treats new and existing rows
+ * differently:
+ *   - a NEW product falls back to classifyProduct(name) when the file carries
+ *     no category, and (as before) does not persist resolved_* identity;
+ *   - an EXISTING product keeps every value it already had unless the file
+ *     supplies a non-empty replacement, and is never handed the classified
+ *     fallback, so re-uploading a file cannot overwrite a real category with
+ *     a guessed one.
+ *
+ * Existing rows are updated through INSERT ... ON CONFLICT DO UPDATE rather
+ * than a bare UPDATE: the row is known to exist, so the conflict branch is
+ * the one that always runs, and it lets the whole set travel as one statement
+ * instead of one per product.
+ *
+ * @param  {Array<{name: string, attrs: object}>} items — one entry per
+ *         product; duplicates by natural key must already be collapsed by the
+ *         caller, first occurrence winning, which is what the per-row cache
+ *         in loadFactRecords did.
+ * @return {Map<string, number>} natural key -> product id, for every input.
+ */
+async function resolveProductIds(organizationId, items, dbClient = null) {
+  assertOrgId(organizationId);
+  const db = dbClient || getSql();
+  const ids = new Map();
+  if (!items || items.length === 0) return ids;
+
+  // Postgres caps a statement at 65,535 bind parameters. The widest statement
+  // below carries 21 columns, so 500 rows (10,500 parameters) stays clear of
+  // the ceiling with room to spare.
+  const CHUNK = 500;
+
+  const norm = (n) => (!n || n === 'Unknown' ? 'Unknown' : n);
+  const text = (v) => (v == null || v === '' ? null : v);
+  const ingredients = (v) => (Array.isArray(v) ? v.join(', ') : text(v));
+
+  for (let i = 0; i < items.length; i += CHUNK) {
+    const chunk = items.slice(i, i + CHUNK);
+    const keys = chunk.map((it) => computeProductNaturalKey(norm(it.name)));
+
+    const found = await db`
+      select id, natural_key from product
+      where organization_id = ${organizationId} and natural_key in ${db(keys)}
+    `;
+    const existing = new Map(found.map((r) => [r.natural_key, r.id]));
+
+    const fresh = [];
+    const stale = [];
+    chunk.forEach((it, idx) => {
+      const key = keys[idx];
+      const a = it.attrs || {};
+      if (existing.has(key)) {
+        ids.set(key, existing.get(key));
+        // Mirrors upsertProduct: an existing row is only rewritten when the
+        // file actually carries something to write.
+        const hasNewAttrs = a.category || a.brand || a.list_price || a.standard_cost || a.launch_date
+          || a.resolved_brand || a.resolved_generic || a.resolved_manufacturer;
+        if (hasNewAttrs) stale.push({ key, name: norm(it.name), a });
+        return;
+      }
+      // A file can name the same product twice with different spellings that
+      // normalize to one key; keep the first, exactly as the old cache did.
+      if (!fresh.some((f) => f.key === key)) fresh.push({ key, name: norm(it.name), a });
+    });
+
+    if (fresh.length > 0) {
+      const rows = fresh.map(({ key, name, a }) => ({
+        organization_id: organizationId,
+        natural_key: key,
+        name,
+        category: a.category || classifyProduct(name),
+        brand: text(a.brand),
+        is_generic: text(a.is_generic),
+        pack_size: text(a.pack_size),
+        list_price: a.list_price ?? null,
+        standard_cost: a.standard_cost ?? null,
+        launch_date: text(a.launch_date),
+        is_discontinued: text(a.is_discontinued),
+        discontinued_date: text(a.discontinued_date),
+      }));
+      const created = await db`
+        insert into product ${db(rows,
+          'organization_id', 'natural_key', 'name', 'category', 'brand', 'is_generic',
+          'pack_size', 'list_price', 'standard_cost', 'launch_date', 'is_discontinued',
+          'discontinued_date')}
+        returning id, natural_key
+      `;
+      for (const r of created) ids.set(r.natural_key, r.id);
+    }
+
+    if (stale.length > 0) {
+      const rows = stale.map(({ key, name, a }) => ({
+        organization_id: organizationId,
+        natural_key: key,
+        name,
+        // Raw, never the classified fallback — see the note above.
+        category: text(a.category),
+        brand: text(a.brand),
+        is_generic: text(a.is_generic),
+        pack_size: text(a.pack_size),
+        list_price: a.list_price ?? null,
+        standard_cost: a.standard_cost ?? null,
+        launch_date: text(a.launch_date),
+        is_discontinued: text(a.is_discontinued),
+        discontinued_date: text(a.discontinued_date),
+        resolved_brand: text(a.resolved_brand),
+        resolved_generic: text(a.resolved_generic),
+        resolved_manufacturer: text(a.resolved_manufacturer),
+        resolved_strength: text(a.resolved_strength),
+        resolved_form: text(a.resolved_form),
+        resolved_nafdac_no: text(a.resolved_nafdac_no),
+        resolution_status: text(a.resolution_status),
+        clinical_product_id: text(a.clinical_product_id),
+        therapeutic_class: text(a.therapeutic_class),
+        active_ingredients: ingredients(a.active_ingredients),
+        resolution_tier: text(a.resolution_tier),
+      }));
+      await db`
+        insert into product ${db(rows,
+          'organization_id', 'natural_key', 'name', 'category', 'brand', 'is_generic',
+          'pack_size', 'list_price', 'standard_cost', 'launch_date', 'is_discontinued',
+          'discontinued_date', 'resolved_brand', 'resolved_generic', 'resolved_manufacturer',
+          'resolved_strength', 'resolved_form', 'resolved_nafdac_no', 'resolution_status',
+          'clinical_product_id', 'therapeutic_class', 'active_ingredients', 'resolution_tier')}
+        on conflict (organization_id, natural_key) do update set
+          category = coalesce(excluded.category, product.category),
+          brand = coalesce(excluded.brand, product.brand),
+          is_generic = coalesce(excluded.is_generic, product.is_generic),
+          pack_size = coalesce(excluded.pack_size, product.pack_size),
+          list_price = coalesce(excluded.list_price, product.list_price),
+          standard_cost = coalesce(excluded.standard_cost, product.standard_cost),
+          launch_date = coalesce(excluded.launch_date, product.launch_date),
+          is_discontinued = coalesce(excluded.is_discontinued, product.is_discontinued),
+          discontinued_date = coalesce(excluded.discontinued_date, product.discontinued_date),
+          resolved_brand = coalesce(excluded.resolved_brand, product.resolved_brand),
+          resolved_generic = coalesce(excluded.resolved_generic, product.resolved_generic),
+          resolved_manufacturer = coalesce(excluded.resolved_manufacturer, product.resolved_manufacturer),
+          resolved_strength = coalesce(excluded.resolved_strength, product.resolved_strength),
+          resolved_form = coalesce(excluded.resolved_form, product.resolved_form),
+          resolved_nafdac_no = coalesce(excluded.resolved_nafdac_no, product.resolved_nafdac_no),
+          resolution_status = coalesce(excluded.resolution_status, product.resolution_status),
+          clinical_product_id = coalesce(excluded.clinical_product_id, product.clinical_product_id),
+          therapeutic_class = coalesce(excluded.therapeutic_class, product.therapeutic_class),
+          active_ingredients = coalesce(excluded.active_ingredients, product.active_ingredients),
+          resolution_tier = coalesce(excluded.resolution_tier, product.resolution_tier)
+      `;
+    }
+  }
+
+  return ids;
+}
+
 async function upsertBranch(organizationId, name, location, dbClient = null) {
   assertOrgId(organizationId);
   const db = dbClient || getSql();
@@ -279,15 +442,54 @@ async function populateProductAttributes(organizationId, joinedRows) {
     });
   }
 
+  // One statement per product meant one network round-trip per product, run
+  // in sequence — on a file with thousands of distinct products that alone
+  // cost more wall-clock time than every other stage of the upload combined.
+  // The statement was already an upsert, so batching it changes nothing about
+  // what is written, only how many trips it takes to write it.
+  //
+  // Two rows in ONE insert that collide on the conflict target make Postgres
+  // raise "ON CONFLICT DO UPDATE command cannot affect row a second time", so
+  // the batch has to be unique by natural key. The per-row loop never hit
+  // this: each statement committed before the next one ran, with later values
+  // winning wherever they were non-empty. Merging duplicates the same way —
+  // later non-empty value wins — keeps that outcome intact. It matters
+  // because the key lowercases the name, so "Panadol" and "panadol" arrive as
+  // two products and leave as one.
+  const merged = new Map();
   for (const p of products) {
     const naturalKey = p.name.toLowerCase().trim();
+    const prev = merged.get(naturalKey);
+    if (!prev) { merged.set(naturalKey, { ...p, naturalKey }); continue; }
+    for (const [k, v] of Object.entries(p)) {
+      if (v !== null && v !== undefined && v !== '') prev[k] = v;
+    }
+  }
+
+  // 12 columns, so 500 rows is 6,000 bind parameters — well inside Postgres's
+  // 65,535 ceiling.
+  const CHUNK = 500;
+  const rows = [...merged.values()].map((p) => ({
+    organization_id: organizationId,
+    natural_key: p.naturalKey,
+    name: p.name,
+    category: p.category ?? null,
+    brand: p.brand ?? null,
+    is_generic: p.is_generic ?? null,
+    pack_size: p.pack_size ?? null,
+    list_price: p.list_price ?? null,
+    standard_cost: p.standard_cost ?? null,
+    launch_date: p.launch_date ?? null,
+    is_discontinued: p.is_discontinued ?? null,
+    discontinued_date: p.discontinued_date ?? null,
+  }));
+
+  for (let i = 0; i < rows.length; i += CHUNK) {
     await db`
-      insert into product
-        (organization_id, natural_key, name, category, brand, is_generic, pack_size, list_price, standard_cost, launch_date, is_discontinued, discontinued_date)
-      values (
-        ${organizationId}, ${naturalKey}, ${p.name}, ${p.category}, ${p.brand}, ${p.is_generic},
-        ${p.pack_size}, ${p.list_price}, ${p.standard_cost}, ${p.launch_date}, ${p.is_discontinued}, ${p.discontinued_date}
-      )
+      insert into product ${db(rows.slice(i, i + CHUNK),
+        'organization_id', 'natural_key', 'name', 'category', 'brand', 'is_generic',
+        'pack_size', 'list_price', 'standard_cost', 'launch_date', 'is_discontinued',
+        'discontinued_date')}
       on conflict (organization_id, natural_key) do update set
         category = coalesce(nullif(excluded.category, ''), product.category),
         brand = coalesce(nullif(excluded.brand, ''), product.brand),
@@ -300,6 +502,34 @@ async function populateProductAttributes(organizationId, joinedRows) {
         discontinued_date = coalesce(excluded.discontinued_date, product.discontinued_date)
     `;
   }
+}
+
+/**
+ * Remove everything one dataset wrote into the star schema and the fact store.
+ *
+ * Used when a re-upload is recognised as the same data arriving under a
+ * different file: the previous copy has to go, or both are counted and every
+ * total is inflated. Scoped to one organization and one dataset — it can never
+ * reach another tenant's rows, and never touches a sibling upload.
+ *
+ * Products are intentionally left alone. They are shared dimension rows that
+ * other datasets may still reference, and loadFactRecords already prunes the
+ * ones no sale points at.
+ */
+async function purgeDataset(organizationId, datasetId) {
+  assertOrgId(organizationId);
+  if (!datasetId) return { sales: 0, facts: 0 };
+  const db = getSql();
+
+  const sales = await db`
+    delete from sale where organization_id = ${organizationId} and dataset_id = ${datasetId}
+    returning 1
+  `;
+  const facts = await db`
+    delete from widget_fact where organization_id = ${organizationId} and dataset_id = ${datasetId}
+    returning 1
+  `;
+  return { sales: sales.length, facts: facts.length };
 }
 
 // ---- transaction loading --------------------------------------------------
@@ -406,18 +636,20 @@ async function loadFactRecords(organizationId, records, options = {}) {
       await tx`delete from sale where organization_id = ${organizationId} and dataset_id = ${datasetId}`;
     }
 
+    // Every product in the file is resolved up front, in bulk. The old code
+    // resolved them one at a time inside the row loop, which on a file whose
+    // rows are mostly distinct products meant two network round-trips per row
+    // before any sale row could be written. First occurrence of a natural key
+    // wins, which is what the per-row cache did.
+    const productOrder = [];
     for (const rec of records) {
       const productName = rec.product_name || rec.product;
-      const price = rec.selling_price != null ? rec.selling_price : rec.price;
-      const qty = rec.quantity;
-      const rawCost = rec.cost_price != null ? rec.cost_price : rec.cost;
-      const cost = rec._cost_is_total === true && qty > 0 ? rawCost / qty : rawCost;
-      const date = rec.transaction_date;
-
-      const productKey = computeProductNaturalKey(productName || 'Unknown');
-      let productId = productCache.get(productKey);
-      if (productId === undefined) {
-        productId = await upsertProduct(organizationId, productName, {
+      const key = computeProductNaturalKey(productName || 'Unknown');
+      if (productCache.has(key)) continue;
+      productCache.set(key, null); // placeholder; real id filled in below
+      productOrder.push({
+        name: productName,
+        attrs: {
           category: rec.category,
           resolved_brand: rec.resolved_brand,
           resolved_generic: rec.resolved_generic,
@@ -430,9 +662,26 @@ async function loadFactRecords(organizationId, records, options = {}) {
           therapeutic_class: rec.therapeutic_class,
           active_ingredients: rec.active_ingredients,
           resolution_tier: rec.resolution_tier,
-        }, tx);
-        productCache.set(productKey, productId);
-      }
+        },
+      });
+    }
+    const productIds = await resolveProductIds(organizationId, productOrder, tx);
+    for (const [key] of productCache) productCache.set(key, productIds.get(key) ?? null);
+
+    // Rows are shaped first and sent in batches. The dimension lookups below
+    // still run in order, but each one is served from the caches above after
+    // its first miss, so they cost round-trips per distinct branch/employee/
+    // customer/date rather than per row.
+    const pending = [];
+    for (const rec of records) {
+      const productName = rec.product_name || rec.product;
+      const price = rec.selling_price != null ? rec.selling_price : rec.price;
+      const qty = rec.quantity;
+      const rawCost = rec.cost_price != null ? rec.cost_price : rec.cost;
+      const cost = rec._cost_is_total === true && qty > 0 ? rawCost / qty : rawCost;
+      const date = rec.transaction_date;
+
+      const productId = productCache.get(computeProductNaturalKey(productName || 'Unknown'));
 
       const calendarId = await cachedCalendarId(date, tx);
       if (!calendarId) continue;
@@ -449,15 +698,36 @@ async function loadFactRecords(organizationId, records, options = {}) {
         ? await cachedCustomerId(rec.customer, rec.customer_type, rec.hmo_code, tx)
         : null;
 
+      pending.push({
+        organization_id: organizationId,
+        dataset_id: datasetId,
+        product_id: productId,
+        branch_id: branchId,
+        employee_id: employeeId,
+        customer_id: customerId,
+        calendar_id: calendarId,
+        sale_date: date.substring(0, 10),
+        quantity: qty || 1,
+        unit_price: price || 0,
+        unit_cost: cost ?? null,
+        payment_method: rec.payment_method || null,
+        invoice_ref: rec.invoice_ref || null,
+      });
+    }
+
+    // 13 columns, so 1,000 rows is 13,000 bind parameters — inside Postgres's
+    // 65,535 ceiling, and few enough statements that a large file finishes
+    // well within the statement timeout set above.
+    const SALE_CHUNK = 1000;
+    for (let i = 0; i < pending.length; i += SALE_CHUNK) {
+      const chunk = pending.slice(i, i + SALE_CHUNK);
       await tx`
-        insert into sale
-          (organization_id, dataset_id, product_id, branch_id, employee_id, customer_id, calendar_id, sale_date, quantity, unit_price, unit_cost, payment_method, invoice_ref)
-        values (
-          ${organizationId}, ${datasetId}, ${productId}, ${branchId}, ${employeeId}, ${customerId}, ${calendarId}, ${date.substring(0, 10)},
-          ${qty || 1}, ${price || 0}, ${cost ?? null}, ${rec.payment_method || null}, ${rec.invoice_ref || null}
-        )
+        insert into sale ${tx(chunk,
+          'organization_id', 'dataset_id', 'product_id', 'branch_id', 'employee_id',
+          'customer_id', 'calendar_id', 'sale_date', 'quantity', 'unit_price',
+          'unit_cost', 'payment_method', 'invoice_ref')}
       `;
-      inserted++;
+      inserted += chunk.length;
     }
 
     // Clean up orphaned product rows for THIS org only — never touches
@@ -822,11 +1092,13 @@ module.exports = {
   assertOrgId,
   computeProductNaturalKey,
   upsertProduct,
+  resolveProductIds,
   populateProductAttributes,
   upsertBranch,
   upsertEmployee,
   upsertCustomer,
   getCalendarId,
+  purgeDataset,
   loadFactRecords,
   queryAnalytics,
   getActiveConversationId,
