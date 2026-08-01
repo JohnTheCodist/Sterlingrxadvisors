@@ -94,13 +94,30 @@ function calculateMetrics(normalizedRecords) {
       totalRevenue: 0, totalQuantitySold: 0, averageSellingPrice: 0,
       grossProfit: null, grossMargin: null, averageTransactionValue: 0,
       totalCost: 0, recordCount: 0, transactionCount: 0,
+      transactionBasis: 'rows', receiptCount: 0, rowsGroupedIntoReceipts: 0,
     };
   }
 
   let totalRevenue = 0;
   let totalCost = 0;
   let totalQty = 0;
-  let transactionCount = 0;
+
+  // A "transaction" is a receipt, not a row. Plenty of exports put one line
+  // per ITEM, so a basket of four drugs arrives as four rows — counting rows
+  // then reports four times the customers and a quarter of the true basket
+  // value, which is the number an owner uses to judge whether baskets are
+  // growing. Rows carrying a receipt number are grouped into one transaction;
+  // rows without one are each counted singly, so a file that mixes the two
+  // (or carries no receipt numbers at all) degrades to the old row count
+  // rather than silently under-reporting.
+  //
+  // Keyed on receipt AND date because plenty of tills restart their numbering
+  // each morning: without the date, every "0001" in the file collapses into a
+  // single transaction. Where numbers are already unique the date changes
+  // nothing, so the stricter key is never worse.
+  const receipts = new Set();
+  let looseRows = 0;
+  let groupedRows = 0;
   // Revenue and row count restricted to rows that carry a cost price. Gross
   // profit must be computed against THESE, not against every row: subtracting
   // a partial cost from the full revenue books the revenue of cost-unknown
@@ -127,8 +144,20 @@ function calculateMetrics(normalizedRecords) {
       rowsWithCost++;
     }
 
-    if (rev > 0) transactionCount++;
+    if (rev > 0) {
+      const receipt = rec.invoice_number ?? rec.invoice_ref;
+      const ref = receipt != null ? String(receipt).trim() : '';
+      if (ref) {
+        const day = rec.transaction_date ? String(rec.transaction_date).substring(0, 10) : '';
+        receipts.add(`${ref}|${day}`);
+        groupedRows++;
+      } else {
+        looseRows++;
+      }
+    }
   }
+
+  const transactionCount = receipts.size + looseRows;
 
   const costCoverage = coverageOf({
     revenue: totalRevenue,
@@ -155,6 +184,15 @@ function calculateMetrics(normalizedRecords) {
     totalCost: reliable ? Math.round(totalCost * 100) / 100 : null,
     recordCount: normalizedRecords.length,
     transactionCount,
+    // What that count actually counts. 'receipts' means rows were grouped by
+    // receipt number and the figure is real baskets; 'rows' means the file
+    // carried no receipt numbers, so one row is assumed to be one sale. The
+    // two are not comparable, and anything reporting the number to an owner —
+    // or comparing it across uploads — needs to know which it got rather than
+    // inferring it.
+    transactionBasis: receipts.size > 0 ? 'receipts' : 'rows',
+    receiptCount: receipts.size,
+    rowsGroupedIntoReceipts: groupedRows,
     costCoverage,
   };
 }
@@ -397,38 +435,50 @@ module.exports = { analyze, calculateMetrics, monthlyRevenue, weeklyRevenue, dai
 
 // ---- transaction counts by period --------------------------------------
 
-function monthlyTransactionCount(normalizedRecords) {
-  const map = {};
+/**
+ * Counts transactions per period on the same rule the headline figure uses:
+ * rows sharing a receipt number within a period are one transaction, rows
+ * without one count singly. Keeping the two in step matters as much as either
+ * being right — a headline of 312 above a chart summing to 848 reads as a
+ * broken dashboard whichever number happens to be correct.
+ *
+ * Receipts are counted within each bucket, so a receipt cannot be double
+ * counted across periods; the day is not needed in the key here because the
+ * bucket already separates them (and for a daily bucket, IS the day).
+ */
+function countTransactionsBy(normalizedRecords, bucketOf) {
+  const buckets = new Map();
   for (const rec of normalizedRecords) {
-    const month = parseMonth(rec.transaction_date);
-    if (!month) continue;
-    map[month] = (map[month] || 0) + 1;
+    const bucket = bucketOf(rec);
+    if (!bucket) continue;
+    let entry = buckets.get(bucket);
+    if (!entry) { entry = { receipts: new Set(), loose: 0 }; buckets.set(bucket, entry); }
+    const receipt = rec.invoice_number ?? rec.invoice_ref;
+    const ref = receipt != null ? String(receipt).trim() : '';
+    if (ref) entry.receipts.add(ref);
+    else entry.loose++;
   }
-  return Object.entries(map)
+  return [...buckets.entries()]
+    .map(([key, { receipts, loose }]) => [key, receipts.size + loose]);
+}
+
+function monthlyTransactionCount(normalizedRecords) {
+  return countTransactionsBy(normalizedRecords, (rec) => parseMonth(rec.transaction_date))
     .map(([month, count]) => ({ month, count }))
     .sort((a, b) => a.month.localeCompare(b.month));
 }
 
 function weeklyTransactionCount(normalizedRecords) {
-  const map = {};
-  for (const rec of normalizedRecords) {
-    const week = parseWeek(rec.transaction_date);
-    if (!week) continue;
-    map[week] = (map[week] || 0) + 1;
-  }
-  return Object.entries(map)
+  return countTransactionsBy(normalizedRecords, (rec) => parseWeek(rec.transaction_date))
     .map(([week, count]) => ({ week, count }))
     .sort((a, b) => a.week.localeCompare(b.week));
 }
 
 function dailyTransactionCount(normalizedRecords) {
-  const map = {};
-  for (const rec of normalizedRecords) {
+  return countTransactionsBy(normalizedRecords, (rec) => {
     const day = parseMonth(rec.transaction_date) ? String(rec.transaction_date).trim().substring(0, 10) : null;
-    if (!day || !/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
-    map[day] = (map[day] || 0) + 1;
-  }
-  return Object.entries(map)
+    return day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
+  })
     .map(([day, count]) => ({ day, count }))
     .sort((a, b) => a.day.localeCompare(b.day));
 }

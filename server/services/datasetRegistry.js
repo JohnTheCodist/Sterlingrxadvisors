@@ -133,8 +133,15 @@ async function register(organizationId, { buffer, filename, mimeType }) {
   const db = getSql();
   const fingerprint = computeFingerprint(buffer, filename);
 
+  // Sending a file again IS a new upload event, even though it reuses the
+  // existing row. Returning the old row untouched left its upload_timestamp
+  // at whenever the file was FIRST seen, so re-uploading last week's file and
+  // watching it process fine still did not make it the newest dataset — every
+  // "your current upload" answer went on pointing at some other file.
   const [existing] = await db`
-    select * from dataset_registry where organization_id = ${organizationId} and fingerprint = ${fingerprint}
+    update dataset_registry set upload_timestamp = now(), updated_at = now()
+    where organization_id = ${organizationId} and fingerprint = ${fingerprint}
+    returning *
   `;
   if (existing) {
     return { ...rowToEntry(existing), isDuplicate: true };
@@ -264,13 +271,39 @@ async function remove(organizationId, datasetId) {
 async function getLatest(organizationId) {
   assertOrgId(organizationId);
   const db = getSql();
-  const [row] = await db`
+
+  // "The current upload" means the newest file the owner can actually be
+  // ASKED about, which is not the same as the newest row in this table. A file
+  // whose mapping never completed sits here at 'schema_detected' carrying no
+  // facts and no sale rows, and picking it made every scoped tool report that
+  // the current upload has no readable fields — true of that row, and nothing
+  // to do with the file the owner had just successfully uploaded.
+  // Ordered by when the file was last SEEN, which is the later of when it
+  // arrived and when it last finished processing. upload_timestamp alone is
+  // not that: rows registered before re-uploads began refreshing it still
+  // carry the date the file was first ever submitted, so a file re-uploaded
+  // and successfully processed minutes ago can sit days down the list while
+  // the dashboard — which renders the upload's own response — correctly shows
+  // its numbers. The two disagreeing is exactly what makes the Advisor look
+  // confused, so it reads the same event the dashboard does.
+  const [processed] = await db`
+    select * from dataset_registry
+    where organization_id = ${organizationId} and processing_status = 'processed'
+    order by greatest(upload_timestamp, coalesce(updated_at, upload_timestamp)) desc
+    limit 1
+  `;
+  if (processed) return rowToEntry(processed);
+
+  // Nothing has finished processing yet — a first upload mid-flight, or an
+  // organization whose only files all failed. Fall back to the newest row so
+  // callers still get a filename to talk about rather than null.
+  const [any] = await db`
     select * from dataset_registry
     where organization_id = ${organizationId}
     order by upload_timestamp desc
     limit 1
   `;
-  return rowToEntry(row);
+  return rowToEntry(any);
 }
 
 /**

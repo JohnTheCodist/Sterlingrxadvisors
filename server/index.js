@@ -167,9 +167,10 @@ app.post('/api/widgets', async (req, res) => {
   if (Array.isArray(records) && records.length > 0) {
     return res.json(evaluateWidgets(records));
   }
-  // Otherwise, evaluate ALL fact tables (multi-dataset intelligence)
+  // Scoped to the current upload by default, same as /api/analytics —
+  // ?scope=all asks for the organization's full history explicitly.
   const { evaluateFromStore } = require('./services/widgetEngine');
-  return res.json(await evaluateFromStore(req.organizationId));
+  return res.json(await evaluateFromStore(req.organizationId, { scope: req.query.scope }));
 });
 
 // ---------- Dataset Classification (runs before schema detection) ----------
@@ -1089,10 +1090,24 @@ app.post('/api/upload', (req, res) => {
 
 // ---------- Analytics from DB ----------
 
+// Scoped to the current upload by default, because that is what the dashboard
+// shows the moment an upload finishes. Returning the organization's whole
+// history here instead would mean the figures CHANGED on refresh — ₦19M where
+// ₦8.4M stood a second earlier — and a dashboard that reports a different
+// revenue depending on how you arrived at it is worse than one that forgets.
+// `?scope=all` asks for the full history explicitly.
 app.get('/api/analytics', async (req, res) => {
-  const { startDate, endDate, branchId } = req.query;
-  const analytics = await queryAnalytics(req.organizationId, { startDate, endDate, branchId: branchId ? Number(branchId) : undefined });
-  res.json(analytics);
+  const { startDate, endDate, branchId, scope } = req.query;
+  let datasetId;
+  if (scope !== 'all') {
+    const latest = await datasetRegistry.getLatest(req.organizationId);
+    datasetId = latest?.datasetId;
+  }
+  const analytics = await queryAnalytics(req.organizationId, {
+    startDate, endDate, datasetId,
+    branchId: branchId ? Number(branchId) : undefined,
+  });
+  res.json({ ...analytics, scope: scope === 'all' ? 'all' : 'current-upload' });
 });
 
 // ---------- Dimension summaries ----------

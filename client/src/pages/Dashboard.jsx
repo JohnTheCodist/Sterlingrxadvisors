@@ -1013,14 +1013,41 @@ export default function Dashboard() {
 
   // Accept both metrics (Phase 5) and analytics (legacy)
   const metrics = state.metrics;
-  const analytics = state.analytics;
   const analysis = state.analysis;
 
-  // Auto-fetch widget manifest so info icons and descriptions show up
+  // Arriving from an upload carries the whole analysis in navigation state.
+  // Arriving any other way — a refresh, a bookmark, the sidebar link — does
+  // not, and navigation state does not survive any of those. The dashboard
+  // used to show its empty "no data" screen in that case, as though nothing
+  // had ever been uploaded, so the only way back to your own numbers was to
+  // upload the file again. Everything needed is already persisted, so fetch
+  // it instead.
+  const [analytics, setAnalytics] = useState(state.analytics || null);
+  const arrivedWithAnalysis = !!(state.metrics || state.analytics || state.widgetManifest);
+  const [restoring, setRestoring] = useState(!arrivedWithAnalysis);
+
   useEffect(() => {
-    if (!widgetManifest && (metrics || analytics)) {
-      loadAllWidgets();
+    if (arrivedWithAnalysis) {
+      // Fresh from an upload — only the widget manifest may be missing.
+      if (!widgetManifest) loadAllWidgets();
+      return;
     }
+
+    let cancelled = false;
+    (async () => {
+      // Both are independent reads; requesting them in parallel keeps a cold
+      // dashboard to one round trip's worth of waiting rather than two.
+      const [analyticsRes] = await Promise.allSettled([
+        apiFetch('/api/analytics').then((r) => (r.ok ? r.json() : null)),
+        loadAllWidgets(),
+      ]);
+      if (cancelled) return;
+      if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
+        setAnalytics(analyticsRes.value);
+      }
+      setRestoring(false);
+    })();
+    return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Business Health (Phase 6) — prefer session data from upload, fall back to API
@@ -1046,7 +1073,10 @@ export default function Dashboard() {
   // instance and crash with React error #310 (Rules of Hooks violation) —
   // this happened for real: clicking "Load All Data" from the empty state
   // used to white-screen the page.
-  const showNoData = !widgetManifest && !metrics && (!analytics || !analytics.metrics);
+  // `restoring` keeps the empty state from flashing while the saved analysis
+  // is still in flight — otherwise every cold load blinks "no data yet" at
+  // someone who has uploaded plenty.
+  const showNoData = !restoring && !widgetManifest && !metrics && (!analytics || !analytics.metrics);
 
   // Extract data from whichever source is available
   const o = metrics?.overview || analytics?.metrics || {};
@@ -1234,6 +1264,33 @@ export default function Dashboard() {
 
   // Safe to branch here (unlike before): every hook in this component has
   // already been called above, in the same order, on every render.
+  // Restoring a saved analysis. Distinct from the empty state on purpose:
+  // "nothing here yet" and "fetching what you already have" call for different
+  // actions from the reader, and showing the first while doing the second is
+  // what made a populated dashboard look wiped.
+  if (restoring) {
+    return (
+      <div className="min-h-screen flex bg-[var(--color-bg)]">
+        <div className="hidden lg:block w-64 shrink-0 bg-[var(--foreground)]" />
+        <div className="flex-1 lg:ml-64">
+          <div className="mx-auto max-w-[var(--max-width)] px-7 py-24 text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary-tint)] text-[var(--color-primary)]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className="animate-spin motion-reduce:animate-none"
+              >
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-semibold text-[var(--color-ink)]">Loading your latest analysis</h1>
+            <p className="mt-3 text-[var(--color-ink-soft)]">Bringing back the figures from your most recent upload.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (showNoData) {
     return (
       <div className="min-h-screen flex bg-[var(--color-bg)]">

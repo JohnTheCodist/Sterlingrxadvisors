@@ -39,12 +39,26 @@ const MIN_COST_COVERAGE_PCT = 20;
 // none of that."
 const NEAR_MISS_THRESHOLD_PCT = 5;
 
+// A transaction is a receipt where the file gave us one, and a row where it
+// did not. Many exports write one line per ITEM, so counting rows reports a
+// four-drug basket as four customers and divides the basket value by four.
+//
+// Rows carrying a receipt number collapse into one transaction; rows without
+// one still count singly, so a file with no receipt numbers anywhere produces
+// exactly count(*) — the previous behaviour, unchanged. The date is part of
+// the key because tills that restart numbering each morning would otherwise
+// fold every "0001" in the file into a single sale.
+const RECEIPT = "nullif(btrim(s.invoice_ref), '')";
+const TXN_COUNT =
+  `(count(distinct case when ${RECEIPT} is not null then ${RECEIPT} || '|' || s.sale_date::text end)`
+  + ` + count(*) filter (where ${RECEIPT} is null))`;
+
 const MEASURES = {
   revenue: { expr: 'sum(s.unit_price * s.quantity)', label: 'Revenue', format: 'currency', costAware: false },
   quantity: { expr: 'sum(s.quantity)', label: 'Quantity', format: 'number', costAware: false },
-  transaction_count: { expr: 'count(*)', label: 'Transaction count', format: 'number', costAware: false },
+  transaction_count: { expr: TXN_COUNT, label: 'Transaction count', format: 'number', costAware: false },
   average_transaction_value: {
-    expr: 'coalesce(sum(s.unit_price * s.quantity) / nullif(count(*), 0), 0)',
+    expr: `coalesce(sum(s.unit_price * s.quantity) / nullif(${TXN_COUNT}, 0), 0)`,
     label: 'Average transaction value', format: 'currency', costAware: false,
   },
   distinct_product_count: { expr: 'count(distinct s.product_id)', label: 'Distinct product count', format: 'number', costAware: false },

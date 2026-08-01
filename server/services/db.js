@@ -711,7 +711,12 @@ async function loadFactRecords(organizationId, records, options = {}) {
         unit_price: price || 0,
         unit_cost: cost ?? null,
         payment_method: rec.payment_method || null,
-        invoice_ref: rec.invoice_ref || null,
+        // The normalizer names this field invoice_number; only the sale table
+        // calls it invoice_ref. Reading just invoice_ref meant every receipt
+        // number a file carried was parsed, mapped, and then silently dropped
+        // at the last step — which is why the column was empty everywhere and
+        // "transactions" could only ever mean "rows".
+        invoice_ref: rec.invoice_ref || rec.invoice_number || null,
       });
     }
 
@@ -783,7 +788,16 @@ async function queryAnalytics(organizationId, options = {}) {
            then round((sum((s.unit_price - s.unit_cost) * s.quantity) filter (where s.unit_cost is not null)
              / sum(s.unit_price * s.quantity) filter (where s.unit_cost is not null)) * 100, 2)
            else null end as "grossMargin",
-      coalesce(sum(s.unit_price * s.quantity) / nullif(count(*), 0), 0) as "averageTransactionValue",
+      -- Receipts where the file carried them, rows where it did not — the same
+      -- rule analytics.js uses, so the figure means the same thing whether the
+      -- dashboard was handed it by an upload or fetched it back afterwards.
+      (count(distinct case when nullif(btrim(s.invoice_ref), '') is not null
+                           then btrim(s.invoice_ref) || '|' || s.sale_date::text end)
+       + count(*) filter (where nullif(btrim(s.invoice_ref), '') is null))::int as "transactionCount",
+      coalesce(sum(s.unit_price * s.quantity) / nullif(
+        (count(distinct case when nullif(btrim(s.invoice_ref), '') is not null
+                             then btrim(s.invoice_ref) || '|' || s.sale_date::text end)
+         + count(*) filter (where nullif(btrim(s.invoice_ref), '') is null)), 0), 0) as "averageTransactionValue",
       sum(s.unit_cost * s.quantity) as "totalCost",
       count(*) as "recordCount",
       count(*) filter (where s.unit_cost is not null)::int as "rowsWithCost",
@@ -902,6 +916,12 @@ async function queryAnalytics(organizationId, options = {}) {
       grossMargin: hasReliableCostCoverage && metrics.grossMargin != null ? Number(metrics.grossMargin) : null,
       totalCost: hasReliableCostCoverage && metrics.totalCost != null ? Math.round(Number(metrics.totalCost) * 100) / 100 : null,
       recordCount: Number(metrics.recordCount || 0),
+      // recordCount is rows; transactionCount is sales. They differ whenever a
+      // file writes one line per item, and the dashboard's "Transactions" KPI
+      // reads this one — it was absent here, so the card rendered blank on any
+      // dashboard restored from the database rather than handed data by an
+      // upload.
+      transactionCount: Number(metrics.transactionCount || 0),
       averageTransactionValue: Math.round(Number(metrics.averageTransactionValue || 0) * 100) / 100,
     },
     // Lets callers (getRevenueProfitSummary's evidence-shaping) disclose

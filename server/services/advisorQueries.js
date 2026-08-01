@@ -69,7 +69,12 @@ async function getDataScope(organizationId, { datasetId } = {}) {
   if (datasetId) whereS = db`${whereS} and s.dataset_id = ${datasetId}`;
   const sources = await db`
     select coalesce(d.filename, 'Unknown file') as filename,
-           count(*)::int as "transactionCount",
+           -- Receipts where the file carried them, rows where it did not, so a
+           -- file listing one line per item is not reported as that many sales.
+           (count(distinct case when nullif(btrim(s.invoice_ref), '') is not null
+                                then btrim(s.invoice_ref) || '|' || s.sale_date::text end)
+            + count(*) filter (where nullif(btrim(s.invoice_ref), '') is null))::int
+             as "transactionCount",
            min(s.sale_date)::text as "from",
            max(s.sale_date)::text as "to"
     from sale s left join dataset_registry d on d.id = s.dataset_id

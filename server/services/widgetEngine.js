@@ -170,16 +170,34 @@ function evaluate(records, options = {}) {
 }
 
 /**
- * Evaluate all widgets against ALL datasets currently in the Fact Store.
- * This enables multi-file intelligence — activating widgets whenever
- * required data exists across any registered dataset.
+ * Evaluate all widgets against the Fact Store.
+ *
+ * Scoped to the CURRENT upload by default — pass `{ scope: 'all' }` for the
+ * organization's full history. Defaulting to "all" was the bug being fixed
+ * here: every other read of this data (the analytics KPI cards, the Advisor)
+ * already scopes to the current upload, so a dashboard showing this widget
+ * grid pooled from every sales-capable file ever uploaded reported a THIRD
+ * total alongside the two the rest of the page agreed on — larger revenue,
+ * more transactions, more distinct products than either the current upload
+ * or the organization's real all-time total, because the pool spans however
+ * many overlapping re-uploads and abandoned imports have accumulated.
  */
 async function evaluateFromStore(organizationId, options = {}) {
   const factStore = require('./factStore');
+  const { scope, ...evalOptions } = options;
   // Purge stale FactSales records from datasets that are not sales-capable
   await factStore.purgeStaleFactSales(organizationId);
-  const records = await factStore.queryAll(organizationId);
-  return evaluate(records, options);
+  const allRecords = await factStore.queryAll(organizationId);
+
+  if (scope === 'all') return evaluate(allRecords, evalOptions);
+
+  const datasetRegistry = require('./datasetRegistry');
+  const latest = await datasetRegistry.getLatest(organizationId);
+  // No registry entry — nothing has gone through the normal upload path, so
+  // there is no "current upload" to scope to and org-wide is the only
+  // honest answer (matches advisorQueries.getScopedRecords's same fallback).
+  const records = latest ? allRecords.filter((r) => r.assetId === latest.datasetId) : allRecords;
+  return evaluate(records, evalOptions);
 }
 
 /**

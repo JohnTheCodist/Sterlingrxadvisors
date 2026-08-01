@@ -79,11 +79,29 @@ async function query(organizationId, tableName) {
 /**
  * Return combined records from ALL fact tables (for widget engine).
  */
+const FACT_TABLES = ['FactSales', 'FactInventory'];
+
+/**
+ * Every fact record across every upload — deliberately excludes DimProduct /
+ * DimCustomer / DimSupplier / DimDate.
+ *
+ * Every caller of this function feeds its output straight into metric
+ * arithmetic (calculateMetrics, widget compute()). A dimension row carries a
+ * bare `name` and no `quantity` or `selling_price`, so it contributes nothing
+ * to a sum — but `distinct-products-kpi` counts on `product_name`, which
+ * dimension rows don't have either, so this specific contamination happened
+ * to under- rather than over-count there. It was not so lucky everywhere:
+ * mixing DimProduct's 6,000+ rows into the same array widget compute()
+ * receives distorted product counts wherever a widget's own logic did not
+ * happen to key on the exact same field name. Returning only fact rows
+ * removes the class of bug rather than patching each symptom.
+ */
 async function queryAll(organizationId) {
   assertOrgId(organizationId);
   const db = getSql();
   const rows = await db`
-    select payload from widget_fact where organization_id = ${organizationId}
+    select payload from widget_fact
+    where organization_id = ${organizationId} and table_name in ${db(FACT_TABLES)}
   `;
   return rows.map((r) => r.payload);
 }
