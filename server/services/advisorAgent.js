@@ -51,26 +51,31 @@ const LLM_RETRY_BASE_MS = 500;
 // Also Advisor-specific: the shared LLM_MAX_TOKENS is 1024, right for the
 // mapper's short JSON replies but enough to truncate a consulting-style
 // answer mid-sentence (one test reply ended on a dangling "##").
-const LLM_MAX_TOKENS = parseInt(process.env.ADVISOR_MAX_TOKENS || '3072', 10);
+// Sized for a REASONING model, which is the actual cause of the "answer cut
+// off after one line" reports. deepseek-v4-flash spends part of the SAME
+// max_tokens budget on internal thinking that is never shown to anyone, so
+// the cap is not an answer-length budget — it is thinking PLUS answer.
+// Measured on the live endpoint: "how do i prepare for this week adequately"
+// burned 939 reasoning tokens before writing a word, and a probe capped at
+// 300 spent all 300 thinking and emitted zero characters of answer. At the
+// old 2048 the answer was routinely starved, and reasoning spend is highly
+// variable (49-2082 tokens observed for the same class of question), so a
+// tight cap fails unpredictably rather than consistently.
+//
+// max_tokens is a ceiling, not a reservation — raising it costs nothing on
+// answers that don't need it, and only bills for tokens actually produced.
+// So the fix is to make the budget comfortably fit thinking AND a full
+// consulting-style answer, rather than to take the thinking away.
+const LLM_MAX_TOKENS = parseInt(process.env.ADVISOR_MAX_TOKENS || '8192', 10);
 
-// Reasoning models (deepseek-v4-flash is one) spend part of the SAME
-// max_tokens budget on internal thinking that is never shown to anyone. That
-// is what produced the "answer cut off after one line" reports: measured on
-// the live endpoint, "how do i prepare for this week" burned 939 reasoning
-// tokens and one probe spent an entire 300-token budget thinking and emitted
-// zero characters of answer. The loop then saw finish_reason 'length' with no
-// content, "resumed" an answer that had never started, and after two futile
-// continuations showed the owner a preamble plus a truncation notice.
-//
-// Turning it off was checked against the thing it could plausibly break --
-// tool selection, which is the Advisor's whole contract -- across five real
-// questions. Same or better tools every time, no malformed arguments, and
-// roughly twice as fast; on the question above, 11.0s -> 2.5s with MORE tools
-// chosen. So the budget now goes entirely to the visible answer.
-//
-// Set ADVISOR_THINKING=enabled to restore it. If a provider rejects the
-// parameter outright we stop sending it rather than let the Advisor 400.
-const THINKING_ENABLED = (process.env.ADVISOR_THINKING || 'disabled') === 'enabled';
+// Reasoning is ON by default and should stay that way: it is what lets the
+// Advisor pick several tools for a compound question and reconcile their
+// results before answering. Disabling it was measured as ~2x faster with
+// equal-or-better tool selection, but that trades away the deliberation the
+// analysis quality rests on, which is not a trade this product should make
+// silently. ADVISOR_THINKING=disabled is available for anyone who wants the
+// speed; the truncation fix does not depend on it either way.
+const THINKING_ENABLED = (process.env.ADVISOR_THINKING || 'enabled') !== 'disabled';
 let thinkingParamRejected = false;
 
 const MAX_TOOL_ITERATIONS = 5;
