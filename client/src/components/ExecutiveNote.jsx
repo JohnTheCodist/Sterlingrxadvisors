@@ -7,28 +7,20 @@
  *
  * Renders nothing when a widget has no note, so it can be dropped into every
  * card without gating each call site.
+ *
+ * Severity used to read from a 2px coloured border down the left edge. That
+ * shape — an asymmetric accent rail on a card — is one of the most
+ * recognisable generated-UI tells, and it also spent the page's whole accent
+ * budget on decoration rather than signal. Severity now reads from a small
+ * square beside the label, and the note sits on its own tinted panel.
+ *
+ * The severity vocabulary and the note contract are unchanged.
  */
 const SEVERITY = {
-  high: {
-    bar: 'border-[var(--color-danger)]',
-    dot: 'bg-[var(--color-danger)]',
-    label: 'Act now',
-  },
-  medium: {
-    bar: 'border-[var(--color-accent)]',
-    dot: 'bg-[var(--color-accent)]',
-    label: 'Worth reviewing',
-  },
-  low: {
-    bar: 'border-[var(--color-line-strong)]',
-    dot: 'bg-[var(--color-line-strong)]',
-    label: 'Healthy',
-  },
-  info: {
-    bar: 'border-[var(--color-primary)]',
-    dot: 'bg-[var(--color-primary)]',
-    label: 'Context',
-  },
+  high:   { color: 'var(--destructive)',     label: 'Act now' },
+  medium: { color: 'var(--warning)',         label: 'Worth reviewing' },
+  low:    { color: 'var(--success)',         label: 'Healthy' },
+  info:   { color: 'var(--color-ink-faint)', label: 'Context' },
 };
 
 export default function ExecutiveNote({ note }) {
@@ -36,23 +28,13 @@ export default function ExecutiveNote({ note }) {
   const tone = SEVERITY[note.severity] || SEVERITY.info;
 
   return (
-    <div className={`mt-4 border-l-2 ${tone.bar} pl-3.5`}>
-      <div className="flex items-center gap-1.5">
-        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${tone.dot}`} />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">
-          {tone.label}
-        </span>
+    <div className="exec-note">
+      <div className="exec-note__head">
+        <span className="exec-note__chip" style={{ background: tone.color }} />
+        <span className="exec-note__tone">{tone.label}</span>
       </div>
-      {note.insight && (
-        <p className="mt-1.5 text-[13px] font-medium leading-relaxed text-[var(--color-ink)]">
-          {note.insight}
-        </p>
-      )}
-      {note.action && (
-        <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--color-ink-soft)]">
-          {note.action}
-        </p>
-      )}
+      {note.insight && <p className="exec-note__insight">{note.insight}</p>}
+      {note.action && <p className="exec-note__action">{note.action}</p>}
     </div>
   );
 }

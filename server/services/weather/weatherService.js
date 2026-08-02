@@ -92,4 +92,12 @@ async function getRawWeather(state) {
   }
 }
 
-module.exports = { getRawWeather, isConfigured };
+/**
+ * The states weather can actually resolve. Exported because this map — not a
+ * second list written next to a form — is the authority on which values are
+ * legal: a state stored here that isn't a key below reaches OpenWeather as an
+ * ungeocodable string and the weather signal silently disappears.
+ */
+const RESOLVABLE_STATES = Object.keys(STATE_CITY_OVERRIDES);
+
+module.exports = { getRawWeather, isConfigured, RESOLVABLE_STATES };

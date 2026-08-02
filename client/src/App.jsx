@@ -20,12 +20,17 @@ import Terms from './pages/Terms.jsx';
 
 export default function App() {
   const location = useLocation();
-  const isDashboard = location.pathname === '/dashboard';
+  // Routes that own the whole viewport and supply their own way back — the
+  // dashboard has its sidebar, sign-in has a wordmark linking home. Wrapping
+  // either in marketing chrome puts a "Get Started" button above a form the
+  // visitor is already using.
+  const CHROMELESS = ['/dashboard', '/signin', '/signup', '/onboarding', '/upload'];
+  const isChromeless = CHROMELESS.includes(location.pathname);
 
   return (
     <>
       <ScrollToTop />
-      {!isDashboard && <Navbar />}
+      {!isChromeless && <Navbar />}
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -43,7 +48,7 @@ export default function App() {
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
         </Routes>
       </main>
-      {!isDashboard && <Footer />}
+      {!isChromeless && <Footer />}
     </>
   );
 }

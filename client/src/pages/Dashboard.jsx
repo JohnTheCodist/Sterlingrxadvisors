@@ -1,12 +1,11 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, ReferenceDot, ComposedChart, ReferenceLine, Treemap,
   AreaChart, Area, ScatterChart, Scatter, ZAxis,
 } from 'recharts';
+import LoadingState from '../components/LoadingState';
 import GrowthRateWidget from '../components/GrowthRateWidget';
 import MonthlySalesPerformanceWidget from '../components/MonthlySalesPerformanceWidget';
 import { pickTotalRevenue, avgTransactionValue, topConcentration, revenueGap, monthlyRevenueWithGap as augmentMonthly, validateMetricConsistency } from '../utils/metrics';
@@ -31,6 +30,7 @@ import BulletChart from '../components/BulletChart.jsx';
 import ExecutiveNote from '../components/ExecutiveNote.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { apiFetch } from '../lib/apiClient.js';
+import ProductTour, { hasSeenTour } from '../components/ProductTour.jsx';
 
 // Widget ids (from server/services/widgetRegistry.js) that are product-centric
 // within the 'sales' dashboard category — used to give the "Products" nav tab
@@ -41,6 +41,69 @@ const PRODUCT_WIDGET_IDS = new Set([
   'gross-margin-analysis', 'best-worst-products', 'revenue-by-category', 'category-growth',
   'product-performance-over-time', 'sales-concentration-risk', 'profit-leakage',
 ]);
+
+/**
+ * The walkthrough shown once on a first visit.
+ *
+ * One list serves both the empty dashboard and a populated one: ProductTour
+ * drops any step whose target isn't on the page, so a brand-new account (which
+ * renders the empty state and has no nav or KPI cards yet) sees only the
+ * upload step, while someone returning after their first upload gets the full
+ * tour. Keeping one list means the two can't drift apart.
+ *
+ * Copy rule: say what the thing DOES, not that it exists. "Your numbers live
+ * here" tells a pharmacist nothing they can't see.
+ */
+const TOUR_STEPS = [
+  {
+    selector: '[data-tour="empty-upload"]',
+    title: 'Start with a spreadsheet',
+    body: 'Upload a sales or stock export — Excel or CSV, straight from your till or supplier. '
+      + 'We read the columns for you, so there is nothing to reformat first.',
+  },
+  {
+    selector: '[data-tour="kpis"]',
+    title: 'Your headline numbers',
+    body: 'Revenue, transactions, basket size and margin for the file you last uploaded — '
+      + 'not everything you have ever uploaded, so these always describe one period you can reason about.',
+  },
+  {
+    selector: '[data-tour="health"]',
+    title: 'Where the business stands',
+    body: 'One score out of 100, built from five pillars. Open it to see which pillar is pulling the '
+      + 'score down and exactly which number caused it.',
+  },
+  {
+    selector: '[data-tour="nav-inventory"]',
+    title: 'Stock, expiry and suppliers',
+    body: 'Each section answers a different question — what is expiring, what is overstocked, which '
+      + 'supplier you depend on most. Sections stay empty until you upload a file that carries those columns.',
+  },
+  {
+    selector: '[data-tour="nav-advisor"]',
+    title: 'Ask instead of hunting',
+    body: 'Type a question in plain English — "what should I reorder this week?" — and it answers from '
+      + 'your own uploaded numbers, showing the figures it used.',
+  },
+  {
+    selector: '[data-tour="upload"]',
+    title: 'Adding more data later',
+    body: 'Every upload adds to your history. Re-uploading the same file replaces it rather than '
+      + 'counting it twice, so you can safely send a corrected export.',
+  },
+  {
+    selector: '[data-tour="export"]',
+    title: 'Take it off the screen',
+    body: 'Export the dashboard as a PDF report — headline figures, health score, priorities and '
+      + 'top products — for a meeting, your accountant or your own records.',
+  },
+  {
+    selector: '[data-tour="nav-settings"]',
+    title: 'One setting worth checking',
+    body: 'Your state drives the weather and disease signals. You set it at signup; change it here if '
+      + 'you move or picked the wrong one.',
+  },
+];
 
 // Sidebar nav tab -> widget-manifest dashboardKey(s) it drills into.
 const NAV_DASHBOARD_KEYS = {
@@ -1171,74 +1234,43 @@ export default function Dashboard() {
     validateMetricConsistency({ overview: o, trends: t, monthlyRevenue, products: p, topProducts });
   }, [o?.totalRevenue, t?.totalRevenue, monthlyRevenue.length, topProducts?.length]);
 
-  const dashboardRef = useRef(null);
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
 
+  // The report is drawn server-side with vector primitives (pdfkit) from the
+  // same current-upload-scoped data the dashboard itself displays — see
+  // server/services/reports/dashboardPdfReport.js. This replaced a
+  // html2canvas + jsPDF screenshot of the live DOM, which produced blurry
+  // text, cut charts in half at arbitrary page breaks, and needed a
+  // computed-style-inlining hack because html2canvas cannot parse the
+  // oklch() colors Tailwind v4 generates.
   const exportToPDF = async () => {
-    const el = dashboardRef.current;
-    if (!el) return;
     setExporting(true);
+    setExportError('');
 
     try {
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        onclone: (clonedDoc) => {
-          // html2canvas cannot parse oklch() colors used by Tailwind v4.
-          // Strategy: inline computed colors on every element (browsers
-          // resolve oklch to rgb), then nuke ALL stylesheets so the
-          // parser never encounters oklch.
-
-          // Nuke external stylesheets first — they all contain oklch
-          clonedDoc.querySelectorAll('link[rel="stylesheet"]').forEach((el) => el.remove());
-
-          // Inline computed color-related properties for every element
-          clonedDoc.querySelectorAll('*').forEach((node) => {
-            const cs = clonedDoc.defaultView.getComputedStyle(node);
-            // Inline the key color-related longhand properties
-            for (const key of ['color', 'background-color', 'border-color', 'border-top-color',
-              'border-right-color', 'border-bottom-color', 'border-left-color',
-              'outline-color', 'text-decoration-color', 'caret-color', 'box-shadow',
-              'column-rule-color', 'fill', 'stroke']) {
-              const val = cs.getPropertyValue(key);
-              if (val && val !== 'rgba(0, 0, 0, 0)' && val !== 'none' && val !== 'auto') {
-                node.style.setProperty(key, val);
-              }
-            }
-          });
-
-          // Strip any remaining oklch() from inline <style> blocks
-          clonedDoc.querySelectorAll('style').forEach((s) => {
-            s.textContent = s.textContent.replace(/oklch\([^)]+\)/g, 'rgb(0,0,0)');
-          });
-        },
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth - 20;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 10;
-
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight - 20;
-
-      while (heightLeft > 0) {
-        position = -(pageHeight - 20);
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight - 20;
+      const res = await apiFetch('/api/export/dashboard-pdf');
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Export failed (${res.status})`);
       }
 
-      pdf.save('rxnaija-dashboard-report.pdf');
+      const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename="([^"]+)"/);
+      const filename = match ? match[1] : 'rxnaija-dashboard-report.pdf';
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     } catch (err) {
       console.error('PDF export failed:', err);
+      setExportError(err.message || 'Could not generate the PDF.');
     } finally {
       setExporting(false);
     }
@@ -1262,6 +1294,19 @@ export default function Dashboard() {
 
   const [activeNav, setActiveNav] = useState('overview');
 
+  // The walkthrough. Keyed on the user id so a shared computer doesn't hide
+  // the tour from the next person to sign in.
+  const tourKey = user?.id || organization?.organizationId || 'anon';
+  const [tourOpen, setTourOpen] = useState(false);
+  useEffect(() => {
+    // Deferred a frame past the first paint: the tour measures real elements,
+    // and on the very first render the sections it points at have not been
+    // laid out yet.
+    if (restoring || hasSeenTour(tourKey)) return undefined;
+    const t = setTimeout(() => setTourOpen(true), 400);
+    return () => clearTimeout(t);
+  }, [restoring, tourKey]);
+
   // Safe to branch here (unlike before): every hook in this component has
   // already been called above, in the same order, on every render.
   // Restoring a saved analysis. Distinct from the empty state on purpose:
@@ -1271,20 +1316,15 @@ export default function Dashboard() {
   if (restoring) {
     return (
       <div className="min-h-screen flex bg-[var(--color-bg)]">
-        <div className="hidden lg:block w-64 shrink-0 bg-[var(--foreground)]" />
+        {/* Rail placeholder now matches the real rail's surface. It used to
+            paint bg-[var(--foreground)] — a black column held for the whole
+            fetch, then swapped to a light one the instant data landed. */}
+        <div className="hidden lg:block w-64 shrink-0 bg-[var(--muted)] border-r border-[var(--color-line)]" />
         <div className="flex-1 lg:ml-64">
-          <div className="mx-auto max-w-[var(--max-width)] px-7 py-24 text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary-tint)] text-[var(--color-primary)]">
-              <svg
-                xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                className="animate-spin motion-reduce:animate-none"
-              >
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-semibold text-[var(--color-ink)]">Loading your latest analysis</h1>
-            <p className="mt-3 text-[var(--color-ink-soft)]">Bringing back the figures from your most recent upload.</p>
+          <div className="mx-auto flex max-w-[var(--max-width)] flex-col items-center px-7 py-24">
+            {/* Same component the auth guard renders, so the chart carries
+                straight through from sign-in without restarting. */}
+            <LoadingState sub="Rebuilding your dashboard from your most recent upload." />
           </div>
         </div>
       </div>
@@ -1294,7 +1334,10 @@ export default function Dashboard() {
   if (showNoData) {
     return (
       <div className="min-h-screen flex bg-[var(--color-bg)]">
-        <div className="hidden lg:block w-64 shrink-0 bg-[var(--foreground)]" />
+        {/* Same rail surface as the real rail and the restore state — all
+            three placeholders have to agree, or the column changes colour
+            as the page moves between them. */}
+        <div className="hidden lg:block w-64 shrink-0 bg-[var(--muted)] border-r border-[var(--color-line)]" />
         <div className="flex-1 lg:ml-64">
           <div className="mx-auto max-w-[var(--max-width)] px-7 py-24 text-center">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary-tint)] text-[var(--color-primary)]">
@@ -1308,6 +1351,7 @@ export default function Dashboard() {
             <div className="mt-6 flex items-center justify-center gap-4">
               <Link
                 to="/upload"
+                data-tour="empty-upload"
                 className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-card)] transition hover:bg-[var(--color-primary-dark)]"
               >
                 Go to Upload
@@ -1321,6 +1365,13 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Mounted here too: a brand-new account renders this branch, and it
+            is the one moment a walkthrough is worth the most. Steps whose
+            targets don't exist on this screen drop out on their own. */}
+        {tourOpen && (
+          <ProductTour steps={TOUR_STEPS} userKey={tourKey} onFinish={() => setTourOpen(false)} />
+        )}
       </div>
     );
   }
@@ -1329,9 +1380,12 @@ export default function Dashboard() {
     <div className="min-h-screen flex bg-[var(--color-bg)]">
 
       {/* ---- Dark fixed sidebar ------------------------------------------- */}
-      <aside className={`dashboard-sidebar fixed left-0 top-0 z-50 h-screen w-64 bg-[var(--foreground)] flex flex-col border-r border-white/5 transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      {/* Surface and ink come from .dashboard-sidebar's own token block in
+          index.css — the rail sits one elevation step below the page rather
+          than opposite it, so no bg-[var(--foreground)] slab here. */}
+      <aside className={`dashboard-sidebar fixed left-0 top-0 z-50 h-screen w-64 flex flex-col border-r border-[var(--color-line)] transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         {/* Brand */}
-        <div className="flex items-center gap-3 px-5 pt-6 pb-4 border-b border-white/8">
+        <div className="flex items-center gap-3 px-5 pt-6 pb-4 border-b border-[var(--color-line)]">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--primary)] text-[11px] font-bold font-mono text-primary-foreground">Rx</div>
           <div>
             <p className="text-sm font-semibold text-[var(--sidebar-ink-bright)]">RxNaija</p>
@@ -1345,11 +1399,12 @@ export default function Dashboard() {
             {navItems.map((item) => (
               <button
                 key={item.id}
+                data-tour={`nav-${item.id}`}
                 onClick={() => setActiveNav(item.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left ${
                   activeNav === item.id
-                    ? 'bg-white/10 text-[var(--sidebar-ink-bright)]'
-                    : 'text-[var(--sidebar-ink)] hover:bg-white/5 hover:text-[var(--sidebar-ink-hover)]'
+                    ? 'bg-[var(--sidebar-active-bg)] text-[var(--sidebar-ink-bright)] font-semibold'
+                    : 'text-[var(--sidebar-ink)] hover:bg-[var(--sidebar-hover-bg)] hover:text-[var(--sidebar-ink-hover)]'
                 }`}
               >
                 <span className="w-4 h-4 shrink-0" dangerouslySetInnerHTML={{ __html: item.icon }} />
@@ -1359,17 +1414,28 @@ export default function Dashboard() {
           </div>
 
           {/* Divider */}
-          <div className="my-3 mx-3 border-t border-white/8" />
+          <div className="my-3 mx-3 border-t border-[var(--color-line)]" />
 
           <div className="space-y-0.5">
             {bottomNavItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveNav(item.id)}
+                data-tour={`nav-${item.id}`}
+                /* Help had no content branch at all — clicking it selected a
+                   tab that rendered nothing. It replays the walkthrough now,
+                   which also gives the tour a way back once dismissed. */
+                onClick={() => {
+                  if (item.id === 'help') {
+                    setActiveNav('overview');
+                    setTourOpen(true);
+                    return;
+                  }
+                  setActiveNav(item.id);
+                }}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left ${
                   activeNav === item.id
-                    ? 'bg-white/10 text-[var(--sidebar-ink-bright)]'
-                    : 'text-[var(--sidebar-ink)] hover:bg-white/5 hover:text-[var(--sidebar-ink-hover)]'
+                    ? 'bg-[var(--sidebar-active-bg)] text-[var(--sidebar-ink-bright)] font-semibold'
+                    : 'text-[var(--sidebar-ink)] hover:bg-[var(--sidebar-hover-bg)] hover:text-[var(--sidebar-ink-hover)]'
                 }`}
               >
                 <span className="w-4 h-4 shrink-0" dangerouslySetInnerHTML={{ __html: item.icon }} />
@@ -1380,7 +1446,7 @@ export default function Dashboard() {
         </nav>
 
         {/* Bottom: user area */}
-        <div className="px-4 py-4 border-t border-white/8">
+        <div className="px-4 py-4 border-t border-[var(--color-line)]">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-bold text-primary-foreground">
               {(user?.email || '?')[0].toUpperCase()}
@@ -1416,7 +1482,7 @@ export default function Dashboard() {
           <span className="text-sm font-semibold text-[var(--foreground)]">RxNaija Analytics</span>
         </div>
 
-        <div ref={dashboardRef} className="mx-auto max-w-[var(--max-width)] px-7 py-10">
+        <div className="mx-auto max-w-[var(--max-width)] px-7 py-10">
 
         {/* Header */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -1432,6 +1498,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <Link
               to="/upload"
+              data-tour="upload"
               className="inline-flex items-center gap-2 rounded-full border border-[var(--color-line-strong)] px-5 py-2.5 text-sm font-semibold text-[var(--color-ink-soft)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
             >
               Upload New Data
@@ -1444,6 +1511,7 @@ export default function Dashboard() {
             </button>
             <button
               onClick={exportToPDF}
+              data-tour="export"
               disabled={exporting}
               className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -1470,6 +1538,9 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+        {exportError && (
+          <p className="-mt-6 mb-6 text-sm text-[var(--color-danger)]">{exportError}</p>
+        )}
 
         {/* ================================================================ */}
         {/*   Overview — condensed executive summary                         */}
@@ -1477,8 +1548,14 @@ export default function Dashboard() {
         {activeNav === 'overview' && (
           <>
             <DatasetSummary fileName={analysis?.fileName} generatedAt={analysis?.generatedAt} capabilities={capabilities} />
-            {widgetManifest && <DynamicKpiGrid widgetManifest={widgetManifest} capabilities={capabilities} />}
-            <BusinessHealthCard bizHealth={bizHealth} />
+            {widgetManifest && (
+              <div data-tour="kpis">
+                <DynamicKpiGrid widgetManifest={widgetManifest} capabilities={capabilities} />
+              </div>
+            )}
+            <div data-tour="health">
+              <BusinessHealthCard bizHealth={bizHealth} />
+            </div>
             {bizHealthLoading && !bizHealth && (
               <div className="mb-6 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5 text-center">
                 <p className="text-xs text-[var(--color-ink-faint)]">Computing business health score...</p>
@@ -1918,6 +1995,10 @@ export default function Dashboard() {
         )}
         </div>
       </div>
+
+      {tourOpen && (
+        <ProductTour steps={TOUR_STEPS} userKey={tourKey} onFinish={() => setTourOpen(false)} />
+      )}
     </div>
   );
 }

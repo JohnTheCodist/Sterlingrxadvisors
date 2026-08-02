@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { apiFetch } from '../lib/apiClient.js';
 
@@ -11,8 +11,6 @@ const ACCEPTED_TYPES = {
 };
 
 // Which categories are required for analysis to proceed.
-// Phase 1+: The API now provides `needsConfirmation` and `domainStatus` —
-// these hardcoded sets are kept as a client-side fallback only.
 const SALES_REQUIRED = new Set(['product_name']);
 const INVENTORY_REQUIRED = new Set(['product_name']);
 const PRICE_CATEGORIES = new Set(['revenue', 'selling_price']);
@@ -193,7 +191,7 @@ function isLlmDetection(detection) {
   return detection.source && /llm|ai/i.test(detection.source);
 }
 
-function FileDropZone({ file, onDrop, onRemove }) {
+function FileDropZone({ file, onDrop, onRemove, compact }) {
   const onDropCb = useCallback(
     (accepted) => { if (accepted.length > 0) onDrop(accepted); },
     [onDrop]
@@ -206,10 +204,14 @@ function FileDropZone({ file, onDrop, onRemove }) {
   });
 
   const fileList = Array.isArray(file) ? file : (file ? [file] : []);
+  // In compact mode this box sits directly below the Files step's own file
+  // manifest — re-listing every file here too would show the same names
+  // twice on one screen. Compact mode's only job is "add one more."
+  const showFileList = fileList.length > 0 && !compact;
 
   return (
     <div className="flex flex-col gap-2">
-      {fileList.length > 0 && (
+      {showFileList && (
         <div className="space-y-1.5 mb-3">
           {fileList.map((f, i) => (
             <div key={f.name + i} className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
@@ -238,24 +240,27 @@ function FileDropZone({ file, onDrop, onRemove }) {
       )}
       <div
         {...getRootProps()}
-        className={`group flex cursor-pointer flex-col items-center rounded border-2 border-dashed px-8 py-12 transition-all
+        className={`group flex cursor-pointer flex-col items-center rounded border-2 border-dashed transition-all
+          ${compact ? 'px-5 py-6' : 'px-8 py-12'}
           ${isDragActive
             ? 'border-[var(--color-primary)] bg-[var(--color-primary-tint)]'
             : 'border-[var(--color-line)] bg-[var(--color-bg)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-tint)]'
           }`}
       >
         <input {...getInputProps()} />
-        <div className="mb-4 flex h-12 w-12 items-center justify-center text-[var(--color-ink-faint)] group-hover:text-[var(--color-primary)] transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="17 8 12 3 7 8" />
-            <line x1="12" y1="3" x2="12" y2="15" />
-          </svg>
-        </div>
-        <p className="text-sm font-medium text-[var(--color-ink-soft)]">
-          {isDragActive ? 'Drop files here' : 'Drag \u0026 drop spreadsheet files, or click to browse'}
+        {!compact && (
+          <div className="mb-4 flex h-12 w-12 items-center justify-center text-[var(--color-ink-faint)] group-hover:text-[var(--color-primary)] transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+        )}
+        <p className={`font-medium text-[var(--color-ink-soft)] ${compact ? 'text-xs' : 'text-sm'}`}>
+          {isDragActive ? 'Drop files here' : compact ? 'Add another file' : 'Drag \u0026 drop, or click to browse'}
         </p>
-        <p className="mt-1.5 text-xs text-[var(--color-ink-faint)]">.xlsx and .csv</p>
+        {!compact && <p className="mt-1.5 text-xs text-[var(--color-ink-faint)]">.xlsx and .csv</p>}
       </div>
     </div>
   );
@@ -277,7 +282,7 @@ function AutoAcceptedPanel({ columns, expanded, onToggle }) {
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary-tint)] text-[var(--color-primary)]">
             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
           </span>
-          {count} column{count !== 1 ? 's' : ''} auto-mapped with high confidence
+          {count} column{count !== 1 ? 's' : ''} auto-mapped
         </span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -550,7 +555,6 @@ function MappingCard({ column, index, total, onResolve }) {
       )}
 
       <div className="map-card-footer">
-        <p className="map-fineprint">Incorrect mapping may affect analysis accuracy.</p>
         <button type="button" onClick={() => commit('')} className="map-skip-link">Skip</button>
       </div>
     </div>
@@ -612,16 +616,7 @@ export default function Upload() {
   const [userMapping, setUserMapping] = useState({});
   const [reviewStatuses, setReviewStatuses] = useState({});
   const [autoExpanded, setAutoExpanded] = useState(false);
-  const [llmStatus, setLlmStatus] = useState(null);
   const [classification, setClassification] = useState(null);
-  const [processingResult, setProcessingResult] = useState(null);
-
-  useEffect(() => {
-    apiFetch('/api/llm-status')
-      .then((r) => r.json())
-      .then((data) => setLlmStatus(data))
-      .catch(() => {});
-  }, []);
 
   const handleDrop = async (acceptedFiles) => {
     setError('');
@@ -720,11 +715,7 @@ export default function Upload() {
 
   const proceedToSchemaDetection = async (fileIndex) => {
     const f = file[fileIndex];
-    console.log('[proceedToSchemaDetection] fileIndex:', fileIndex, 'file name:', f?.name, 'file.length:', file.length);
-    if (!f) {
-      console.warn('[proceedToSchemaDetection] No file at index', fileIndex, '- returning early.');
-      return;
-    }
+    if (!f) return;
     setActiveFileIndex(fileIndex);
     setLoading(true);
     setError('');
@@ -761,14 +752,10 @@ export default function Upload() {
       }
       setUserMapping(initial);
       setReviewStatuses(statuses);
-      console.log('[proceedToSchemaDetection] set userMapping with', Object.keys(initial).length, 'keys:', Object.keys(initial));
-      console.log('[proceedToSchemaDetection] reviewStatuses:', JSON.stringify(statuses));
-      console.log('[proceedToSchemaDetection] classifiedFiles[f.name]:', JSON.stringify(classifiedFiles[f.name]));
       setSchemaData(data);
       // Prefer per-file classifiedFiles entry; fall back to existing classification state
       // (single-file flow sets classification directly, not via classifiedFiles).
       const fileClassification = classifiedFiles[f.name] || classification;
-      console.log('[proceedToSchemaDetection] effective classification:', JSON.stringify(fileClassification));
       setClassification(fileClassification);
       setPhase('schema');
       setLoading(false);
@@ -778,13 +765,15 @@ export default function Upload() {
     }
   };
 
+  // Confirms the current file, then either chains straight into the next
+  // uploaded file's mapping (no return trip to the file list) or, once the
+  // last one is done, goes to the dashboard directly — there is no separate
+  // "done" screen to land on first. One "Continue" in the Files step starts
+  // this chain for however many files were uploaded; a single file is just a
+  // chain of one.
   const handleConfirm = async () => {
     const f = activeFileIndex != null ? file[activeFileIndex] : null;
-    console.log('[handleConfirm] activeFileIndex:', activeFileIndex, 'file.length:', file.length, 'file name:', f?.name, 'userMapping keys:', Object.keys(userMapping));
-    if (!f) {
-      console.warn('[handleConfirm] No file found — activeFileIndex is stale or file array is empty. Returning early.');
-      return;
-    }
+    if (!f) return;
     setLoading(true);
     setError('');
 
@@ -808,10 +797,21 @@ export default function Upload() {
         return;
       }
 
-      // Store result and show completion — no auto-navigation
-      setProcessingResult(data);
-      setPhase('processed');
-      setLoading(false);
+      const nextIndex = activeFileIndex + 1;
+      if (nextIndex < file.length) {
+        // proceedToSchemaDetection manages its own loading/error state —
+        // returning here instead of also touching `loading` avoids a flash
+        // between this call finishing and the next one starting.
+        await proceedToSchemaDetection(nextIndex);
+        return;
+      }
+
+      navigate('/dashboard', {
+        state: {
+          analytics: data.analytics, metrics: data.metrics,
+          bizHealth: data.bizHealth, widgetManifest: data.widgetManifest,
+        },
+      });
     } catch (err) {
       setError(err.message || 'Could not reach the server.');
       setLoading(false);
@@ -825,23 +825,14 @@ export default function Upload() {
     setReviewStatuses({});
     setAutoExpanded(false);
     setClassification(null);
-    setProcessingResult(null);
     setActiveFileIndex(null);
   };
-
-  const requiredNeedMapping = schemaData?.unmappedRequired?.length || 0;
-  const optionalUnmapped = schemaData?.unmappedOptional?.length || 0;
-  const priceMissing = schemaData?.priceFulfilled === false;
-  const ignoredColumns = schemaData?.ignored?.length || 0;
-  const productIdentityFulfilled = schemaData?.productIdentityFulfilled !== false;
-  const domainStatus = schemaData?.domainStatus || [];
 
   // Client-side canProceed: checks that userMapping covers all required categories.
   // Requirements depend on the dataset type — inventory files don't need quantity/date/price.
   const capabilities = classification?.capabilities || {};
   const isSales = !!capabilities.sales;
   const isInventory = !!capabilities.inventory;
-  const isInventoryOnly = isInventory && !isSales;
   const requiredCategories = getRequiredCategories(capabilities);
   const mappedCategories = new Set(Object.values(userMapping).filter(Boolean));
   // Product identity is satisfied by any identity field (brand, generic_name, etc.),
@@ -863,32 +854,6 @@ export default function Upload() {
     return !mappedCategories.has(cat);
   }).length;
 
-  // ---- DEBUG: trace canProceed blockers ----
-  console.log('[canProceed DEBUG] ========================================');
-  console.log('[canProceed DEBUG] classification:', JSON.stringify(classification));
-  console.log('[canProceed DEBUG] capabilities:', JSON.stringify(capabilities));
-  console.log('[canProceed DEBUG] isSales:', isSales, '| isInventory:', isInventory, '| isInventoryOnly:', isInventoryOnly);
-  console.log('[canProceed DEBUG] requiredCategories:', [...requiredCategories]);
-  console.log('[canProceed DEBUG] userMapping keys:', Object.keys(userMapping));
-  console.log('[canProceed DEBUG] userMapping values:', [...new Set(Object.values(userMapping).filter(Boolean))]);
-  console.log('[canProceed DEBUG] mappedCategories:', [...mappedCategories]);
-  console.log('[canProceed DEBUG] requiredSatisfied:', requiredSatisfied, '(needs:', [...requiredCategories], ')');
-  console.log('[canProceed DEBUG] PRICE_CATEGORIES:', [...PRICE_CATEGORIES]);
-  console.log('[canProceed DEBUG] priceClientSatisfied:', priceClientSatisfied);
-  console.log('[canProceed DEBUG] canProceed:', canProceed);
-  console.log('[canProceed DEBUG] requiredStillNeeded:', requiredStillNeeded);
-  console.log('[canProceed DEBUG] schemaData?.needsConfirmation:', schemaData?.needsConfirmation);
-  console.log('[canProceed DEBUG] schemaData?.columns count:', schemaData?.columns?.length);
-  if (schemaData?.columns) {
-    schemaData.columns.forEach(c => {
-      console.log('[canProceed DEBUG]   col:', c.rawHeader, '| tier:', c.tier, '| mappedTo:', c.mappedTo, '| ignored:', c.ignored);
-    });
-  }
-  console.log('[canProceed DEBUG] ========================================');
-
-  const llmUsed = schemaData?.llm?.used;
-  const llmSource = schemaData?.llm?.source;
-
   // ---- Tiered review derived values ----
   const columns = schemaData?.columns || [];
   // Helper: best confidence for a column
@@ -898,6 +863,30 @@ export default function Upload() {
   const autoColumns    = columns.filter(c => c.tier === 'auto' && !c.ignored);
   const reviewColumns  = columns.filter(c => c.tier === 'review' && !c.ignored && colConfidence(c) >= MIN_CONFIDENCE);
   const confirmColumns = columns.filter(c => (c.tier === 'confirm' || !c.tier) && !c.ignored && colConfidence(c) >= MIN_CONFIDENCE);
+
+  // A column scoring below MIN_CONFIDENCE never becomes a card at all — by
+  // design, so a real upload isn't blocked resolving every weak guess. That's
+  // safe for most fields, but not the transaction date: the server's own gate
+  // for sales capability (hasTransactionCapability) is a hard boolean, mapped
+  // or not, nothing in between — so a file whose date column has an odd
+  // enough header could confirm with sales silently, invisibly switched off.
+  //
+  // Checking the DETECTOR'S own category isn't enough to catch this: a real
+  // case ("Txn Dt") fuzzy-matched harder to "txn id" (67%) than to anything
+  // date-related, so schemaDetector never recorded a transaction_date/date
+  // detection for it AT ALL — there was nothing low-confidence to surface,
+  // the column was simply never considered a date candidate in the first
+  // place. This checks the raw header text directly instead, scoped to only
+  // the columns invisible to the whole review queue (below MIN_CONFIDENCE) —
+  // a visible pending card is already covered by the messages below.
+  const dateAlreadyMapped = Object.values(userMapping).some(
+    (cat) => cat === 'transaction_date' || cat === 'date'
+  );
+  const DATE_HEADER_HINT = /\b(date|dt|txn ?dt)\b/i;
+  const hiddenDateCandidate = dateAlreadyMapped ? null : columns.find((c) => {
+    if (c.ignored || colConfidence(c) >= MIN_CONFIDENCE) return false;
+    return DATE_HEADER_HINT.test(c.normalizedHeader || c.rawHeader || '');
+  });
 
   // Review columns sorted by ascending confidence (least certain first)
   const sortedReviewColumns = [...reviewColumns].sort((a, b) => {
@@ -962,65 +951,43 @@ export default function Upload() {
     setReviewStatuses((prev) => ({ ...prev, [rawHeader]: status }));
   };
 
+  const STEP_LABELS = ['Upload', 'Files', 'Map'];
+  const stepIndex = { upload: 0, capabilities: 1, schema: 2 }[phase] ?? 0;
+  const isWideCard = phase === 'schema';
+
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
-      <div className="mx-auto max-w-[var(--max-width)] px-7 py-16">
+    <div className="upload-shell">
+      <div className={`upload-card ${isWideCard ? 'upload-card--wide' : ''}`}>
+        <Link to="/dashboard" className="upload-card__close" aria-label="Close and return to dashboard">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </Link>
+
+        <ol className="upload-steps">
+          {STEP_LABELS.map((label, i) => (
+            <li key={label} aria-current={i === stepIndex ? 'step' : undefined} data-done={i < stepIndex ? 'true' : undefined}>
+              <span>{label}</span>
+            </li>
+          ))}
+        </ol>
 
         {phase === 'upload' && (
           <>
-            <div className="mb-10">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-ink)] text-[10px] font-bold text-primary-foreground font-mono">1</span>
-                <p className="text-xs font-semibold tracking-widest text-[var(--color-ink-faint)]">UPLOAD</p>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-semibold text-[var(--color-ink)]">Upload your spreadsheet</h1>
-              <p className="mt-3 text-base text-[var(--color-ink-soft)] max-w-prose">
-                Upload a sales or inventory spreadsheet to begin the analysis. We support .xlsx and .csv files from any pharmacy system.
-              </p>
-              {llmStatus && (
-                <div className="mt-4 inline-flex items-center gap-2 border px-3 py-1 text-[11px] font-semibold tracking-wide"
-                  style={llmStatus.available
-                    ? { borderColor: '#d8b4fe', background: '#faf5ff', color: '#7c3aed' }
-                    : { borderColor: '#e5e7eb', background: '#f9fafb', color: '#9ca3af' }}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${llmStatus.available ? 'bg-purple-500' : 'bg-gray-300'}`} />
-                  {llmStatus.available
-                    ? `AI Mapping: ${llmStatus.config?.model || 'enabled'}`
-                    : 'AI Mapping: not configured (using rules)'}
-                </div>
-              )}
+            <h1 className="upload-title">Upload your spreadsheet</h1>
+            <p className="upload-sub">Excel or CSV, from any pharmacy system.</p>
+
+            <div className="mt-6">
+              <FileDropZone file={file} onDrop={handleDrop} onRemove={handleRemoveFile} />
             </div>
 
-            <div className="max-w-xl">
-              <FileDropZone
-                file={file}
-                onDrop={handleDrop}
-                onRemove={handleRemoveFile}
-              />
-            </div>
+            {error && <p className="upload-status" data-tone="danger">{error}</p>}
 
-            {error && (
-              <div className="mt-6 max-w-xl border-l-2 border-[var(--color-danger)] bg-[var(--color-danger-tint)] px-4 py-3 text-sm text-[var(--color-danger)]">
-                {error}
-              </div>
-            )}
-
-            <div className="mt-8 max-w-xl">
-              {!file || !file.length ? (
-                <p className="text-sm text-[var(--color-ink-faint)]">Upload a file to continue.</p>
-              ) : (
-                <button
-                  onClick={handleDetectSchema}
-                  disabled={loading}
-                  className="inline-flex items-center gap-2 bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      Detecting columns...
-                    </>
-                  ) : (
-                    'Detect Columns'
-                  )}
+            <div className="mt-6">
+              {file && file.length > 0 && (
+                <button onClick={handleDetectSchema} disabled={loading} className="btn btn-primary auth__submit">
+                  {loading ? 'Reading file…' : 'Continue'}
                 </button>
               )}
             </div>
@@ -1035,245 +1002,118 @@ export default function Upload() {
           });
 
           return (<>
-            <div className="mb-10">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-ink)] text-[10px] font-bold text-primary-foreground font-mono">2</span>
-                <p className="text-xs font-semibold tracking-widest text-[var(--color-ink-faint)]">FILES DETECTED</p>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-semibold text-[var(--color-ink)]">
-                {fileNames.length} file{fileNames.length !== 1 ? 's' : ''} uploaded
-              </h1>
-              <p className="mt-3 text-base text-[var(--color-ink-soft)] max-w-prose">
-                Each file has been analyzed. Select a file to process through column mapping.
-              </p>
-            </div>
+            <h1 className="upload-title">
+              {fileNames.length} file{fileNames.length !== 1 ? 's' : ''} ready
+            </h1>
+            <p className="upload-sub">We'll walk through each file's columns, one at a time.</p>
 
-            <div className="max-w-2xl">
-              {/* File grid */}
-              <div className="space-y-1 mb-12">
-                {fileNames.map((name, idx) => {
-                  const c = classifiedFiles[name];
-                  const caps = c?.capabilities || {};
-                  const activeCaps = Object.entries(caps).filter(([,v]) => v).map(([k]) => k);
+            <div className="upload-files mt-5">
+              {fileNames.map((name, idx) => {
+                const c = classifiedFiles[name];
+                const caps = c?.capabilities || {};
+                const activeCaps = Object.entries(caps).filter(([, v]) => v).map(([k]) => k);
+                const fileArrayIndex = file.findIndex((f) => f.name === name);
 
-                  return (
-                    <div key={name} className="group flex items-center justify-between gap-4 border-b border-[var(--color-line)] py-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center bg-[var(--color-ink)] text-primary-foreground text-[10px] font-bold font-mono tracking-wider">
-                          {name.split('.').pop().toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-[var(--color-ink)] truncate">{name}</p>
-                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                            <span className="text-xs text-[var(--color-ink-faint)]">{c?.rowCount || '?'} rows</span>
-                            {activeCaps.map(cap => (
-                              <span key={cap} className="inline-flex items-center border border-[var(--color-line)] px-1.5 py-px text-[10px] font-medium text-[var(--color-ink-faint)]">
-                                {cap}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
+                return (
+                  <div key={name} className="upload-file" style={{ '--i': idx }}>
+                    <span className="upload-file__icon" aria-hidden="true">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="8" y1="13" x2="16" y2="13" />
+                        <line x1="8" y1="17" x2="13" y2="17" />
+                      </svg>
+                    </span>
+
+                    <div className="upload-file__body">
+                      <p className="upload-file__name">{name}</p>
+                      <div className="upload-file__meta">
+                        <span className="upload-file__rows">{c?.rowCount || '?'} rows</span>
+                        {activeCaps.map((cap) => (
+                          <span key={cap} className="upload-file__tag">{cap}</span>
+                        ))}
                       </div>
-                      <button
-                        onClick={() => proceedToSchemaDetection(idx)}
-                        disabled={loading}
-                        className="shrink-0 inline-flex items-center gap-1.5 bg-[var(--color-primary)] px-5 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-[var(--color-primary-dark)] disabled:opacity-50"
-                      >
-                        {loading && activeFileIndex === idx ? (
-                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        ) : null}
-                        Process
-                      </button>
                     </div>
-                  );
-                })}
-              </div>
 
-              {/* Add more files — re-show dropzone */}
-              <div className="mb-10">
-                <FileDropZone
-                  file={file}
-                  onDrop={handleDrop}
-                  onRemove={handleRemoveFile}
-                />
-              </div>
+                    <span className="upload-file__ready" aria-hidden="true">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    </span>
 
-              {allFalse && (
-                <div className="border-l-2 border-[var(--color-ink-faint)] bg-[var(--color-bg-alt)] px-4 py-6 mb-8">
-                  <p className="font-semibold text-[var(--color-ink-soft)] mb-1">No dashboards available</p>
-                  <p className="text-sm text-[var(--color-ink-faint)]">These files don't match any known dataset patterns.</p>
-                </div>
-              )}
+                    {fileArrayIndex !== -1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(fileArrayIndex)}
+                        className="upload-file__remove"
+                        aria-label={`Remove ${name}`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
-            {error && (
-              <div className="mt-6 max-w-xl border-l-2 border-[var(--color-danger)] bg-[var(--color-danger-tint)] px-4 py-3 text-sm text-[var(--color-danger)]">
-                {error}
-              </div>
+            {allFalse && (
+              <p className="upload-status mt-4">No dashboards match these files yet — check that the columns line up with a pharmacy sales or stock export.</p>
             )}
 
-            {/* Back button */}
-            <div className="mt-10 max-w-xl">
-              <button onClick={handleBackToUpload} className="inline-flex items-center gap-2 border-b-2 border-[var(--color-line)] pb-1 text-sm font-semibold text-[var(--color-ink-soft)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]">
-                Start Over
+            {error && <p className="upload-status" data-tone="danger">{error}</p>}
+
+            <div className="mt-6 flex items-center gap-4">
+              <button
+                onClick={() => proceedToSchemaDetection(0)}
+                disabled={loading || fileNames.length === 0}
+                className="btn btn-primary"
+              >
+                {loading ? 'Reading file…' : 'Continue'}
+                {!loading && (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            <div className="mt-5">
+              <FileDropZone file={file} onDrop={handleDrop} onRemove={handleRemoveFile} compact />
+            </div>
+
+            <div className="mt-6">
+              <button onClick={handleBackToUpload} className="text-sm font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] transition">
+                Start over
               </button>
             </div>
           </>);
         })()}
 
-        {phase === 'processed' && processingResult && (
-          <>
-            <div className="mb-10">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-ink)] text-[10px] font-bold text-primary-foreground font-mono">4</span>
-                <p className="text-xs font-semibold tracking-widest text-[var(--color-ink-faint)]">COMPLETE</p>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-semibold text-[var(--color-ink)]">Processing complete</h1>
-              <p className="mt-3 text-base text-[var(--color-ink-soft)] max-w-prose">
-                Your dataset has been processed and registered. Choose what to do next.
-              </p>
-            </div>
-
-            <div className="max-w-xl">
-              {/* Summary card */}
-              <div className="border border-[var(--color-line)] p-6 mb-8">
-                <div className="flex items-center gap-3 mb-5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-primary)]"><polyline points="20 6 9 17 4 12" /></svg>
-                  <div>
-                    <p className="text-sm font-semibold text-[var(--color-ink)]">Dataset registered</p>
-                    <p className="text-xs text-[var(--color-ink-faint)]">
-                      {processingResult.normalizedRowCount || processingResult.persistedRows || '?'} records stored
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-xs mb-4">
-                  <div className="bg-[var(--color-bg-alt)] px-3 py-2">
-                    <span className="text-[var(--color-ink-faint)]">File</span>
-                    <p className="font-medium text-[var(--color-ink)]">{processingResult.fileName || (activeFileIndex != null && file[activeFileIndex] ? file[activeFileIndex].name : '')}</p>
-                  </div>
-                  <div className="bg-[var(--color-bg-alt)] px-3 py-2">
-                    <span className="text-[var(--color-ink-faint)]">Status</span>
-                    <p className="font-medium text-[var(--color-ink)]">Processed</p>
-                  </div>
-                </div>
-
-                {/* Fact Store Summary */}
-                {processingResult.factStore && (
-                  <div className="pt-4 border-t border-[var(--color-line)]">
-                    <p className="text-xs font-semibold text-[var(--color-ink-faint)] mb-2">Multi-Dataset Store</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-[var(--color-bg-alt)] px-3 py-2 text-center">
-                        <p className="text-lg font-bold text-[var(--color-ink)]">{processingResult.factStore.FactSales || 0}</p>
-                        <p className="text-[10px] text-[var(--color-ink-faint)]">FactSales</p>
-                      </div>
-                      <div className="bg-[var(--color-bg-alt)] px-3 py-2 text-center">
-                        <p className="text-lg font-bold text-[var(--color-ink)]">{processingResult.factStore.FactInventory || 0}</p>
-                        <p className="text-[10px] text-[var(--color-ink-faint)]">FactInventory</p>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-[10px] text-[var(--color-ink-faint)]">
-                      Upload more files to unlock additional widgets
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => navigate('/dashboard', { state: { analytics: processingResult.analytics, metrics: processingResult.metrics, bizHealth: processingResult.bizHealth, widgetManifest: processingResult.widgetManifest } })}
-                  className="bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-[var(--color-primary-dark)]"
-                >
-                  View Dashboard
-                </button>
-                <button
-                  onClick={() => { setPhase('capabilities'); setProcessingResult(null); setActiveFileIndex(null); setSchemaData(null); setUserMapping({}); setReviewStatuses({}); setAutoExpanded(false); setClassification(null); }}
-                  className="border border-[var(--color-ink)] px-8 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-ink)] hover:text-primary-foreground"
-                >
-                  Process Another File
-                </button>
-                <button
-                  onClick={handleBackToUpload}
-                  className="border-b-2 border-[var(--color-line)] pb-1 text-sm font-semibold text-[var(--color-ink-soft)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
-                >
-                  + Upload Another File
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
         {phase === 'schema' && schemaData && (
           <>
-            {activeFileIndex != null && file[activeFileIndex] && (
-              <div className="mb-6 text-xs font-mono text-[var(--color-ink-faint)]">
-                {file[activeFileIndex].name}
-              </div>
-            )}
+            <h1 className="upload-title">Map your columns</h1>
+            <p className="upload-sub">
+              {file.length > 1 ? `File ${activeFileIndex + 1} of ${file.length} — ` : ''}
+              {schemaData.fileName} · {schemaData.rowCount} rows
+            </p>
 
-            <div className="mb-10">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-ink)] text-[10px] font-bold text-primary-foreground font-mono">3</span>
-                <p className="text-xs font-semibold tracking-widest text-[var(--color-ink-faint)]">REVIEW MAPPING</p>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-semibold text-[var(--color-ink)]">Column detection results</h1>
-              <p className="mt-3 text-base text-[var(--color-ink-soft)] max-w-prose">
-                {canProceed
-                  ? `All required fields are mapped. ${optionalUnmapped > 0 ? `${optionalUnmapped} optional column${optionalUnmapped > 1 ? 's' : ''} unmapped — you can assign them now or skip.` : 'Review and confirm to continue.'}`
-                  : `${requiredStillNeeded > 0 ? `${requiredStillNeeded} required column${requiredStillNeeded > 1 ? 's' : ''} still need${requiredStillNeeded === 1 ? 's' : ''} mapping.` : ''}`}
-              </p>
-
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                {schemaData.savedMapping && (
-                  <span className="inline-flex items-center gap-1.5 border border-[var(--color-line)] px-3 py-1 text-[11px] font-medium text-[var(--color-ink-faint)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                    Saved mapping loaded
-                  </span>
-                )}
-                {productIdentityFulfilled && schemaData.productIdentityFulfilled && (
-                  <span className="inline-flex items-center gap-1.5 border border-[var(--color-line)] px-3 py-1 text-[11px] font-medium text-[var(--color-ink-faint)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                    Flexible product identity
-                  </span>
-                )}
-                {llmUsed && (
-                  <span className="inline-flex items-center gap-1.5 border border-[var(--color-line)] px-3 py-1 text-[11px] font-medium text-[var(--color-ink-faint)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    AI mapping ({llmSource === 'cache' ? 'cached' : llmSource})
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* File info */}
-            <div className="mb-4 flex flex-wrap items-center gap-4 text-sm font-mono">
-              <span className="font-semibold text-[var(--color-ink)]">{schemaData.fileName}</span>
-              <span className="text-[var(--color-ink-faint)]">{schemaData.rowCount} rows</span>
-              <span className="text-[var(--color-ink-faint)]">Sheet: {schemaData.sheetName}</span>
-            </div>
-
-            {/* Progress — columns needing your input */}
-            {(reviewColumns.length + confirmColumns.length) > 0 && (
-              <div className="mb-8 max-w-2xl">
-                <div className="mb-2 flex items-center justify-between text-xs font-medium text-[var(--color-ink-faint)]">
-                  <span>
-                    {confirmedCount + skippedCount} of {reviewColumns.length + confirmColumns.length} resolved
-                  </span>
-                  {autoColumns.length > 0 && <span>{autoColumns.length} auto-mapped separately</span>}
+            {(reviewColumns.length + confirmColumns.length) > 0 && (() => {
+              const totalToReview = reviewColumns.length + confirmColumns.length;
+              const doneCount = confirmedCount + skippedCount;
+              const pct = Math.round((doneCount / totalToReview) * 100);
+              return (
+                <div className="mt-5">
+                  <p className="mb-1.5 text-xs font-medium text-[var(--color-ink-faint)]">{pct}% reviewed</p>
+                  <div className="map-progress-track">
+                    <div className="map-progress-fill" style={{ '--progress': doneCount / totalToReview }} />
+                  </div>
                 </div>
-                <div className="map-progress-track">
-                  <div
-                    className="map-progress-fill"
-                    style={{ '--progress': (confirmedCount + skippedCount) / (reviewColumns.length + confirmColumns.length) }}
-                  />
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
-            {/* ---- Column Review — one card at a time ---- */}
-            <div className="max-w-xl">
-              {/* Auto-accepted columns (collapsed summary) */}
+            <div className="mt-5">
               {autoColumns.length > 0 && (
                 <AutoAcceptedPanel
                   columns={autoColumns}
@@ -1302,14 +1142,27 @@ export default function Upload() {
               ) : null}
             </div>
 
-            {/* Phase 1: Ignored columns */}
+            {hiddenDateCandidate && (
+              <div className="upload-status" data-tone="danger">
+                <p>
+                  "{hiddenDateCandidate.rawHeader}" looks like it might name a date, but we didn't
+                  recognize it as one, so it wasn't shown above. Without a date column, revenue and
+                  trend figures won't be available for this file.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleCardResolve(hiddenDateCandidate.rawHeader, 'transaction_date')}
+                  className="mt-1.5 text-sm font-semibold text-[var(--color-danger)] underline underline-offset-2 hover:no-underline transition"
+                >
+                  Map "{hiddenDateCandidate.rawHeader}" as the transaction date
+                </button>
+              </div>
+            )}
+
             {schemaData.ignored && schemaData.ignored.length > 0 && (
-              <div className="mt-8 max-w-2xl border-l-2 border-[var(--color-ink-faint)] pl-4 py-2">
-                <h3 className="text-sm font-semibold text-[var(--color-ink-soft)] mb-1">
-                  Excluded from analysis ({schemaData.ignored.length})
-                </h3>
-                <p className="text-xs text-[var(--color-ink-faint)] mb-3">
-                  Non-business data (notes, contact info, audit fields) — attached to the dataset but excluded automatically.
+              <div className="mt-6 border-l-2 border-[var(--color-line-strong)] pl-3.5 py-1">
+                <p className="text-xs font-semibold text-[var(--color-ink-soft)] mb-1.5">
+                  Excluded ({schemaData.ignored.length})
                 </p>
                 <div className="space-y-1">
                   {schemaData.ignored.map((col) => (
@@ -1322,91 +1175,38 @@ export default function Upload() {
               </div>
             )}
 
-            {/* Domain satisfaction indicators */}
-            {domainStatus.length > 0 && (
-              <div className="mt-6 max-w-2xl flex flex-wrap items-center gap-2">
-                {(isInventory
-                  ? domainStatus.filter(d => d.domain !== 'sales_quantity' && d.domain !== 'sales_date')
-                  : domainStatus
-                ).map((d) => (
-                  <span
-                    key={d.domain}
-                    className={`inline-flex items-center gap-1.5 border px-3 py-1 text-[11px] font-semibold ${
-                      d.satisfied
-                        ? 'border-[var(--color-line)] text-[var(--color-ink-soft)]'
-                        : 'border-[var(--color-danger-tint)] bg-[var(--color-danger-tint)] text-[var(--color-danger)]'
-                    }`}
-                  >
-                    <span className={`h-1.5 w-1.5 rounded-full ${d.satisfied ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-danger)]'}`} />
-                    {d.label}
-                    {d.satisfied ? '' : ' \u2717'}
-                  </span>
-                ))}
-                <span className={`inline-flex items-center gap-1.5 border px-3 py-1 text-[11px] font-semibold ${
-                  priceClientSatisfied
-                    ? 'border-[var(--color-line)] text-[var(--color-ink-soft)]'
-                    : 'border-[var(--color-danger-tint)] bg-[var(--color-danger-tint)] text-[var(--color-danger)]'
-                }`}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${priceClientSatisfied ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-danger)]'}`} />
-                  Price / Revenue
-                  {priceClientSatisfied ? '' : ' \u2717'}
-                </span>
-              </div>
-            )}
-
             {!mappedCategories.has('selling_price') && !mappedCategories.has('revenue') && isSales && requiredStillNeeded === 0 && (
-              <div className="mt-6 max-w-2xl border-l-2 border-[var(--color-accent)] pl-4 py-2">
-                <h3 className="text-sm font-semibold text-[var(--color-ink)] mb-1">Tip: Add a price field</h3>
-                <p className="text-xs text-[var(--color-ink-soft)]">
-                  Sales dashboards work best with price data. Revenue, margin, and profit metrics will show errors without it — but volume-based metrics will still work.
-                </p>
-              </div>
+              <p className="upload-status" data-tone="accent">Add a price column to also see revenue and margin.</p>
             )}
 
-            {error && (
-              <div className="mt-6 max-w-2xl border-l-2 border-[var(--color-danger)] bg-[var(--color-danger-tint)] px-4 py-3 text-sm text-[var(--color-danger)]">
-                {error}
-              </div>
+            {error && <p className="upload-status" data-tone="danger">{error}</p>}
+
+            {!canProceed && requiredStillNeeded > 0 && (
+              <p className="upload-status" data-tone="danger">
+                Map {requiredStillNeeded} more required column{requiredStillNeeded === 1 ? '' : 's'} to continue.
+              </p>
+            )}
+            {canProceed && !allResolved && (
+              <p className="upload-status" data-tone="accent">Finish reviewing the columns above to continue.</p>
             )}
 
-            {/* Actions */}
-            <div className="mt-10 max-w-2xl space-y-4">
-              {canProceed && allResolved ? (
-                <div className="border-l-2 border-[var(--color-primary)] pl-4 py-1 text-sm text-[var(--color-ink)]">
-                  All columns are mapped. Ready to import.
-                </div>
-              ) : canProceed && !allResolved ? (
-                <div className="border-l-2 border-[var(--color-accent)] pl-4 py-1 text-sm text-[var(--color-ink-soft)]">
-                  Review the remaining columns above before confirming.
-                </div>
-              ) : null}
-              {!canProceed && (
-                <div className="border-l-2 border-[var(--color-danger)] pl-4 py-1 text-sm text-[var(--color-danger)]">
-                  {requiredStillNeeded > 0 && 'Map all required fields to proceed.'}
-                </div>
-              )}
-              <div className="flex flex-wrap items-center gap-4">
-                <button
-                  onClick={handleBackToUpload}
-                  className="border-b-2 border-[var(--color-line)] pb-1 text-sm font-semibold text-[var(--color-ink-soft)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handleConfirm}
-                  disabled={loading || !canProceed || !allResolved}
-                  className="inline-flex items-center gap-2 bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      Processing...
-                    </>
-                  ) : (
-                    'Confirm & Analyze'
-                  )}
-                </button>
-              </div>
+            <div className="mt-6 flex items-center gap-4">
+              <button
+                onClick={handleBackToUpload}
+                className="text-sm font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] transition"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={loading || !canProceed || !allResolved}
+                className="btn btn-primary auth__submit"
+                style={{ width: 'auto', flex: '1 1 auto' }}
+              >
+                {loading
+                  ? 'Processing…'
+                  : activeFileIndex + 1 < file.length ? 'Confirm & continue' : 'Confirm & analyze'}
+              </button>
             </div>
           </>
         )}

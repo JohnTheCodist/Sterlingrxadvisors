@@ -92,6 +92,54 @@ async function getDataScope(organizationId, { datasetId } = {}) {
 }
 
 /**
+ * Every file this organization has ever uploaded, whatever it contains —
+ * the plain answer to "how many files do I have" / "what have I uploaded".
+ *
+ * getDataScope above answers a different, narrower question: it counts
+ * datasets that produced SALE-table rows, so it can tell the Advisor whether
+ * a sales figure spans one file or several. That made it silently blind to
+ * every stock, expiry or supplier-only upload — inventory rows carry no
+ * transaction date and never reach `sale` at all — and it goes fully silent
+ * whenever only one sales-capable file exists, even if three other files sit
+ * right next to it in the registry. A pharmacy that had uploaded a sales
+ * file plus three stock/expiry files asked "how many files do I have" and
+ * was told "1", because that was the only number anything in this codebase
+ * was computing.
+ *
+ * Reads dataset_registry directly instead — the actual record of every
+ * upload — so a file counts here whether or not it was ever sales-shaped.
+ */
+async function getUploadHistory(organizationId) {
+  assertOrgId(organizationId);
+  const datasetRegistry = require('./datasetRegistry');
+  const all = await datasetRegistry.list(organizationId, { limit: 200 });
+
+  const files = all.map((d) => ({
+    filename: d.filename,
+    uploadedAt: d.uploadTimestamp,
+    status: d.processingStatus,
+    rowCount: d.rowCount,
+    // Named capabilities only, not the whole false-heavy object — "sales,
+    // expiry" reads as an answer; "{sales:true,inventory:false,...}" reads as
+    // a bug report.
+    capabilities: Object.entries(d.capabilities || {}).filter(([, v]) => v).map(([k]) => k),
+  }));
+
+  const processed = files.filter((f) => f.status === 'processed');
+  const unprocessed = files.filter((f) => f.status !== 'processed');
+
+  return {
+    totalFiles: files.length,
+    processedFiles: processed.length,
+    files,
+    ...(unprocessed.length > 0 && {
+      note: `${unprocessed.length} of these never finished processing (status: `
+        + `${[...new Set(unprocessed.map((f) => f.status))].join(', ')}) and hold no usable data.`,
+    }),
+  };
+}
+
+/**
  * Sales-side counterpart to getScopedRecords (below, built for the
  * fact-store-backed inventory tools) — resolves which dataset_id counts as
  * "current" for the star-schema (sale table) tools. Uploads accumulate sale
@@ -1212,6 +1260,7 @@ async function getExecutiveBrief(organizationId) {
 
 module.exports = {
   getDataScope,
+  getUploadHistory,
   getWeatherOutlook,
   getDecisionOpportunities,
   getRecommendations,

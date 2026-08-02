@@ -1,17 +1,8 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../lib/apiClient.js';
-
-// Nigeria's 36 states + FCT. This is the only input the weather feature
-// needs — deliberately independent of spreadsheet column mapping (branch/
-// warehouse columns aren't reliably present in independent-pharmacy sales
-// exports), so the pharmacy owner just picks it once, here.
-const NIGERIAN_STATES = [
-  'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue',
-  'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu',
-  'Federal Capital Territory', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano',
-  'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun',
-  'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara',
-];
+// Signup collects this too, so the list lives in one module both import —
+// see lib/nigerianStates.js for why a second copy would be a silent bug.
+import { NIGERIAN_STATES } from '../lib/nigerianStates.js';
 
 export default function SettingsPanel() {
   const [state, setState] = useState('');

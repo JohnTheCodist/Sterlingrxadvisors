@@ -53,9 +53,32 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
 
-  /* Type — 2 fonts max */
+  /* Type — display + body + one numeral outlier (the 2+1 ceiling).
+     Geist carries headings and KPI figures; Inter carries running text and
+     UI labels; IBM Plex Mono tags one role only — tabular numerals — so
+     columns of naira align. Before this, --font-display pointed at Inter and
+     a single face did all three jobs, which is what made the page read
+     un-designed however well the data was laid out. */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Named 4-point spacing scale. The page previously reached straight for
+     Tailwind's raw utilities (p-5, gap-6), so rhythm lived in whichever
+     number was typed at each call site rather than in the system. */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs:  0.75rem;
+  --space-sm:  1rem;
+  --space-md:  1.5rem;
+  --space-lg:  2rem;
+  --space-xl:  3rem;
+  --space-2xl: 4.5rem;
+
+  /* Named easings — never the browser default `ease`. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-short: 160ms;
+  --dur-mid: 240ms;
 
   /* Layout */
   --max-width: 1100px;
@@ -76,7 +99,30 @@
   --color-danger-tint: oklch(0.95 0.01 25);
   --color-line: var(--border);
   --color-line-strong: oklch(0.85 0.01 250);
-  --font-display: var(--font-body);
+  /* Keyboard focus ring. Deliberately NOT --color-primary: a ring drawn in
+     the same hue as the control it surrounds disappears the moment that
+     control is itself primary-filled. This sits darker and bluer so it holds
+     ≥3:1 against both the field and the page it's drawn on. */
+  --color-focus: oklch(0.45 0.11 235);
+  /* Dark promo surface for the auth panel. Deep teal rather than the
+     reference's purple — the panel had to carry this product's own hue, not
+     the one it borrowed its shape from. Ink and the two raised values are
+     declared alongside it so a surface flip never has to guess its own
+     foreground. */
+  --color-panel-deep: oklch(0.26 0.045 194);
+  --color-panel-ink: oklch(0.97 0.008 190);
+  --color-panel-dim: oklch(0.74 0.03 190);
+  --color-panel-raised: oklch(0.31 0.045 194);
+  --color-panel-line: oklch(0.38 0.04 194);
+  /* Tour scrim. Carries the page's cool hue rather than neutral black, so
+     dimming reads as the same surface turned down instead of a grey sheet
+     laid over it. */
+  --color-tour-scrim: oklch(0.21 0.02 250 / 0.62);
+  /* Was `var(--font-body)` — display and body were the same face, so nothing
+     on the page carried a second typographic register. Geist reads tighter
+     and more geometric than Inter at heading sizes, which is what lets a
+     KPI figure sit next to its label and read as a different kind of thing. */
+  --font-display: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* ---- Tailwind v4 Theme Bridge ---------------------------------------- */
@@ -141,17 +187,21 @@ button {
   font-family: inherit;
 }
 
+/* Headings pointed at --font-body directly, which is why the display token
+   had no effect anywhere on the page — the pairing existed in the tokens and
+   nowhere in the render. Tracking tightens as size grows, which is what makes
+   Geist read as a display face rather than a large body face. */
 h1, h2, h3, h4 {
-  font-family: var(--font-body);
+  font-family: var(--font-display);
   color: var(--foreground);
   margin: 0;
   line-height: 1.12;
   font-weight: 600;
 }
 
-h1 { font-size: clamp(2.4rem, 4.4vw, 3.8rem); letter-spacing: -0.01em; }
-h2 { font-size: clamp(1.7rem, 2.8vw, 2.4rem); letter-spacing: -0.01em; }
-h3 { font-size: 1.25rem; }
+h1 { font-size: clamp(2.4rem, 4.4vw, 3.8rem); letter-spacing: -0.028em; }
+h2 { font-size: clamp(1.7rem, 2.8vw, 2.4rem); letter-spacing: -0.022em; }
+h3 { font-size: 1.25rem; letter-spacing: -0.014em; }
 
 p { margin: 0; }
 
@@ -1445,19 +1495,53 @@ p { margin: 0; }
 
 .page-header .section-head { margin: 0 auto; }
 
-/* ---- Sidebar --------------------------------------------------------- */
+/* ---- Sidebar ----------------------------------------------------------
+   The rail used to be a near-black slab (bg --foreground) against an
+   off-white page. Two surfaces that far apart read as two applications
+   bolted together, and the contrast pulled the eye to the navigation —
+   the one part of the page carrying no information.
+
+   Now the rail sits one elevation step below the page rather than
+   opposite it: same hue family, 2% darker, separated by a hairline
+   instead of a colour block. The eye lands on the data; the navigation
+   is available without asking to be looked at.
+
+   These tokens are scoped to .dashboard-sidebar, so the rail carries its
+   own ink ramp without leaking into the page's global tokens. */
 .dashboard-sidebar {
-  --sidebar-ink: oklch(0.78 0.015 250);
-  --sidebar-ink-dim: oklch(0.72 0.01 250);
-  --sidebar-ink-bright: oklch(0.95 0.005 190);
-  --sidebar-ink-hover: oklch(0.92 0.01 190);
+  /* Surface — one step below the page, never opposite it. */
+  --sidebar-surface: var(--muted);
+  /* Interactive states, tinted toward ink rather than white-alpha, which
+     only ever worked because the slab underneath was dark. */
+  --sidebar-active-bg: oklch(0.925 0.008 240);
+  --sidebar-hover-bg: oklch(0.948 0.006 240);
+  /* Ink ramp, re-derived for a light surface. Values step ~10% lightness
+     apart so the three tiers stay distinguishable at 12–14px. */
+  --sidebar-ink: oklch(0.46 0.017 250);
+  /* 0.58 measured 3.87:1 against the rail — under AA, and this token carries
+     the Sign out control, not just decorative captions. Darkened until it
+     clears 4.5:1 with margin. */
+  --sidebar-ink-dim: oklch(0.5 0.015 250);
+  --sidebar-ink-bright: oklch(0.24 0.021 250);
+  --sidebar-ink-hover: oklch(0.3 0.02 250);
+
+  background: var(--sidebar-surface);
 }
+
 .dashboard-sidebar nav::-webkit-scrollbar { width: 4px; }
 .dashboard-sidebar nav::-webkit-scrollbar-track { background: transparent; }
-.dashboard-sidebar nav::-webkit-scrollbar-thumb { background: oklch(0.92 0.006 250 / 0.15); border-radius: 2px; }
+.dashboard-sidebar nav::-webkit-scrollbar-thumb {
+  /* Was a white wash for the dark slab; on a light rail it has to be ink. */
+  background: oklch(0.21 0.02 250 / 0.16);
+  border-radius: 2px;
+}
+.dashboard-sidebar nav:hover::-webkit-scrollbar-thumb { background: oklch(0.21 0.02 250 / 0.26); }
 
 @media (max-width: 1023px) {
-  .dashboard-sidebar { box-shadow: 0 0 0 1px oklch(0.92 0.006 250 / 0.08), 8px 0 40px oklch(0 0 0 / 0.3); }
+  /* Off-canvas on mobile, so it does need to read as a raised layer — but
+     with the tinted whisper shadow the rest of the app uses, not the heavy
+     0.3-alpha black drop the dark slab needed to separate itself. */
+  .dashboard-sidebar { box-shadow: var(--shadow-float); }
 }
 
 /* ---- Generic --------------------------------------------------------- */
@@ -1612,13 +1696,6 @@ p { margin: 0; }
   color: var(--muted-foreground);
 }
 .map-btn--skip:hover { background: var(--muted); color: var(--foreground); }
-
-.map-fineprint {
-  margin-top: 12px;
-  font-size: 0.72rem;
-  color: var(--muted-foreground);
-  line-height: 1.5;
-}
 
 .map-resolved-row {
   display: flex;
@@ -1826,10 +1903,12 @@ p { margin: 0; }
   margin-top: 14px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  /* Was space-between, paired with a fineprint sentence on the left ("may
+     affect analysis accuracy") that read as hand-holding once the card
+     itself already asks a direct question — cut, leaving Skip as the only
+     control here. */
+  justify-content: flex-end;
 }
-.map-card-footer .map-fineprint { margin-top: 0; }
 
 .map-skip-link {
   font-size: 0.78rem;
@@ -1852,4 +1931,1130 @@ p { margin: 0; }
     transform: none !important;
   }
   .map-btn:hover, .map-btn:active { transform: none; }
+}
+
+/* ============================================================
+   Hallmark · genre: modern-minimal · macrostructure: Workbench (app page)
+   theme: preserved — existing OKLCH teal + Naira gold (pre-flight: palette preserved)
+   display: Geist · body: Inter · outlier: IBM Plex Mono (numerals only)
+   nav: N3 side-rail (kept) · enrichment: none — the data is the content
+   axes: light / geometric-sans / cool-teal · studied: no
+   ============================================================ */
+
+/* ---- KPI card ---------------------------------------------------------
+   Replaces the uniform rounded-box grid. The figure leads; the container
+   recedes to one hairline under the label, so a row of these reads as a
+   table of facts rather than a tray of identical boxes. */
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  padding: var(--space-sm) 0 var(--space-xs);
+  background: transparent;
+  border: 0;
+  min-width: 0;
+}
+
+.kpi-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  padding-bottom: var(--space-2xs);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.kpi-card__label {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  /* Was uppercase + tracking-wider. Sentence case at a readable size lets the
+     label be legible without competing with the figure for emphasis. */
+  color: var(--color-ink-soft);
+  letter-spacing: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.kpi-card__value {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  /* Floor is low enough that a 9-figure naira total still fits a 320px
+     single-column card without breaking. */
+  font-size: clamp(1.375rem, 1rem + 1.6vw, 2.125rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--color-ink);
+  margin-top: var(--space-2xs);
+  /* NEVER overflow-wrap here. A figure that breaks mid-number renders
+     "₦8,417,200" as "₦8,4 / 17,2 / 00" — three lines that each read as a
+     different, smaller number. Prose may break inside a word; a currency
+     amount may not. Size steps down instead. */
+  white-space: nowrap;
+}
+
+.kpi-card__sub {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+  color: var(--color-ink-faint);
+  letter-spacing: -0.01em;
+}
+
+.kpi-card__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin-top: var(--space-3xs);
+}
+
+.kpi-card__arrow { flex-shrink: 0; }
+
+.kpi-card__trend.is-up   { color: var(--success); }
+.kpi-card__trend.is-down { color: var(--destructive); }
+.kpi-card__trend.is-flat { color: var(--color-ink-faint); }
+.kpi-card__trend.is-flat .kpi-card__arrow { display: none; }
+
+/* ---- Executive note ---------------------------------------------------
+   The old treatment was a 2px coloured stripe down one edge — the named
+   "side-stripe card" tell. Severity now reads from a small square beside
+   the label (accent as a signal, not as a rail) and the note sits on a
+   tinted panel instead of hanging off a coloured edge. */
+.exec-note {
+  margin-top: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+}
+
+.exec-note__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+}
+
+.exec-note__chip {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 1px;
+}
+
+.exec-note__tone {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.exec-note__insight {
+  font-family: var(--font-body);
+  margin-top: var(--space-2xs);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+
+.exec-note__action {
+  font-family: var(--font-body);
+  margin-top: var(--space-3xs);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+
+/* ---- Dashboard restore state ------------------------------------------
+   Replaces a rotating spinner — the most generic "something is happening"
+   signal there is, and one that tells the reader nothing about what they
+   are waiting for.
+
+   The idea: while the dashboard fetches its figures, it draws the chart it
+   is about to show. Bars rise from a baseline in a stagger, hold, and fall
+   back. The wait becomes a preview of the destination rather than a stand-in
+   for it, and the motion is subject-specific — this is what a revenue trend
+   does, not what a loading indicator does.
+
+   Bars animate transform + opacity only (never height), so the whole thing
+   stays on the compositor. Heights differ per bar so it reads as data with
+   a shape rather than an equaliser. */
+.dash-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.dash-loading__chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  height: 76px;
+  padding-bottom: var(--space-2xs);
+  border-bottom: 1px solid var(--color-line-strong);
+}
+
+.dash-loading__bar {
+  width: 12px;
+  border-radius: 3px 3px 1px 1px;
+  background: var(--color-primary);
+  transform-origin: bottom center;
+  transform: scaleY(0.08);
+  opacity: 0.35;
+  animation: dash-bar-rise 2.4s var(--ease-in-out) infinite;
+}
+
+/* A plausible upward trend, not seven identical sticks. */
+.dash-loading__bar:nth-child(1) { height: 26px; animation-delay: 0ms; }
+.dash-loading__bar:nth-child(2) { height: 38px; animation-delay: 90ms; }
+.dash-loading__bar:nth-child(3) { height: 31px; animation-delay: 180ms; }
+.dash-loading__bar:nth-child(4) { height: 52px; animation-delay: 270ms; }
+.dash-loading__bar:nth-child(5) { height: 45px; animation-delay: 360ms; }
+.dash-loading__bar:nth-child(6) { height: 64px; animation-delay: 450ms; }
+/* The last bar is the accent — the figure the owner is actually waiting on. */
+.dash-loading__bar:nth-child(7) {
+  height: 72px;
+  animation-delay: 540ms;
+  background: var(--color-accent);
+}
+
+@keyframes dash-bar-rise {
+  0%        { transform: scaleY(0.08); opacity: 0.3; }
+  30%, 62%  { transform: scaleY(1);    opacity: 1; }
+  100%      { transform: scaleY(0.08); opacity: 0.3; }
+}
+
+.dash-loading__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  text-align: center;
+  max-width: 34ch;
+}
+
+.dash-loading__title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.15;
+  color: var(--color-ink);
+}
+
+.dash-loading__sub {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+
+/* Spatial motion collapses to a static chart — the bars simply stand at
+   their real heights. The reader still sees a chart shape; they just don't
+   see it move. */
+@media (prefers-reduced-motion: reduce) {
+  .dash-loading__bar {
+    animation: none;
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* Hallmark · genre: editorial · macrostructure: Split Studio
+ * theme: preserved-project-palette (light / geometric-sans / cool-teal)
+ * enrichment: none (typography only) · tone: editorial · anchor hue: cool-teal
+ * nav: none — auth renders chromeless · footer: none
+ * studied: yes · DNA-source: image (user reference, Airtable sign-in)
+ * pre-emit critique: P5 H5 E5 S4 R5 V4
+ *
+ * Auth. Structure adopted from the reference: a dark promo panel paired with
+ * a plain form column, panel carrying a headline, one CTA and a card grid.
+ * The reference's palette, copy and imagery are NOT carried over — the panel
+ * is drawn in this project's own teal, and the cards hold real questions the
+ * advisor can answer rather than invented product screenshots.
+ */
+
+.auth {
+  /* Chromeless: no Navbar, no Footer, so the page owns the viewport and a
+     full-height split is the shape rather than a centred card floating in
+     leftover space. */
+  min-height: 100dvh;
+  display: grid;
+  /* Form first in the DOM — it is why someone opened this page. The panel is
+     re-ordered to the left visually, so keyboard and screen-reader order
+     still reach the form before the marketing. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  background: var(--color-bg);
+}
+
+/* ---- promo panel (visually left, second in DOM) --------------------- */
+
+.auth__promo {
+  order: -1;
+  min-width: 0;
+  margin: var(--space-sm);
+  padding: clamp(2rem, 4vw, 3.25rem);
+  border-radius: var(--radius-xl);
+  background: var(--color-panel-deep);
+  /* Any rule that flips the surface dark must state its own ink — relying on
+     inheritance here is how ink-on-ink happens. */
+  color: var(--color-panel-ink);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  /* New stacking context so the decoration can never escape the panel or
+     climb above the form column. */
+  isolation: isolate;
+}
+
+/* A chart grid, not a starfield. The panel belongs to a product that reads
+   numbers, so the surface it sits on is a plotting surface — drawn as two
+   repeating gradients, which costs one paint and never animates.
+   Masked toward the edges so it fades out rather than colliding with the
+   rounded corner. */
+.auth__promo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    repeating-linear-gradient(to right,  var(--color-panel-line) 0 1px, transparent 1px 64px),
+    repeating-linear-gradient(to bottom, var(--color-panel-line) 0 1px, transparent 1px 64px);
+  opacity: 0.28;
+  -webkit-mask-image: radial-gradient(120% 90% at 30% 20%, #000 35%, transparent 78%);
+  mask-image: radial-gradient(120% 90% at 30% 20%, #000 35%, transparent 78%);
+  pointer-events: none;
+}
+
+/* The sparks. Each sits on a grid intersection and lights briefly, the way a
+   reading surface does when something on it is worth noticing. Deliberately
+   few, slow and dim — six marks over seven seconds, peaking well below full
+   opacity, so the panel has life without competing with the form beside it. */
+.auth__spark {
+  position: absolute;
+  z-index: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-panel-ink);
+  opacity: 0;
+  pointer-events: none;
+  animation: auth-spark 7s var(--ease-in-out) infinite;
+}
+/* Two carry the naira gold, so the accent appears at a few percent of the
+   surface rather than as a wash. */
+.auth__spark:nth-child(3),
+.auth__spark:nth-child(5) { background: var(--color-accent); }
+
+/* Positions land on the 64px grid and stay clear of the headline block at
+   top-left and the card grid along the bottom. */
+.auth__spark:nth-child(1) { top: 18%;  left: 62%;  animation-delay: 0s; }
+.auth__spark:nth-child(2) { top: 34%;  left: 82%;  animation-delay: 1.1s; }
+.auth__spark:nth-child(3) { top: 47%;  left: 46%;  animation-delay: 2.3s; }
+.auth__spark:nth-child(4) { top: 26%;  left: 34%;  animation-delay: 3.4s; }
+.auth__spark:nth-child(5) { top: 56%;  left: 71%;  animation-delay: 4.6s; }
+.auth__spark:nth-child(6) { top: 41%;  left: 15%;  animation-delay: 5.7s; }
+
+@keyframes auth-spark {
+  /* Alight for roughly a fifth of the cycle, dark for the rest — the pause is
+     what keeps it from reading as a blinking cursor. */
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  6%       { opacity: 0.75; transform: scale(1); }
+  18%      { opacity: 0; transform: scale(0.5); }
+}
+
+/* Content rides above the decoration. */
+.auth__promo-title,
+.auth__promo-cta,
+.auth__promo-grid { position: relative; z-index: 1; }
+
+.auth__promo-title {
+  margin: 0;
+  max-width: 18ch;
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 600;
+  font-size: clamp(1.9rem, 2.7vw, 2.7rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--color-panel-ink);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.auth__promo-cta {
+  align-self: flex-start;
+  margin-top: var(--space-md);
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  background: var(--color-panel-ink);
+  color: var(--color-panel-deep);
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  font-weight: 600;
+  /* A wrapped CTA label reads as a styling error, never as intent. */
+  white-space: nowrap;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: transform var(--dur-short) var(--ease-out);
+}
+@media (hover: hover) {
+  .auth__promo-cta:hover { transform: translateY(-1px); }
+}
+.auth__promo-cta:focus-visible { outline-color: var(--color-panel-ink); }
+
+/* The reference fills this space with product screenshots. Fabricating those
+   would mean inventing dashboard numbers, so the grid instead holds real
+   questions the advisor genuinely answers — same visual rhythm, nothing
+   claimed that isn't true. */
+.auth__promo-grid {
+  margin-top: auto;
+  padding-top: var(--space-lg);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, minmax(9rem, 1fr)));
+  gap: var(--space-2xs);
+}
+
+.auth__ask {
+  padding: 0.85rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-panel-raised);
+  border: 1px solid var(--color-panel-line);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--color-panel-ink);
+}
+.auth__ask span {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-panel-dim);
+}
+
+/* ---- form column ---------------------------------------------------- */
+
+.auth__form-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 5vw, 4.5rem);
+}
+
+.auth__inner {
+  width: 100%;
+  max-width: 25rem;
+}
+
+/* Chromeless pages still need one way back to the marketing site. */
+.auth__wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: var(--space-lg);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+.auth__wordmark span { color: var(--color-ink-faint); }
+.auth__wordmark:focus-visible { outline-color: var(--color-focus); }
+
+.auth__title {
+  margin: 0 0 var(--space-lg);
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 600;
+  font-size: clamp(1.65rem, 2.4vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -0.022em;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+/* When a subtitle follows the title, the title's own bottom margin would
+   double the gap. */
+.auth__title + .auth__panel-sub { margin-top: calc(var(--space-lg) * -1 + 0.35rem); }
+
+/* Signup's two steps. Genuinely ordinal — you cannot name a pharmacy before
+   the account exists — which is the one case where numbering earns its place
+   rather than decorating. Rendered as an <ol> so the order is in the markup,
+   not only in the styling. */
+.auth__steps {
+  display: flex;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-md);
+  padding: 0;
+  list-style: none;
+  counter-reset: auth-step;
+}
+.auth__steps li {
+  counter-increment: auth-step;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--color-ink-soft);
+}
+.auth__steps li::before {
+  content: counter(auth-step);
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-line-strong);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-ink-faint);
+}
+.auth__steps li[aria-current="step"] { color: var(--color-ink); font-weight: 500; }
+.auth__steps li[aria-current="step"]::before {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--primary-foreground);
+}
+/* A completed step reads as done rather than merely not-current — a checkmark
+   glyph replaces the number so the two states differ by shape, not colour. */
+.auth__steps li[data-done]::before {
+  content: "✓";
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+/* A native select, styled through its wrapper. Custom-building one means
+   re-implementing keyboard and screen-reader behaviour the platform already
+   ships correctly. */
+.auth__select {
+  appearance: none;
+  cursor: pointer;
+  /* The chevron is drawn in the reserved right-edge slot the inputs already
+     keep clear, so a select and a text field line up exactly. */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-ink-soft) 50%),
+    linear-gradient(135deg, var(--color-ink-soft) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.35rem) calc(50% + 2px),
+    calc(100% - 1rem) calc(50% + 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+/* An unchosen select shows its placeholder option, which should read as
+   placeholder text rather than as an answer. */
+.auth__select:invalid,
+.auth__select option[value=""] { color: var(--color-ink-faint); }
+
+/* Hallmark · scope: page (redesign) · macrostructure: preserved (Workbench-adjacent, popup treatment)
+ * theme: preserved-project-palette (light / geometric-sans / cool-teal)
+ * enrichment: none · tone: utilitarian
+ * pre-emit critique: P5 H5 E4 S4 R5 V4
+ *
+ * Upload — a working state machine (upload -> files -> map -> done) restyled
+ * as a centered popup rather than an edge-to-edge page, with a close control
+ * back to the dashboard. Nothing about the four phases, the validation, or
+ * the mapping logic changed here — only the chrome around it and how much of
+ * it talks. The mapping screen in particular carried plumbing a pharmacist
+ * has no use for (cache/LLM source, a table named "FactSales") — cut rather
+ * than restyled, since restyling clutter still ships clutter.
+ */
+
+.upload-shell {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) var(--space-sm);
+  background: var(--color-bg-alt);
+}
+
+.upload-card {
+  position: relative;
+  width: 100%;
+  max-width: 34rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  animation: auth-rise var(--dur-mid) var(--ease-out) both;
+}
+/* The mapping phase carries a table, sample chips and a field list — three
+   times the content of every other phase — so it alone gets a wider surface.
+   Same border, radius and shadow: the treatment doesn't change, only the
+   room inside it. */
+.upload-card--wide { max-width: 46rem; }
+
+.upload-card__close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: background-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out);
+}
+/* ::before extends the hit target to 44px without enlarging what the eye
+   sees — the visible circle stays a modest 32px. */
+.upload-card__close::before { content: ""; position: absolute; inset: -0.375rem; }
+@media (hover: hover) {
+  .upload-card__close:hover { background: var(--color-bg-alt); color: var(--color-ink); }
+}
+.upload-card__close:focus-visible { outline-color: var(--color-focus); }
+
+/* Compact step track — four short, genuinely ordinal stages (you cannot map
+   columns before uploading, cannot confirm before mapping). Reuses the same
+   numbered-circle language as signup's step track, kept as its own class so
+   editing one can never silently move the other. */
+.upload-steps {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  padding: 0;
+  list-style: none;
+  counter-reset: upload-step;
+}
+.upload-steps li {
+  counter-increment: upload-step;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  color: var(--color-ink-faint);
+}
+.upload-steps li::before {
+  content: counter(upload-step);
+  display: grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-line-strong);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--color-ink-faint);
+}
+.upload-steps li[aria-current="step"] { color: var(--color-ink); font-weight: 600; }
+.upload-steps li[aria-current="step"]::before {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--primary-foreground);
+}
+.upload-steps li[data-done]::before {
+  content: "✓";
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.upload-title {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 600;
+  font-size: clamp(1.4rem, 3vw, 1.7rem);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+
+.upload-sub {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+}
+
+/* One quiet status line, shown only in the states that actually need the
+   reader's attention (blocked, or something still pending) — silence is the
+   "you're ready" state; the enabled Confirm button already says that. */
+.upload-status {
+  margin-top: var(--space-sm);
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--color-line-strong);
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  color: var(--color-ink-soft);
+}
+.upload-status[data-tone="danger"] { border-color: var(--color-danger); color: var(--color-danger); }
+.upload-status[data-tone="accent"] { border-color: var(--color-accent); color: var(--color-ink-soft); }
+
+@media (max-width: 26rem) {
+  .upload-steps li span { display: none; }
+}
+
+/* ---- Files step: a manifest, not a bare list -------------------------
+ * The previous version was plain text rows under hairline dividers, which
+ * carried no visual weight — so a full-width primary button below it read as
+ * oversized by comparison, not because the button itself was wrong. The fix
+ * is giving the list real presence (icon, card, tag pills reusing the
+ * mapping screen's own badge language) and letting the button size to its
+ * own label instead of stretching to fill the card. */
+
+.upload-files {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.upload-file {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  /* Staggered per row via the --i custom property set inline — one keyframe,
+     not five near-identical animation rules. */
+  animation: upload-file-in var(--dur-mid) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+
+.upload-file__icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+}
+
+.upload-file__body { min-width: 0; flex: 1 1 auto; }
+
+.upload-file__name {
+  font-size: 0.87rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-file__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+
+.upload-file__rows {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Same pill language as .map-badge on the Map step — one visual vocabulary
+   for "what this column/file was detected as" across both screens, rather
+   than two different micro-languages a reader has to learn separately. */
+.upload-file__tag {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--color-bg-alt);
+  color: var(--color-ink-soft);
+}
+
+.upload-file__ready {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+}
+
+.upload-file__remove {
+  flex-shrink: 0;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  border: 0;
+  background: transparent;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: 1px;
+  transition: background-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out);
+}
+.upload-file__remove::before { content: ""; position: absolute; inset: -0.35rem; }
+@media (hover: hover) {
+  .upload-file__remove:hover { background: var(--color-danger-tint); color: var(--color-danger); }
+}
+.upload-file__remove:focus-visible { outline-color: var(--color-focus); }
+
+@keyframes upload-file-in {
+  from { opacity: 0; transform: translateY(0.4rem); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload-file { animation-delay: 0ms; }
+}
+
+/* ---- product tour --------------------------------------------------- */
+
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  /* The overlay itself catches nothing — only the card below opts back in —
+     so the dimmed page can still be scrolled and read while the tour runs. */
+  pointer-events: none;
+}
+
+/* One element, one enormous spread shadow: everything outside this box dims,
+   and the hole can never fall out of register with what it frames — which is
+   exactly what happens when you build the same effect from four panels. */
+.tour__spotlight {
+  position: fixed;
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 9999px var(--color-tour-scrim);
+  /* Outline rather than border: it draws outside the box, so the ring can't
+     shrink the hole it is marking. */
+  outline: 2px solid var(--color-primary);
+  outline-offset: 0;
+  transition:
+    top var(--dur-mid) var(--ease-out),
+    left var(--dur-mid) var(--ease-out),
+    width var(--dur-mid) var(--ease-out),
+    height var(--dur-mid) var(--ease-out);
+}
+
+/* Steps with no target dim the whole page instead. */
+.tour__scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--color-tour-scrim);
+}
+
+.tour__card {
+  position: fixed;
+  width: min(20.75rem, calc(100vw - 2rem));
+  pointer-events: auto;
+  padding: var(--space-sm);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  box-shadow: var(--shadow-float);
+  animation: tour-in var(--dur-mid) var(--ease-out) both;
+}
+.tour__card:focus { outline: none; }
+.tour__card:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+.tour__count {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.tour__title {
+  margin: 0.35rem 0 0.4rem;
+  font-family: var(--font-display);
+  font-style: normal;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+
+.tour__body {
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+}
+
+.tour__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+.tour__nav { display: flex; align-items: center; gap: 0.4rem; }
+
+.tour__skip,
+.tour__back,
+.tour__next {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+  /* Reserved and transparent so the focus ring has no geometry to push. */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  /* Labels are short and must never wrap onto a second line. */
+  white-space: nowrap;
+  transition: background-color var(--dur-short) var(--ease-out);
+}
+.tour__skip, .tour__back { background: transparent; border: 0; color: var(--color-ink-soft); }
+.tour__next {
+  background: var(--color-primary);
+  border: 0;
+  color: var(--primary-foreground);
+}
+@media (hover: hover) {
+  .tour__skip:hover, .tour__back:hover { background: var(--color-bg-alt); color: var(--color-ink); }
+  .tour__next:hover { background: var(--color-primary-dark); }
+}
+.tour__skip:focus-visible,
+.tour__back:focus-visible,
+.tour__next:focus-visible { outline-color: var(--color-focus); }
+
+@keyframes tour-in {
+  from { opacity: 0; transform: translateY(0.4rem); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour__spotlight { transition: none; }
+  .tour__card { animation-duration: 140ms; animation-name: auth-fade; }
+}
+
+/* Not an error — the account was created. Distinct colour so "check your
+   email" never reads as a failure. */
+.auth__notice {
+  margin-top: var(--space-sm);
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-dark);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.auth__fields { display: flex; flex-direction: column; gap: var(--space-sm); }
+.auth__field { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.auth__label {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.auth__input-wrap { position: relative; }
+
+.auth__input {
+  width: 100%;
+  /* Input height == button height. A page with 46px buttons above 38px
+     inputs feels untuned even when nothing is obviously wrong. */
+  height: 2.875rem;
+  /* Right-edge slot reserved whether or not a glyph occupies it, so nothing
+     reflows when the reveal button or an error mark appears. */
+  padding: 0 2.9rem 0 0.9rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--color-ink);
+  /* background-COLOR, not the shorthand: the shorthand also resets
+     background-image, which silently erased the chevron that .auth__select
+     draws on top of this rule. */
+  background-color: var(--color-surface);
+  /* 1px in EVERY state — border-width changes on focus are layout shift. */
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  /* Reserved and transparent, so the ring has no geometry to push when it
+     appears — and it appears instantly. */
+  outline: 2px solid transparent;
+  outline-offset: 1px;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out);
+}
+.auth__input::placeholder { color: var(--color-ink-faint); }
+
+@media (hover: hover) {
+  /* Background shift, not a border flash — a border-colour-only hover is easy
+     to miss. Scoped so touch users never get a stuck hover. */
+  .auth__input:hover:not(:disabled) { background: var(--color-bg-alt); }
+}
+
+.auth__input:focus-visible {
+  outline-color: var(--color-focus);
+  border-color: var(--color-primary);
+}
+.auth__input[aria-invalid="true"] { border-color: var(--color-danger); }
+.auth__input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Visually 1.85rem; the ::before pushes the hit target past the 44px touch
+   floor without changing what the eye sees. */
+.auth__reveal {
+  position: absolute;
+  top: 50%;
+  right: 0.55rem;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: 1px;
+  transition: color var(--dur-short) var(--ease-out);
+}
+.auth__reveal::before { content: ""; position: absolute; inset: -0.55rem; }
+@media (hover: hover) {
+  .auth__reveal:hover { color: var(--color-ink); }
+}
+.auth__reveal:focus-visible { outline-color: var(--color-focus); }
+
+/* Reserves one line always, so surfacing an error never pushes the submit
+   button down the page. */
+.auth__helper {
+  min-height: 1lh;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  /* NOT --color-ink-faint: measured at 2.55:1 against this page, which fails
+     4.5:1. The slot is empty today so nothing is unreadable yet — but the
+     next person to add hint text here would inherit the failure silently. */
+  color: var(--color-ink-soft);
+}
+.auth__helper[data-tone="error"] { color: var(--color-danger); }
+
+.auth__submit {
+  width: 100%;
+  height: 2.875rem;
+  margin-top: var(--space-md);
+  white-space: nowrap;
+}
+
+.auth__divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: var(--space-md) 0;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--color-ink-faint);
+}
+.auth__divider::before,
+.auth__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-line);
+}
+
+.auth__alert {
+  margin-top: var(--space-sm);
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-tint);
+  color: var(--color-danger);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.auth__foot {
+  margin-top: var(--space-lg);
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  color: var(--color-ink-soft);
+}
+.auth__foot a {
+  color: var(--color-primary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ---- one orchestrated entrance -------------------------------------- */
+
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(0.6rem); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes auth-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.auth__inner,
+.auth__promo { animation: auth-rise var(--dur-mid) var(--ease-out) both; }
+.auth__inner { animation-delay: 90ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth__inner,
+  .auth__promo {
+    animation-name: auth-fade;
+    animation-duration: 140ms;
+    animation-delay: 0ms;
+  }
+  /* The sparks stop rather than disappear — the grid keeps its plotted points,
+     it just no longer draws attention to them one at a time. */
+  .auth__spark {
+    animation: none;
+    opacity: 0.4;
+    transform: scale(1);
+  }
+}
+
+/* ---- collapse ------------------------------------------------------- */
+
+@media (max-width: 60rem) {
+  .auth {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 100dvh;
+  }
+  /* The panel is an argument for signing up, not a step in signing in. On a
+     phone it would push the form below the fold, so it steps aside — the
+     wordmark in the form column still carries the brand. */
+  .auth__promo { display: none; }
+  .auth__form-col { justify-content: flex-start; padding-top: clamp(2.5rem, 9vw, 4rem); }
+  .auth__inner { max-width: none; margin: 0 auto; }
 }

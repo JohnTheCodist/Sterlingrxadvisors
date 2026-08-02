@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import LoadingState from './LoadingState.jsx';
 
 /**
  * Guards /upload and /dashboard only — marketing pages stay public.
@@ -12,13 +13,15 @@ export default function RequireAuth({ children }) {
   const { session, organization, orgStatus, loading, refreshOrganization } = useAuth();
   const location = useLocation();
 
+  // Was a bare "Loading…" line. Signing in therefore crossed two unrelated
+  // loading screens back to back — this one, then the dashboard's own — and
+  // the reader registered the change rather than the progress. Same treatment
+  // as the dashboard now, so the wait is one continuous thing.
   if (loading) {
     return (
-      <section className="page-header">
-        <div className="shell">
-          <p className="lead">Loading…</p>
-        </div>
-      </section>
+      <div className="flex min-h-screen items-center justify-center px-7 py-24">
+        <LoadingState sub="Signing you in." />
+      </div>
     );
   }
 

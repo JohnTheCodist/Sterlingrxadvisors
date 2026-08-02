@@ -158,6 +158,14 @@ const TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'getUploadHistory',
+      description: 'Every file this organization has EVER uploaded — filename, when, row count, processing status, and capabilities (sales/inventory/expiry/supplier/customer) — regardless of what each file contains. This is the ONLY correct source for "how many files/uploads do I have", "what have I uploaded", or "list my files". Do not answer this from getDataFields, getDataScope, or the current-upload context in this prompt — those only ever cover files that produced sales transaction rows, so a stock, expiry or supplier-only upload is invisible to them even though it is a real file. Call this tool whenever the question is about the organization\'s upload history itself, not about what one of those files contains.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'getDatasetMetric',
       description: 'Computes STOCK-shaped metrics from the current upload\'s own records — the only tool that can read an inventory/stock file, because inventory rows have no transaction date and therefore never reach the sales tables that every other metric tool queries. Use it for: potential revenue/cost/gross profit/margin on stock currently held, inventory value at cost or at retail, per-unit margins, highest/lowest margin product, and any ranking of those (top N, a position range via `offset`, or "everything below X%" via maxValue). Also use it when a question about the current upload comes back with no sales rows — an inventory file legitimately has none. DIVISION OF LABOUR: sales-transaction measures (revenue/quantity/profit over time, by payment method, by customer type) belong to getBusinessMetric and are deliberately NOT offered here — the two engines read different row sets, so asking each for the same named number could yield two different answers. Every figure is exact arithmetic over real records. Returns available:false naming the exact missing columns when a measure\'s inputs aren\'t present, and gates cost-derived measures when cost-price coverage is too thin to be reliable (stating the exact coverage). Grouped results report totalMatching — if it exceeds the rows returned, say the list is partial.',
       parameters: {
@@ -395,6 +403,7 @@ const IMPLEMENTATIONS = {
   getTopCustomers: queries.getTopCustomers,
   getFrequentlyBoughtTogether: queries.getFrequentlyBoughtTogether,
   getDataFields: queries.getDataFields,
+  getUploadHistory: queries.getUploadHistory,
   getDatasetMetric: queries.getDatasetMetric,
   getLowStock: queries.getLowStock,
   getOverstock: queries.getOverstock,

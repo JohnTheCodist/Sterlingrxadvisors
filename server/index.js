@@ -23,11 +23,12 @@ const { generateInsights } = require('./services/recommendations');
 const { computeHealthStats } = require('./services/businessHealthData');
 const { classifyDataset } = require('./services/datasetClassifier');
 const datasetRegistry = require('./services/datasetRegistry');
-const { evaluate: evaluateWidgets } = require('./services/widgetEngine');
+const { evaluate: evaluateWidgets, evaluateFromStore } = require('./services/widgetEngine');
 const { hasTransactionCapability } = require('./services/columnMapper');
 const factStore = require('./services/factStore');
 const { chatStream: advisorChatStream } = require('./services/advisorAgent');
 const advisorQueries = require('./services/advisorQueries');
+const { buildDashboardPdf, fmtN, fmtNum } = require('./services/reports/dashboardPdfReport');
 const { requireAuth, requireAuthOnly } = require('./middleware/auth');
 const { ALLOWED_MIMES, ALLOWED_EXTS, parseSheet } = require('./services/fileUpload');
 const { verifyTwilioSignature } = require('./services/whatsapp/twilioSignature');
@@ -94,11 +95,33 @@ app.get('/pdf/whatsapp/:id', servePdfExport);
 
 // ---------- Organizations ----------
 
+/**
+ * Rejects a state weather could not resolve. Checked against the weather
+ * service's own map rather than a list maintained beside a form — two lists
+ * drift, and the failure that follows is silent.
+ *
+ * @returns {string|null} an error message, or null when the value is fine.
+ */
+function validateState(state) {
+  if (state == null || state === '') return null;
+  const { RESOLVABLE_STATES } = require('./services/weather/weatherService');
+  if (!RESOLVABLE_STATES.includes(state)) {
+    return `"${state}" is not a Nigerian state we can look up weather for. Pick one from the list.`;
+  }
+  return null;
+}
+
 app.post('/api/organizations', async (req, res) => {
-  const { name } = req.body || {};
+  const { name, state } = req.body || {};
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({ error: 'name is required.' });
   }
+  if (state != null && typeof state !== 'string') {
+    return res.status(400).json({ error: 'state must be a string.' });
+  }
+  const badState = validateState(state);
+  if (badState) return res.status(400).json({ error: badState });
+
   try {
     const db = getSql();
 
@@ -119,7 +142,15 @@ app.post('/api/organizations', async (req, res) => {
 
     const [org] = await db`insert into organizations (name) values (${name.trim()}) returning id, name`;
     await db`insert into organization_members (organization_id, user_id, role) values (${org.id}, ${req.user.id}, 'owner')`;
-    return res.status(201).json({ organizationId: org.id, name: org.name, role: 'owner' });
+
+    // Signup collects the state, so write it straight into the same profile
+    // row Settings edits and the weather signal reads. Doing it here rather
+    // than asking again later is the whole point of collecting it at signup.
+    if (state) {
+      await require('./services/pharmacyProfile').update(org.id, { state });
+    }
+
+    return res.status(201).json({ organizationId: org.id, name: org.name, role: 'owner', state: state || null });
   } catch (err) {
     return res.status(500).json({ error: `Failed to create organization: ${err.message}` });
   }
@@ -611,6 +642,13 @@ app.post('/api/pharmacy-profile', async (req, res) => {
   if (state != null && typeof state !== 'string') {
     return res.status(400).json({ error: 'state must be a string.' });
   }
+  // Only a string was checked before, so any typo was accepted and stored —
+  // and then reached OpenWeather as an ungeocodable name, which is a weather
+  // signal that just stops appearing with nothing to explain why. Rejecting
+  // it here means a stored state is always one weather can resolve.
+  const badState = validateState(state);
+  if (badState) return res.status(400).json({ error: badState });
+
   const fields = {};
   if (state !== undefined) fields.state = state;
   if (city !== undefined) fields.city = city;
@@ -1160,6 +1198,108 @@ app.get('/api/business-health', async (req, res) => {
   } catch (err) {
     console.error('[business-health]', err);
     return res.status(500).json({ error: `Failed to compute business health: ${err.message}` });
+  }
+});
+
+// ---------- Dashboard PDF export ----------
+//
+// Replaces the client's old html2canvas + jsPDF screenshot: this draws a real
+// vector PDF server-side (services/reports/dashboardPdfReport.js) from the
+// same data the dashboard itself queries, current-upload-scoped the same way
+// /api/analytics and /api/widgets already are — so the report matches what's
+// on screen instead of rasterizing whatever the DOM happened to look like.
+app.get('/api/export/dashboard-pdf', async (req, res) => {
+  try {
+    const organizationId = req.organizationId;
+    const db = getSql();
+
+    const [org] = await db`select name from organizations where id = ${organizationId}`;
+    const latest = await datasetRegistry.getLatest(organizationId);
+
+    const [analytics, healthBundle, widgetManifest] = await Promise.all([
+      queryAnalytics(organizationId, { datasetId: latest?.datasetId }),
+      advisorQueries.getBusinessHealthBundle(organizationId),
+      evaluateFromStore(organizationId),
+    ]);
+
+    const m = analytics.metrics || {};
+    const byId = new Map();
+    for (const dash of Object.values(widgetManifest.dashboards || {})) {
+      for (const w of dash.available || []) byId.set(w.id, w.result);
+    }
+    const g = (id) => byId.get(id);
+
+    const kpis = [
+      { label: 'Total Revenue', value: fmtN(m.totalRevenue), accent: '#1F6F5C' },
+      m.grossProfit != null && {
+        label: 'Gross Profit', value: fmtN(m.grossProfit),
+        sub: m.grossMargin != null ? `${m.grossMargin}% margin` : null, accent: '#1F6F5C',
+      },
+      { label: 'Transactions', value: String(m.transactionCount ?? 0), accent: '#B8901F' },
+      { label: 'Avg. Basket', value: fmtN(m.averageTransactionValue), accent: '#B8901F' },
+      { label: 'Products Sold', value: fmtNum(m.totalQuantitySold), accent: '#164F42' },
+      g('distinct-products-kpi') && {
+        label: 'Distinct Products', value: String(g('distinct-products-kpi').value), accent: '#164F42',
+      },
+      g('avg-items-per-basket') && {
+        label: 'Items per Basket', value: fmtNum(g('avg-items-per-basket').value), accent: '#B4780A',
+      },
+    ].filter(Boolean);
+
+    // Same four risk metrics DynamicKpiGrid shows on screen, plus up to four
+    // of the highest-severity executive notes across every stock-side widget
+    // that produced one — carried verbatim from the widgets themselves (see
+    // ExecutiveNote.jsx) so the report can never disagree with its own chart.
+    const invAvailable = [
+      ...(widgetManifest.dashboards.inventory?.available || []),
+      ...(widgetManifest.dashboards.expiry?.available || []),
+    ];
+    let inventory = null;
+    if (invAvailable.length > 0) {
+      const invById = new Map(invAvailable.map((w) => [w.id, w.result]));
+      const gi = (id) => invById.get(id);
+      const invKpis = [
+        gi('stock-value') && { label: 'Stock Value', value: fmtN(gi('stock-value').value), accent: '#1F6F5C' },
+        gi('current-stock') && { label: 'Current Stock', value: fmtNum(gi('current-stock').value), accent: '#1F6F5C' },
+        gi('low-stock-alert') && { label: 'Low Stock Items', value: fmtNum(gi('low-stock-alert').value), accent: '#B23A2E' },
+        gi('expiry-risk-value') && { label: 'At Risk of Expiring', value: fmtN(gi('expiry-risk-value').value), accent: '#B4780A' },
+        gi('overstock-value') && { label: 'Cash in Overstock', value: fmtN(gi('overstock-value').value), accent: '#B8901F' },
+      ].filter(Boolean);
+
+      const severityRank = { high: 0, medium: 1, low: 2, info: 3 };
+      const notes = invAvailable
+        .map((w) => w.result?.executive)
+        .filter((n) => n && (n.insight || n.action))
+        .sort((a, b) => (severityRank[a.severity] ?? 9) - (severityRank[b.severity] ?? 9))
+        .slice(0, 4);
+
+      if (invKpis.length > 0 || notes.length > 0) inventory = { kpis: invKpis, notes };
+    }
+
+    const dateRangeLabel = analytics.monthlyRevenue && analytics.monthlyRevenue.length > 0
+      ? `${analytics.monthlyRevenue[0].month} to ${analytics.monthlyRevenue[analytics.monthlyRevenue.length - 1].month}`
+      : null;
+
+    const pdfBuffer = await buildDashboardPdf({
+      organizationName: org?.name || 'RxNaija Analytics',
+      datasetLabel: latest?.filename ? `Current upload: ${latest.filename}` : null,
+      dateRangeLabel,
+      kpis,
+      bizHealth: healthBundle.health,
+      insights: healthBundle.insights,
+      monthlyRevenue: analytics.monthlyRevenue,
+      topProducts: analytics.topProducts,
+      inventory,
+    });
+
+    const safeName = (org?.name || 'rxnaija').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const stamp = new Date().toISOString().slice(0, 10);
+    res.set('Content-Type', 'application/pdf');
+    res.set('Content-Disposition', `attachment; filename="${safeName}-dashboard-report-${stamp}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('[export/dashboard-pdf]', err);
+    res.status(500).json({ error: `Failed to generate PDF: ${err.message}` });
   }
 });
 

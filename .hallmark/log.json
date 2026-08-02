@@ -1,0 +1,34 @@
+[
+  {
+    "date": "2026-08-01",
+    "scope": "page",
+    "macrostructure": "preserved (Workbench-adjacent, popup treatment)",
+    "theme": "preserved-project-palette",
+    "theme_axes": "light / geometric-sans / cool-teal",
+    "enrichment": "none",
+    "nav": "none — chromeless popup, App.jsx CHROMELESS list",
+    "footer": "none — chromeless popup",
+    "brief": "RxNaija Analytics — Upload flow redesign: centered popup card with close-to-dashboard, compact step track, and heavy copy/plumbing cuts (internal cache/LLM-source badges, raw FactSales/FactInventory table names) from the mapping-review and completion screens"
+  },
+  {
+    "date": "2026-08-01",
+    "scope": "page",
+    "macrostructure": "Split Studio",
+    "theme": "preserved-project-palette",
+    "theme_axes": "light / geometric-sans / cool-teal",
+    "enrichment": "none",
+    "nav": "owned by App.jsx (N/A)",
+    "footer": "owned by App.jsx (N/A)",
+    "brief": "RxNaija Analytics — sign-in page, editorial tone, split panel"
+  },
+  {
+    "date": "2026-08-01",
+    "scope": "app",
+    "macrostructure": "Workbench",
+    "theme": "preserved-project-palette",
+    "theme_axes": "light / geometric-sans / cool-teal",
+    "enrichment": "none",
+    "nav": "N3 side-rail (kept)",
+    "brief": "RxNaija Analytics — pharmacy BI dashboard redesign (visual layer only)"
+  }
+]
