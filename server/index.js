@@ -201,7 +201,11 @@ app.post('/api/widgets', async (req, res) => {
   // Scoped to the current upload by default, same as /api/analytics —
   // ?scope=all asks for the organization's full history explicitly.
   const { evaluateFromStore } = require('./services/widgetEngine');
-  return res.json(await evaluateFromStore(req.organizationId, { scope: req.query.scope }));
+  const manifest = await evaluateFromStore(req.organizationId, { scope: req.query.scope });
+  // Stamped the same way /api/analytics already is, so the client can label
+  // what it's showing rather than silently swapping the KPI grid's numbers
+  // to a wider scope with nothing on screen explaining why they changed.
+  return res.json({ ...manifest, scope: req.query.scope === 'all' ? 'all' : 'current-upload' });
 });
 
 // ---------- Dataset Classification (runs before schema detection) ----------

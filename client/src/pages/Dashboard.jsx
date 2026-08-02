@@ -6,6 +6,7 @@ import {
   AreaChart, Area, ScatterChart, Scatter, ZAxis,
 } from 'recharts';
 import LoadingState from '../components/LoadingState';
+import LoadAllDataOverlay from '../components/LoadAllDataOverlay';
 import GrowthRateWidget from '../components/GrowthRateWidget';
 import MonthlySalesPerformanceWidget from '../components/MonthlySalesPerformanceWidget';
 import { pickTotalRevenue, avgTransactionValue, topConcentration, revenueGap, monthlyRevenueWithGap as augmentMonthly, validateMetricConsistency } from '../utils/metrics';
@@ -1066,12 +1067,56 @@ export default function Dashboard() {
   const [bizHealth, setBizHealth] = useState(state.bizHealth || null);
   const [bizHealthLoading, setBizHealthLoading] = useState(!state.bizHealth);
 
+  // "Load All Data" had two separate problems, not one. /api/widgets was
+  // called with no scope, which defaults to the current upload — the SAME
+  // data already on screen — so the KPI grid never changed. The Executive
+  // Brief's problem was different: bizHealth (which ExecutiveBrief reads)
+  // is fetched exactly once on page load/restore and never again by
+  // anything, including this button — so even though getBusinessHealthBundle
+  // itself is already org-wide (queryAnalytics with no dataset filter, see
+  // advisorQueries.js), the copy on screen goes stale the moment new data
+  // lands and nothing ever asks the server for a fresh one. "Hardcoded"
+  // was the right word for what it looked like, even though the underlying
+  // query was never scoped wrong — it just never re-ran.
+  const [loadAllStatus, setLoadAllStatus] = useState(null); // null | 'loading' | 'success' | 'error'
+  const [loadAllError, setLoadAllError] = useState('');
+
   const loadAllWidgets = async () => {
+    if (loadAllStatus === 'loading') return; // one in flight at a time
+    setLoadAllStatus('loading');
+    setLoadAllError('');
     try {
-      const res = await apiFetch('/api/widgets', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}' });
-      const data = await res.json();
-      setWidgetManifest(data);
-    } catch (_) {}
+      const [widgetsRes, healthRes] = await Promise.all([
+        apiFetch('/api/widgets?scope=all', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+        }),
+        apiFetch('/api/business-health'),
+      ]);
+
+      if (!widgetsRes.ok) {
+        const body = await widgetsRes.json().catch(() => null);
+        throw new Error(body?.error || `Widgets request failed (${widgetsRes.status})`);
+      }
+      const widgetsData = await widgetsRes.json();
+      setWidgetManifest(widgetsData);
+
+      // Business health failing is reported but doesn't fail the whole
+      // action — the widget grid above already has fresh data, and
+      // ExecutiveBrief simply keeps its last good copy rather than the
+      // owner losing both halves over one endpoint's outage.
+      if (healthRes.ok) {
+        const healthData = await healthRes.json();
+        if (healthData.health) {
+          setBizHealth(healthData);
+          setBizHealthLoading(false);
+        }
+      }
+
+      setLoadAllStatus('success');
+    } catch (err) {
+      setLoadAllError(err.message || 'Could not reach the server.');
+      setLoadAllStatus('error');
+    }
   };
 
   // Accept both metrics (Phase 5) and analytics (legacy)
@@ -1372,6 +1417,15 @@ export default function Dashboard() {
         {tourOpen && (
           <ProductTour steps={TOUR_STEPS} userKey={tourKey} onFinish={() => setTourOpen(false)} />
         )}
+        {loadAllStatus && (
+          <LoadAllDataOverlay
+            status={loadAllStatus}
+            errorMessage={loadAllError}
+            onRetry={loadAllWidgets}
+            onDismiss={() => setLoadAllStatus(null)}
+            onComplete={() => setLoadAllStatus(null)}
+          />
+        )}
       </div>
     );
   }
@@ -1550,6 +1604,11 @@ export default function Dashboard() {
             <DatasetSummary fileName={analysis?.fileName} generatedAt={analysis?.generatedAt} capabilities={capabilities} />
             {widgetManifest && (
               <div data-tour="kpis">
+                {widgetManifest.scope === 'all' && (
+                  <p className="-mt-2 mb-3 text-xs font-medium text-[var(--color-ink-faint)]">
+                    Combined across every upload — not just your most recent file.
+                  </p>
+                )}
                 <DynamicKpiGrid widgetManifest={widgetManifest} capabilities={capabilities} />
               </div>
             )}
@@ -1998,6 +2057,15 @@ export default function Dashboard() {
 
       {tourOpen && (
         <ProductTour steps={TOUR_STEPS} userKey={tourKey} onFinish={() => setTourOpen(false)} />
+      )}
+      {loadAllStatus && (
+        <LoadAllDataOverlay
+          status={loadAllStatus}
+          errorMessage={loadAllError}
+          onRetry={loadAllWidgets}
+          onDismiss={() => setLoadAllStatus(null)}
+          onComplete={() => setLoadAllStatus(null)}
+        />
       )}
     </div>
   );

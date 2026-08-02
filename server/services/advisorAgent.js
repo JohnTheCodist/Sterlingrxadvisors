@@ -55,6 +55,13 @@ const LLM_MAX_TOKENS = parseInt(process.env.ADVISOR_MAX_TOKENS || '2048', 10);
 
 const MAX_TOOL_ITERATIONS = 5;
 
+// How many times a capped answer may be resumed. Two is enough for ~3x the
+// token cap — long enough for any legitimate answer, while still bounding a
+// model that has started rambling. Raising ADVISOR_MAX_TOKENS instead would
+// slow down EVERY answer to rescue the rare long one, and still truncate the
+// answer that runs one token past whatever the new cap is.
+const MAX_CONTINUATIONS = parseInt(process.env.ADVISOR_MAX_CONTINUATIONS || '2', 10);
+
 /** Connection-level faults worth retrying — never HTTP status errors. */
 function isTransientNetworkError(err) {
   if (!err) return false;
@@ -339,7 +346,14 @@ You're replying inside a WhatsApp chat on a phone screen, not a web page — thi
  *
  * @returns {Promise<{content: string, tool_calls?: Array}>}
  */
-async function callLlmStreamOnce(messages, onDelta) {
+/**
+ * @param {boolean} [withTools=true] — false on a continuation call, where the
+ *   model is only finishing a sentence it already started. The tool schemas
+ *   are ~6,000 tokens; sending them to say "keep writing" costs real latency
+ *   on every resumed answer and cannot change the outcome, since a
+ *   continuation that called a tool would be abandoning the answer mid-way.
+ */
+async function callLlmStreamOnce(messages, onDelta, withTools = true) {
   const controller = new AbortController();
 
   // Two clocks: a stall timer that RESETS on every byte received, and an
@@ -366,8 +380,7 @@ async function callLlmStreamOnce(messages, onDelta) {
       body: JSON.stringify({
         model: LLM_MODEL,
         messages,
-        tools: TOOLS,
-        tool_choice: 'auto',
+        ...(withTools ? { tools: TOOLS, tool_choice: 'auto' } : {}),
         max_tokens: LLM_MAX_TOKENS,
         temperature: 0.3,
         stream: true,
@@ -457,11 +470,11 @@ async function callLlmStreamOnce(messages, onDelta) {
  * streamed to the owner yet — re-running a partially delivered answer would
  * print it twice.
  */
-async function callLlmStream(messages, onDelta) {
+async function callLlmStream(messages, onDelta, withTools = true) {
   let lastErr;
   for (let attempt = 0; attempt <= LLM_MAX_RETRIES; attempt++) {
     try {
-      return await callLlmStreamOnce(messages, onDelta);
+      return await callLlmStreamOnce(messages, onDelta, withTools);
     } catch (err) {
       lastErr = err;
       const retryable = isTransientNetworkError(err) && !err.streamed && attempt < LLM_MAX_RETRIES;
@@ -507,13 +520,19 @@ async function chatStream(organizationId, history, onToken, options = {}) {
   const toolCallsUsed = [];
 
   let partial = '';
-  for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
+  let toolIterations = 0;
+  let continuations = 0;
+  // Counted separately from tool iterations on purpose: a long answer that
+  // needs resuming twice must not consume the budget the agent needs for
+  // gathering evidence, or asking a genuinely multi-step question would
+  // start failing purely because the answer to it was wordy.
+  while (toolIterations < MAX_TOOL_ITERATIONS && continuations <= MAX_CONTINUATIONS) {
     let message;
     try {
       message = await callLlmStream(messages, (tok) => {
         partial += tok;
         if (onToken) onToken(tok);
-      });
+      }, continuations === 0); // no tool schemas once we're only resuming prose
     } catch (err) {
       // Whatever already streamed is real, evidenced output the owner can
       // see — never discard it or bury it under a failure banner. Append a
@@ -539,11 +558,45 @@ async function chatStream(organizationId, history, onToken, options = {}) {
     }
 
     if (!message.tool_calls || message.tool_calls.length === 0) {
-      const reply = message.content || "I wasn't able to come up with an answer.";
-      if (!message.content && onToken) onToken(reply);
+      // finishReason 'length' means the model was cut off mid-sentence by the
+      // token cap, not that it finished. This branch only checked for tool
+      // calls, so a capped answer returned as though it were complete and the
+      // owner saw a sentence that simply stopped — the "cut off" report.
+      // Ask it to continue from where it stopped rather than raising the cap:
+      // a bigger cap makes every answer slower and still truncates the one
+      // answer that runs one token past it.
+      if (message.finishReason === 'length' && continuations < MAX_CONTINUATIONS) {
+        continuations++;
+        messages.push({ role: 'assistant', content: message.content || '' });
+        messages.push({
+          role: 'user',
+          content: 'Continue exactly where you stopped. Do not repeat anything you already '
+            + 'wrote, do not re-introduce the answer, and do not start a new section — resume '
+            + 'mid-sentence if that is where you left off.',
+        });
+        continue;
+      }
+
+      // After a continuation the answer spans several assistant messages, so
+      // message.content holds only the LAST segment. `partial` is every token
+      // actually streamed to the owner — return that, or the conversation
+      // history would persist a reply missing its own opening paragraphs.
+      const full = continuations > 0 && partial.trim() ? partial : message.content;
+      let reply = full || "I wasn't able to come up with an answer.";
+      if (!full && onToken) onToken(reply);
+
+      // Still truncated with no resumes left. Say so where it actually
+      // happens — this returns from inside the loop, so a disclosure placed
+      // after the loop would never run.
+      if (message.finishReason === 'length' && full) {
+        const note = '\n\n_(This answer ran unusually long and was cut here. Ask about any part of it to get the rest.)_';
+        if (onToken) onToken(note);
+        reply += note;
+      }
       return { reply, toolCalls: toolCallsUsed };
     }
 
+    toolIterations++;
     messages.push({ role: 'assistant', content: message.content || null, tool_calls: message.tool_calls });
 
     for (const call of message.tool_calls) {
@@ -559,6 +612,9 @@ async function chatStream(organizationId, history, onToken, options = {}) {
     }
   }
 
+  // Reached only by exhausting TOOL ITERATIONS — the agent kept gathering
+  // evidence without ever concluding. A capped answer never lands here; it
+  // returns from inside the loop with its own disclosure attached.
   const reply = "I needed too many steps to answer that confidently — could you ask it more specifically, e.g. about one product or one time period?";
   if (onToken) onToken(reply);
   return { reply, toolCalls: toolCallsUsed };
