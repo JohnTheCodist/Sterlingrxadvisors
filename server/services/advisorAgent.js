@@ -51,7 +51,27 @@ const LLM_RETRY_BASE_MS = 500;
 // Also Advisor-specific: the shared LLM_MAX_TOKENS is 1024, right for the
 // mapper's short JSON replies but enough to truncate a consulting-style
 // answer mid-sentence (one test reply ended on a dangling "##").
-const LLM_MAX_TOKENS = parseInt(process.env.ADVISOR_MAX_TOKENS || '2048', 10);
+const LLM_MAX_TOKENS = parseInt(process.env.ADVISOR_MAX_TOKENS || '3072', 10);
+
+// Reasoning models (deepseek-v4-flash is one) spend part of the SAME
+// max_tokens budget on internal thinking that is never shown to anyone. That
+// is what produced the "answer cut off after one line" reports: measured on
+// the live endpoint, "how do i prepare for this week" burned 939 reasoning
+// tokens and one probe spent an entire 300-token budget thinking and emitted
+// zero characters of answer. The loop then saw finish_reason 'length' with no
+// content, "resumed" an answer that had never started, and after two futile
+// continuations showed the owner a preamble plus a truncation notice.
+//
+// Turning it off was checked against the thing it could plausibly break --
+// tool selection, which is the Advisor's whole contract -- across five real
+// questions. Same or better tools every time, no malformed arguments, and
+// roughly twice as fast; on the question above, 11.0s -> 2.5s with MORE tools
+// chosen. So the budget now goes entirely to the visible answer.
+//
+// Set ADVISOR_THINKING=enabled to restore it. If a provider rejects the
+// parameter outright we stop sending it rather than let the Advisor 400.
+const THINKING_ENABLED = (process.env.ADVISOR_THINKING || 'disabled') === 'enabled';
+let thinkingParamRejected = false;
 
 const MAX_TOOL_ITERATIONS = 5;
 
@@ -355,6 +375,7 @@ You're replying inside a WhatsApp chat on a phone screen, not a web page — thi
  */
 async function callLlmStreamOnce(messages, onDelta, withTools = true) {
   const controller = new AbortController();
+  const sendThinkingParam = !THINKING_ENABLED && !thinkingParamRejected;
 
   // Timing. The question "why is the Advisor slow" has three quite different
   // answers -- the provider is thinking, the provider is typing, or our own
@@ -413,6 +434,7 @@ async function callLlmStreamOnce(messages, onDelta, withTools = true) {
         // tool execution and the prompt telling the model to batch
         // independent tool calls into one turn.
         ...(withTools ? { tools: TOOLS, tool_choice: 'auto' } : {}),
+        ...(sendThinkingParam ? { thinking: { type: 'disabled' } } : {}),
         max_tokens: LLM_MAX_TOKENS,
         temperature: 0.3,
         stream: true,
@@ -422,6 +444,17 @@ async function callLlmStreamOnce(messages, onDelta, withTools = true) {
     tFirstByte = Date.now();
     if (!response.ok) {
       const text = await response.text().catch(() => '');
+      // A provider that doesn't understand `thinking` must not take the
+      // Advisor down with it. Remember the rejection, and let the caller
+      // retry once without it instead of failing the owner's question.
+      if (response.status === 400 && sendThinkingParam && /thinking/i.test(text)) {
+        thinkingParamRejected = true;
+        console.warn('[advisor] provider rejected the `thinking` parameter — disabling it for this process');
+        const err = new Error('retry without thinking parameter');
+        err.retryWithoutThinking = true;
+        err.streamed = false;
+        throw err;
+      }
       const err = new Error(`LLM API returned ${response.status}: ${text.slice(0, 300)}`);
       err.httpStatus = response.status;
       err.streamed = false;
@@ -429,6 +462,7 @@ async function callLlmStreamOnce(messages, onDelta, withTools = true) {
     }
 
     let content = '';
+    let reasoningChars = 0;
     const toolCallsAcc = [];
     let buffer = '';
     let finishReason = null;
@@ -456,6 +490,14 @@ async function callLlmStreamOnce(messages, onDelta, withTools = true) {
 
         if (tFirstToken === null && (delta.content || delta.tool_calls)) tFirstToken = Date.now();
 
+        // Internal thinking. Deliberately NOT forwarded to the owner — it is
+        // the model's scratchpad, not an answer — but it is measured, because
+        // it spends the same token budget the answer needs and being blind to
+        // it is what made the truncation bug so hard to see from the outside.
+        if (typeof delta.reasoning_content === 'string') {
+          reasoningChars += delta.reasoning_content.length;
+        }
+
         if (delta.content) {
           content += delta.content;
           streamed = true;
@@ -478,7 +520,14 @@ async function callLlmStreamOnce(messages, onDelta, withTools = true) {
 
     const toolCalls = toolCallsAcc.filter(Boolean);
     if (finishReason === 'length') {
-      console.warn(`[advisor] answer hit the ${LLM_MAX_TOKENS}-token cap and was truncated`);
+      // Naming the reasoning spend here matters: "truncated" with 0 content
+      // and thousands of reasoning chars is a completely different fault from
+      // a genuinely long answer, and needs a different fix.
+      console.warn(
+        `[advisor] hit the ${LLM_MAX_TOKENS}-token cap — `
+        + `${content.length} chars of answer, ${reasoningChars} chars of internal reasoning`
+        + `${reasoningChars > content.length ? ' (reasoning consumed most of the budget)' : ''}`,
+      );
     }
     const tEnd = Date.now();
     const timing = {
@@ -524,6 +573,10 @@ async function callLlmStream(messages, onDelta, withTools = true) {
       return await callLlmStreamOnce(messages, onDelta, withTools);
     } catch (err) {
       lastErr = err;
+      // The provider refused the `thinking` parameter. The flag is already
+      // set, so retrying immediately sends a request without it — this costs
+      // one round trip once per process, not a failed answer.
+      if (err.retryWithoutThinking && !err.streamed) continue;
       const retryable = isTransientNetworkError(err) && !err.streamed && attempt < LLM_MAX_RETRIES;
       if (!retryable) break;
       const backoff = LLM_RETRY_BASE_MS * (2 ** attempt);
@@ -577,6 +630,7 @@ async function chatStream(organizationId, history, onToken, options = {}) {
   // the database time so the log says which side actually owns the wait.
   let llmMs = 0;
   let toolMs = 0;
+  const toolTimings = []; // [name, ms] per individual tool call
   // Counted separately from tool iterations on purpose: a long answer that
   // needs resuming twice must not consume the budget the agent needs for
   // gathering evidence, or asking a genuinely multi-step question would
@@ -610,7 +664,7 @@ async function chatStream(organizationId, history, onToken, options = {}) {
         if (onToken) onToken(reply);
       }
       console.error(`[advisor] LLM call failed after ${toolCallsUsed.length} tool call(s):`, err.message);
-      logTurnSummary(turnStart, llmMs, toolMs, toolCallsUsed.length);
+      logTurnSummary(turnStart, llmMs, toolMs, toolCallsUsed.length, toolTimings);
       return { reply, toolCalls: toolCallsUsed };
     }
 
@@ -624,12 +678,25 @@ async function chatStream(organizationId, history, onToken, options = {}) {
       // answer that runs one token past it.
       if (message.finishReason === 'length' && continuations < MAX_CONTINUATIONS) {
         continuations++;
+        // Two different faults share finish_reason 'length', and telling them
+        // apart decides what to say next. If prose was actually written, the
+        // answer really was cut mid-flow and resuming is right. If nothing
+        // visible was produced, the budget went somewhere else (a reasoning
+        // model thinking past its cap), and "continue where you stopped" asks
+        // the model to resume something that never started — which is exactly
+        // how a question could burn three round trips and still return only a
+        // one-line preamble. Ask for the answer plainly instead.
+        const wroteSomething = partial.trim().length > 0;
         messages.push({ role: 'assistant', content: message.content || '' });
         messages.push({
           role: 'user',
-          content: 'Continue exactly where you stopped. Do not repeat anything you already '
-            + 'wrote, do not re-introduce the answer, and do not start a new section — resume '
-            + 'mid-sentence if that is where you left off.',
+          content: wroteSomething
+            ? 'Continue exactly where you stopped. Do not repeat anything you already '
+              + 'wrote, do not re-introduce the answer, and do not start a new section — resume '
+              + 'mid-sentence if that is where you left off.'
+            : 'You ran out of room before writing anything. Answer now, directly and '
+              + 'concisely — lead with the conclusion, keep it under 250 words, and do not '
+              + 'restate the question.',
         });
         continue;
       }
@@ -644,13 +711,18 @@ async function chatStream(organizationId, history, onToken, options = {}) {
 
       // Still truncated with no resumes left. Say so where it actually
       // happens — this returns from inside the loop, so a disclosure placed
-      // after the loop would never run.
+      // after the loop would never run. The wording has to match what really
+      // occurred: "ran unusually long" printed under a single-line preamble
+      // told the owner the opposite of the truth, since nothing long was ever
+      // written — the budget was spent thinking.
       if (message.finishReason === 'length' && full) {
-        const note = '\n\n_(This answer ran unusually long and was cut here. Ask about any part of it to get the rest.)_';
+        const note = full.trim().length > 400
+          ? '\n\n_(This answer ran unusually long and was cut here. Ask about any part of it to get the rest.)_'
+          : '\n\n_(I ran out of room before finishing this one. Ask again, or narrow it to one part, and I\'ll give you the full answer.)_';
         if (onToken) onToken(note);
         reply += note;
       }
-      logTurnSummary(turnStart, llmMs, toolMs, toolCallsUsed.length);
+      logTurnSummary(turnStart, llmMs, toolMs, toolCallsUsed.length, toolTimings);
       return { reply, toolCalls: toolCallsUsed };
     }
 
@@ -663,11 +735,20 @@ async function chatStream(organizationId, history, onToken, options = {}) {
     // costs the slowest one. Timed as wall-clock for the same reason: it's
     // the slowest tool that gates the next LLM call, not their sum.
     const toolsT0 = Date.now();
-    const results = await Promise.all(message.tool_calls.map((call) => {
+    const results = await Promise.all(message.tool_calls.map(async (call) => {
       let args = {};
       try { args = JSON.parse(call.function.arguments || '{}'); } catch (_) { /* leave empty */ }
       toolCallsUsed.push(call.function.name);
-      return runTool(organizationId, call.function.name, args);
+      const t0 = Date.now();
+      try {
+        return await runTool(organizationId, call.function.name, args);
+      } finally {
+        // Per-tool, not just per-batch: a batch is only as slow as its worst
+        // member, and "tools took 208s" is unactionable until you know which
+        // one owns it. Recorded even when the tool throws, since a slow
+        // failure is still slow.
+        toolTimings.push([call.function.name, Date.now() - t0]);
+      }
     }));
     toolMs += Date.now() - toolsT0;
 
@@ -685,9 +766,12 @@ async function chatStream(organizationId, history, onToken, options = {}) {
   // returns from inside the loop with its own disclosure attached.
   const reply = "I needed too many steps to answer that confidently — could you ask it more specifically, e.g. about one product or one time period?";
   if (onToken) onToken(reply);
-  logTurnSummary(turnStart, llmMs, toolMs, toolCallsUsed.length);
+  logTurnSummary(turnStart, llmMs, toolMs, toolCallsUsed.length, toolTimings);
   return { reply, toolCalls: toolCallsUsed };
 }
+
+/** A tool this slow is the answer to "why was that question slow". */
+const SLOW_TOOL_MS = 3000;
 
 /**
  * One line per answer: how the wall-clock time split between waiting on the
@@ -695,14 +779,22 @@ async function chatStream(organizationId, history, onToken, options = {}) {
  * how much of the total neither accounts for — request setup, JSON parsing,
  * the gaps between iterations. Exists so "the Advisor is slow" has an answer
  * grounded in a real number instead of a guess at which of the two to blame.
+ *
+ * The slowest individual tools are named on a second line, because the first
+ * real measurement showed tools owning 93% of a 374-second answer — at which
+ * point the only question that matters is WHICH tool.
  */
-function logTurnSummary(turnStart, llmMs, toolMs, toolCallCount) {
+function logTurnSummary(turnStart, llmMs, toolMs, toolCallCount, toolTimings = []) {
   const totalMs = Date.now() - turnStart;
   const otherMs = Math.max(0, totalMs - llmMs - toolMs);
   console.log(
     `[advisor] turn: ${totalMs}ms total — llm ${llmMs}ms, tools ${toolMs}ms `
     + `(${toolCallCount} call${toolCallCount === 1 ? '' : 's'}), other ${otherMs}ms`,
   );
+  const slow = toolTimings.filter(([, ms]) => ms >= SLOW_TOOL_MS).sort((a, b) => b[1] - a[1]);
+  if (slow.length) {
+    console.log(`[advisor]   slow tools: ${slow.map(([n, ms]) => `${n} ${(ms / 1000).toFixed(1)}s`).join(', ')}`);
+  }
 }
 
 // buildSystemPrompt is exported for the prompt-contract tests only — the

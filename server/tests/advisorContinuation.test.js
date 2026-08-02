@@ -169,7 +169,8 @@ async function main() {
       async (agent, stats) => {
         const { reply } = await agent.chatStream(ORG, [{ role: 'user', content: 'q' }]);
         assert(stats().callCount <= 4, `runaway loop: ${stats().callCount} calls`);
-        assert(/cut here|unusually long/i.test(reply), `should disclose it was cut: ${reply}`);
+        assert(/cut here|unusually long|ran out of room/i.test(reply),
+          `should disclose it was cut: ${reply}`);
       },
     );
   });
@@ -185,6 +186,115 @@ async function main() {
           'the "too many steps" message is for tool exhaustion, not a long answer');
       },
     );
+  });
+
+  section('Truncation with nothing written — the reasoning-model case');
+
+  // The production failure: deepseek-v4-flash spends part of the SAME
+  // max_tokens budget on internal reasoning that never reaches the caller, so
+  // a capped turn can arrive with finish_reason 'length' and zero visible
+  // content. Asking such a turn to "continue where you stopped" tells it to
+  // resume something it never began — which is how one question burned three
+  // round trips and returned a one-line preamble plus a truncation notice.
+
+  await test('an empty capped answer is asked to answer, not to resume', async () => {
+    await withScriptedLlm(
+      [
+        { content: '', finishReason: 'length' },
+        { content: 'Stock antifungals — humidity is high.', finishReason: 'stop' },
+      ],
+      async (agent, stats) => {
+        await agent.chatStream(ORG, [{ role: 'user', content: 'how do i prepare for this week' }]);
+        const second = stats().sentBodies[1];
+        const last = second.messages[second.messages.length - 1];
+        eq(last.role, 'user');
+        assert(!/continue exactly where you stopped/i.test(last.content),
+          `nothing was written, so there is nothing to resume: ${last.content}`);
+        assert(/answer now/i.test(last.content), `must ask for the answer directly: ${last.content}`);
+      },
+    );
+  });
+
+  await test('a capped answer that DID write prose is still asked to resume', async () => {
+    // The opposite branch must not regress: real mid-sentence truncation
+    // still needs "continue where you stopped", not a fresh start.
+    await withScriptedLlm(
+      [
+        { content: 'Your revenue grew because', finishReason: 'length' },
+        { content: ' of higher basket size.', finishReason: 'stop' },
+      ],
+      async (agent, stats) => {
+        await agent.chatStream(ORG, [{ role: 'user', content: 'why?' }]);
+        const last = stats().sentBodies[1].messages.slice(-1)[0];
+        assert(/continue exactly where you stopped/i.test(last.content),
+          `prose was written, so it must resume: ${last.content}`);
+      },
+    );
+  });
+
+  await test('the disclosure does not claim an answer "ran long" when nothing was written', async () => {
+    // The owner saw "This answer ran unusually long and was cut here" under a
+    // single line of text — the opposite of what happened. Nothing long was
+    // ever written; the budget was spent thinking.
+    await withScriptedLlm(
+      [{ content: 'Let me pull the real signals.', finishReason: 'length' }],
+      async (agent) => {
+        const { reply } = await agent.chatStream(ORG, [{ role: 'user', content: 'q' }]);
+        assert(!/ran unusually long/i.test(reply),
+          `a 29-character reply must not be described as unusually long: ${reply}`);
+        assert(/ran out of room/i.test(reply), `must still disclose it was cut: ${reply}`);
+      },
+    );
+  });
+
+  await test('a genuinely long truncated answer still says so', async () => {
+    const long = 'A real, evidenced paragraph about pharmacy performance. '.repeat(10);
+    await withScriptedLlm(
+      [{ content: long, finishReason: 'length' }],
+      async (agent) => {
+        const { reply } = await agent.chatStream(ORG, [{ role: 'user', content: 'q' }]);
+        assert(/ran unusually long/i.test(reply), `long answers keep the long-answer wording: ${reply.slice(-200)}`);
+      },
+    );
+  });
+
+  section('Internal reasoning is measured but never shown');
+
+  await test('reasoning_content is not streamed to the owner', async () => {
+    // It is the model's scratchpad, not an answer. It must never reach the
+    // pharmacy owner, and must never be persisted as if it were the reply.
+    const realFetch = global.fetch;
+    const agentPathLocal = require.resolve('../services/advisorAgent');
+    const realQueries = require.cache[queriesPath];
+    const realTools = require.cache[toolsPath];
+    require.cache[queriesPath] = { id: queriesPath, filename: queriesPath, loaded: true, exports: { getDataScope: async () => null } };
+    require.cache[toolsPath] = { id: toolsPath, filename: toolsPath, loaded: true, exports: { TOOLS: [], runTool: async () => ({}) } };
+
+    global.fetch = async () => {
+      const chunks = [
+        { choices: [{ delta: { reasoning_content: 'SECRET-SCRATCHPAD-THINKING' } }] },
+        { choices: [{ delta: { content: 'Revenue was up 12%.' } }] },
+        { choices: [{ delta: {}, finish_reason: 'stop' }] },
+      ];
+      const body = chunks.map((c) => `data: ${JSON.stringify(c)}\n\n`).join('') + 'data: [DONE]\n\n';
+      const encoder = new TextEncoder();
+      return { ok: true, status: 200, body: { async *[Symbol.asyncIterator]() { yield encoder.encode(body); } } };
+    };
+
+    delete require.cache[agentPathLocal];
+    const agent = require('../services/advisorAgent');
+    const streamed = [];
+    try {
+      const { reply } = await agent.chatStream(ORG, [{ role: 'user', content: 'q' }], (t) => streamed.push(t));
+      assert(!reply.includes('SECRET-SCRATCHPAD-THINKING'), 'reasoning must not appear in the persisted reply');
+      assert(!streamed.join('').includes('SECRET-SCRATCHPAD-THINKING'), 'reasoning must not be streamed to the owner');
+      eq(reply, 'Revenue was up 12%.');
+    } finally {
+      global.fetch = realFetch;
+      require.cache[queriesPath] = realQueries;
+      require.cache[toolsPath] = realTools;
+      delete require.cache[agentPathLocal];
+    }
   });
 
   section('Continuation calls skip the tool schemas');
