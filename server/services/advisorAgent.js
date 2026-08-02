@@ -392,6 +392,26 @@ async function callLlmStreamOnce(messages, onDelta, withTools = true) {
       body: JSON.stringify({
         model: LLM_MODEL,
         messages,
+        // ALWAYS the complete tool list, never a per-question subset. This
+        // looks like an obvious thing to trim -- 28 schemas is ~5,900 tokens
+        // on every call -- but it was measured against the live provider and
+        // trimming makes it SLOWER, because the full list is byte-identical
+        // on every request and therefore ~100% prompt-cache hits:
+        //
+        //   full 28, static     1922ms median prefill, 100% cached
+        //   trimmed to 12       2665ms median prefill,  99% cached
+        //   subset per question 3237ms median prefill,  67% cached
+        //
+        // The schemas are effectively free; what is not free is CHANGING
+        // them, which invalidates the cached prefix and forces a re-read.
+        // Same reasoning applies to the system prompt: the stable text is
+        // built first and the org-specific blocks appended after it, so the
+        // cacheable prefix stays identical across organizations.
+        //
+        // The real cost is per ROUND TRIP (~1s connect + ~2s prefill), so
+        // the lever that works is making fewer calls -- hence concurrent
+        // tool execution and the prompt telling the model to batch
+        // independent tool calls into one turn.
         ...(withTools ? { tools: TOOLS, tool_choice: 'auto' } : {}),
         max_tokens: LLM_MAX_TOKENS,
         temperature: 0.3,
