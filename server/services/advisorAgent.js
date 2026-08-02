@@ -356,6 +356,18 @@ You're replying inside a WhatsApp chat on a phone screen, not a web page — thi
 async function callLlmStreamOnce(messages, onDelta, withTools = true) {
   const controller = new AbortController();
 
+  // Timing. The question "why is the Advisor slow" has three quite different
+  // answers -- the provider is thinking, the provider is typing, or our own
+  // database is -- and they call for opposite fixes. Splitting the wait at the
+  // first token separates the first two: everything before it is prefill,
+  // which scales with how much prompt we send (28 tool schemas is ~6k tokens
+  // on every call that offers them), and everything after it is generation,
+  // which scales with how much the model writes. Measured here rather than
+  // estimated, for the same reason the upload breakdown is.
+  const t0 = Date.now();
+  let tFirstByte = null;   // response headers back: connection + provider queue
+  let tFirstToken = null;  // first delta of any kind: prefill is done
+
   // Two clocks: a stall timer that RESETS on every byte received, and an
   // absolute ceiling. `streamed` records whether any content already reached
   // the caller, so the retry layer above never re-runs a request whose output
@@ -387,6 +399,7 @@ async function callLlmStreamOnce(messages, onDelta, withTools = true) {
       }),
       signal: controller.signal,
     });
+    tFirstByte = Date.now();
     if (!response.ok) {
       const text = await response.text().catch(() => '');
       const err = new Error(`LLM API returned ${response.status}: ${text.slice(0, 300)}`);
@@ -421,6 +434,8 @@ async function callLlmStreamOnce(messages, onDelta, withTools = true) {
         const delta = choice.delta;
         if (!delta) continue;
 
+        if (tFirstToken === null && (delta.content || delta.tool_calls)) tFirstToken = Date.now();
+
         if (delta.content) {
           content += delta.content;
           streamed = true;
@@ -445,7 +460,19 @@ async function callLlmStreamOnce(messages, onDelta, withTools = true) {
     if (finishReason === 'length') {
       console.warn(`[advisor] answer hit the ${LLM_MAX_TOKENS}-token cap and was truncated`);
     }
-    return { content, tool_calls: toolCalls.length > 0 ? toolCalls : undefined, finishReason };
+    const tEnd = Date.now();
+    const timing = {
+      connectMs: tFirstByte - t0,           // network + provider queueing
+      prefillMs: (tFirstToken || tEnd) - tFirstByte, // reading the prompt (grows with tool schemas)
+      generateMs: tEnd - (tFirstToken || tEnd),      // writing the answer
+      totalMs: tEnd - t0,
+    };
+    console.log(
+      `[advisor] llm call: connect ${timing.connectMs}ms, prefill ${timing.prefillMs}ms, `
+      + `generate ${timing.generateMs}ms, total ${timing.totalMs}ms`
+      + `${withTools ? ` (+${TOOLS.length} tool schemas)` : ' (no tools)'}`,
+    );
+    return { content, tool_calls: toolCalls.length > 0 ? toolCalls : undefined, finishReason, timing };
   } catch (err) {
     // Distinguish our own stall abort from a caller/provider abort so the
     // message the owner sees names the real cause.
@@ -522,6 +549,14 @@ async function chatStream(organizationId, history, onToken, options = {}) {
   let partial = '';
   let toolIterations = 0;
   let continuations = 0;
+  const turnStart = Date.now();
+  // Split across the whole request, not just one call, because the owner's
+  // "why is this slow" question is about the request end to end. A question
+  // needing two tool calls makes three LLM round trips (pick tool -> pick
+  // tool again or answer -> answer); this adds each one up separately from
+  // the database time so the log says which side actually owns the wait.
+  let llmMs = 0;
+  let toolMs = 0;
   // Counted separately from tool iterations on purpose: a long answer that
   // needs resuming twice must not consume the budget the agent needs for
   // gathering evidence, or asking a genuinely multi-step question would
@@ -533,6 +568,7 @@ async function chatStream(organizationId, history, onToken, options = {}) {
         partial += tok;
         if (onToken) onToken(tok);
       }, continuations === 0); // no tool schemas once we're only resuming prose
+      if (message.timing) llmMs += message.timing.totalMs;
     } catch (err) {
       // Whatever already streamed is real, evidenced output the owner can
       // see — never discard it or bury it under a failure banner. Append a
@@ -554,6 +590,7 @@ async function chatStream(organizationId, history, onToken, options = {}) {
         if (onToken) onToken(reply);
       }
       console.error(`[advisor] LLM call failed after ${toolCallsUsed.length} tool call(s):`, err.message);
+      logTurnSummary(turnStart, llmMs, toolMs, toolCallsUsed.length);
       return { reply, toolCalls: toolCallsUsed };
     }
 
@@ -593,6 +630,7 @@ async function chatStream(organizationId, history, onToken, options = {}) {
         if (onToken) onToken(note);
         reply += note;
       }
+      logTurnSummary(turnStart, llmMs, toolMs, toolCallsUsed.length);
       return { reply, toolCalls: toolCallsUsed };
     }
 
@@ -602,13 +640,16 @@ async function chatStream(organizationId, history, onToken, options = {}) {
     // Tools in one iteration are independent — the model asked for all of
     // them before seeing any result — so they run concurrently. Sequentially
     // a three-tool turn cost the sum of three database round trips; now it
-    // costs the slowest one.
+    // costs the slowest one. Timed as wall-clock for the same reason: it's
+    // the slowest tool that gates the next LLM call, not their sum.
+    const toolsT0 = Date.now();
     const results = await Promise.all(message.tool_calls.map((call) => {
       let args = {};
       try { args = JSON.parse(call.function.arguments || '{}'); } catch (_) { /* leave empty */ }
       toolCallsUsed.push(call.function.name);
       return runTool(organizationId, call.function.name, args);
     }));
+    toolMs += Date.now() - toolsT0;
 
     message.tool_calls.forEach((call, i) => {
       messages.push({
@@ -624,7 +665,24 @@ async function chatStream(organizationId, history, onToken, options = {}) {
   // returns from inside the loop with its own disclosure attached.
   const reply = "I needed too many steps to answer that confidently — could you ask it more specifically, e.g. about one product or one time period?";
   if (onToken) onToken(reply);
+  logTurnSummary(turnStart, llmMs, toolMs, toolCallsUsed.length);
   return { reply, toolCalls: toolCallsUsed };
+}
+
+/**
+ * One line per answer: how the wall-clock time split between waiting on the
+ * LLM provider and waiting on our own tool calls (database queries), plus
+ * how much of the total neither accounts for — request setup, JSON parsing,
+ * the gaps between iterations. Exists so "the Advisor is slow" has an answer
+ * grounded in a real number instead of a guess at which of the two to blame.
+ */
+function logTurnSummary(turnStart, llmMs, toolMs, toolCallCount) {
+  const totalMs = Date.now() - turnStart;
+  const otherMs = Math.max(0, totalMs - llmMs - toolMs);
+  console.log(
+    `[advisor] turn: ${totalMs}ms total — llm ${llmMs}ms, tools ${toolMs}ms `
+    + `(${toolCallCount} call${toolCallCount === 1 ? '' : 's'}), other ${otherMs}ms`,
+  );
 }
 
 // buildSystemPrompt is exported for the prompt-contract tests only — the
