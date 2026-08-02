@@ -599,17 +599,24 @@ async function chatStream(organizationId, history, onToken, options = {}) {
     toolIterations++;
     messages.push({ role: 'assistant', content: message.content || null, tool_calls: message.tool_calls });
 
-    for (const call of message.tool_calls) {
+    // Tools in one iteration are independent — the model asked for all of
+    // them before seeing any result — so they run concurrently. Sequentially
+    // a three-tool turn cost the sum of three database round trips; now it
+    // costs the slowest one.
+    const results = await Promise.all(message.tool_calls.map((call) => {
       let args = {};
       try { args = JSON.parse(call.function.arguments || '{}'); } catch (_) { /* leave empty */ }
       toolCallsUsed.push(call.function.name);
-      const result = await runTool(organizationId, call.function.name, args);
+      return runTool(organizationId, call.function.name, args);
+    }));
+
+    message.tool_calls.forEach((call, i) => {
       messages.push({
         role: 'tool',
         tool_call_id: call.id,
-        content: JSON.stringify(result),
+        content: JSON.stringify(results[i]),
       });
-    }
+    });
   }
 
   // Reached only by exhausting TOOL ITERATIONS — the agent kept gathering
