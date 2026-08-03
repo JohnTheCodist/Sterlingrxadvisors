@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, ReferenceDot, ComposedChart, ReferenceLine, Treemap,
@@ -32,6 +32,7 @@ import ExecutiveNote from '../components/ExecutiveNote.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { apiFetch } from '../lib/apiClient.js';
 import ProductTour, { hasSeenTour } from '../components/ProductTour.jsx';
+import SectionEmptyState from '../components/SectionEmptyState.jsx';
 
 // Widget ids (from server/services/widgetRegistry.js) that are product-centric
 // within the 'sales' dashboard category — used to give the "Products" nav tab
@@ -1012,14 +1013,29 @@ const layoutFor = (dashboardKey) => DASHBOARD_LAYOUTS[dashboardKey] || ChartType
  * the valid/errored split — and delegates the arrangement of the widgets
  * themselves to whichever layout that dashboard type declares.
  */
-function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOverride }) {
-  if (!data || !data.available || data.available.length === 0) return null;
-
-  const available = idFilter ? data.available.filter(w => idFilter.has(w.id)) : data.available;
-  if (available.length === 0) return null;
-
+function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOverride, onUpload }) {
   const labels = { sales: 'Sales', inventory: 'Inventory', expiry: 'Expiry', supplier: 'Supplier', customer: 'Customer' };
   const title = titleOverride || labels[dashboardKey] || dashboardKey;
+
+  // Both no-data paths used to `return null`, which rendered the tab as a
+  // blank page — a sales-only upload made Inventory look broken rather than
+  // simply unfilled, with nothing on screen to say which. Explain it instead:
+  // why this section is empty, which columns would fill it, and what the
+  // owner gets in return.
+  const hasAny = data && data.available && data.available.length > 0;
+  const available = hasAny && idFilter ? data.available.filter(w => idFilter.has(w.id)) : (data?.available || []);
+
+  if (available.length === 0) {
+    return (
+      <div className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-7 w-1 rounded-full bg-[var(--color-line-strong)]" />
+          <h2 className="text-lg font-semibold text-[var(--color-ink)]">{title}</h2>
+        </div>
+        <SectionEmptyState dashboardKey={dashboardKey} onUpload={onUpload} />
+      </div>
+    );
+  }
 
   // Filter widgets that have valid results (not errored)
   const valid = available.filter(w => !w.result?.error);
@@ -1055,6 +1071,7 @@ function DashboardSection({ dashboardKey, data, totalRevenue, idFilter, titleOve
 
 export default function Dashboard() {
   const location = useLocation();
+  const navigate = useNavigate();
   const state = location.state || {};
   const { user, organization, signOut } = useAuth();
 
@@ -1645,6 +1662,7 @@ export default function Dashboard() {
               totalRevenue={totalRevenue}
               idFilter={activeNav === 'products' ? PRODUCT_WIDGET_IDS : activeNav === 'performance' ? performanceIdFilter : undefined}
               titleOverride={activeNav === 'products' ? 'Products' : activeNav === 'performance' ? 'Performance' : undefined}
+              onUpload={() => navigate('/upload')}
             />
           ))
         }
