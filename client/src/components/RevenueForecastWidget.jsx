@@ -3,6 +3,7 @@ import {
   ResponsiveContainer, ReferenceLine, Legend,
 } from 'recharts';
 import InfoBadge from './InfoBadge';
+import { formatMonthLong } from '../utils/dateFormat';
 
 function formatNaira(n) {
   if (n == null) return '—';
@@ -235,9 +236,11 @@ export default function RevenueForecastWidget({ widget }) {
                 </tr>
               </thead>
               <tbody>
+                {/* The key stays the raw "2026-07": it is the stable identity
+                    and what the server sorts on. Only the cell is formatted. */}
                 {forecast.map((f) => (
                   <tr key={f.month} className="border-b border-[var(--color-line)]/50">
-                    <td className="py-2 pr-4 font-mono text-xs">{f.month}</td>
+                    <td className="py-2 pr-4 text-xs whitespace-nowrap">{formatMonthLong(f.month)}</td>
                     <td className="py-2 pr-4 font-mono text-right font-bold">{formatNaira(f.predicted)}</td>
                     <td className="py-2 pr-4 font-mono text-right text-[var(--color-ink-soft)]">{formatNaira(f.lower)}</td>
                     <td className="py-2 pr-4 font-mono text-right text-[var(--color-ink-soft)]">{formatNaira(f.upper)}</td>

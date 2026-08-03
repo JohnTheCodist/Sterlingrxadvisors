@@ -67,12 +67,9 @@ function impactColors(impact) {
   return { fg: COLOR.emerald, bg: COLOR.emeraldMuted };
 }
 
-function monthLabel(ym) {
-  if (!ym) return '';
-  const [y, m] = ym.split('-');
-  const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${names[parseInt(m, 10) - 1] || m} '${y.slice(2)}`;
-}
+// Short form: same bar-chart width constraint as the dashboard PDF — the
+// label sits under a bar sized CONTENT_WIDTH / number-of-months.
+const { monthShort: monthLabel } = require('../monthFormat');
 
 /** Adds a new page (with the standard footer space reserved) if `needed` pt won't fit before PAGE_BOTTOM. */
 function ensureSpace(doc, cursor, needed) {

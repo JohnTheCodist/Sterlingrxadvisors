@@ -90,12 +90,11 @@ function impactColors(impact) {
   return { fg: COLOR.emerald, bg: COLOR.emeraldMuted };
 }
 
-function monthLabel(ym) {
-  if (!ym) return '';
-  const [y, m] = ym.split('-');
-  const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${names[parseInt(m, 10) - 1] || m} '${y.slice(2)}`;
-}
+// Short form deliberately: this label sits under a bar whose width is
+// CONTENT_WIDTH / number-of-months, so at a year of data there is roughly 34pt
+// per column. "July 2026" would collide with its neighbours. Everywhere the
+// month appears in prose uses monthLong instead.
+const { monthShort: monthLabel } = require('../monthFormat');
 
 function ensureSpace(doc, cursor, needed) {
   if (cursor + needed > PAGE_BOTTOM) {

@@ -12,6 +12,7 @@ const { getSql, assertOrgId, queryAnalytics } = require('./db');
 const { computeHealthStats } = require('./businessHealthData');
 const { scoreBusinessHealth } = require('./businessHealth');
 const { generateInsights } = require('./recommendations');
+const { monthLong } = require('./monthFormat');
 const { profitByCategory, fastSlowMovers } = require('./insights');
 
 const round = (n, d = 2) => {
@@ -551,7 +552,9 @@ async function simulatePriceChange(organizationId, { query, priceChangePct } = {
       const qtyChangeSeen = ((Number(last.qty) - firstQty) / firstQty) * 100;
       if (Math.abs(priceChangeSeen) > 1) {
         historicalElasticitySignal = {
-          note: `Between ${first.month} and ${last.month}, this product's price moved ${round(priceChangeSeen)}% and quantity sold moved ${round(qtyChangeSeen)}%.`,
+          // The query groups and orders on the raw 'YYYY-MM' key; only the
+          // sentence the Advisor reads aloud is formatted.
+          note: `Between ${monthLong(first.month)} and ${monthLong(last.month)}, this product's price moved ${round(priceChangeSeen)}% and quantity sold moved ${round(qtyChangeSeen)}%.`,
           priceChangeSeenPct: round(priceChangeSeen),
           quantityChangeSeenPct: round(qtyChangeSeen),
         };

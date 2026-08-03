@@ -22,13 +22,10 @@ function fmtPct(n) {
   return round(n) + '%';
 }
 
-const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-function monthLabel(ym) {
-  if (!ym) return '';
-  const parts = String(ym).split('-');
-  const idx = parseInt(parts[1], 10) - 1;
-  return MONTH_NAMES[idx] + ' ' + parts[0];
-}
+// Prose, so the full form: "July 2026", not "Jul 2026". Shared with every
+// other caller via monthFormat.js — this file used to carry its own copy, and
+// four private copies had drifted into three different output formats.
+const { monthLong: monthLabel } = require('./monthFormat');
 
 // ── trend analysis helpers ────────────────────────────────────────────
 

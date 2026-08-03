@@ -13,6 +13,10 @@
  * metric from the source data.
  */
 
+// Months arrive as the "2026-07" sort key; these insights are read as
+// sentences, so they print the full "July 2026" form.
+const { monthLong } = require('./monthFormat');
+
 const LLM_API_KEY = process.env.LLM_API_KEY || '';
 const LLM_API_URL = process.env.LLM_API_URL || 'https://api.openai.com/v1/chat/completions';
 const LLM_MODEL = process.env.LLM_MODEL || 'gpt-4o-mini';
@@ -221,15 +225,15 @@ function generateRuleBasedInsights(metrics) {
     const prev = t.months[t.months.length - 2];
     if (last && prev && last.momGrowth !== null && last.momGrowth < 0) {
       insights.push({
-        title: `Revenue dropped ${Math.abs(last.momGrowth)}% from ${prev.month} to ${last.month}`,
+        title: `Revenue dropped ${Math.abs(last.momGrowth)}% from ${monthLong(prev.month)} to ${monthLong(last.month)}`,
         type: 'growth_trend',
         severity: last.momGrowth < -10 ? 'critical' : 'warning',
-        insight: `Monthly revenue fell from ₦${_fmt(prev.revenue)} (${prev.month}) to ₦${_fmt(last.revenue)} (${last.month}), a decline of ${Math.abs(last.momGrowth)}%.`,
+        insight: `Monthly revenue fell from ₦${_fmt(prev.revenue)} (${monthLong(prev.month)}) to ₦${_fmt(last.revenue)} (${monthLong(last.month)}), a decline of ${Math.abs(last.momGrowth)}%.`,
         soWhat: 'Consecutive months of decline indicate a systemic issue — not just a slow week. Competitor activity, supplier problems, or seasonal patterns could be the cause. Left unchecked, the annualized impact is significant.',
-        recommendation: `1) Compare ${last.month} to the same month last year (if data exists) to check for seasonality. 2) Review which products declined most — was it across the board or specific items? 3) Check if any competitor opened nearby or if there were supply disruptions. 4) If seasonal, plan inventory and promotions accordingly for next year.`,
+        recommendation: `1) Compare ${monthLong(last.month)} to the same month last year (if data exists) to check for seasonality. 2) Review which products declined most — was it across the board or specific items? 3) Check if any competitor opened nearby or if there were supply disruptions. 4) If seasonal, plan inventory and promotions accordingly for next year.`,
         expectedImpact: {
           description: 'Identifying and reversing the decline trend',
-          financialEstimate: `Recovering to ${prev.month} levels would restore ₦${_fmt(prev.revenue - last.revenue)} per month`,
+          financialEstimate: `Recovering to ${monthLong(prev.month)} levels would restore ₦${_fmt(prev.revenue - last.revenue)} per month`,
         },
         confidence: 0.85,
       });
@@ -245,7 +249,7 @@ function generateRuleBasedInsights(metrics) {
         title: `Revenue growing — ${totalGrowth}% increase over ${t.monthCount} months`,
         type: 'growth_trend',
         severity: 'positive',
-        insight: `Revenue grew from ₦${_fmt(first.revenue)} (${first.month}) to ₦${_fmt(last.revenue)} (${last.month}), a ${totalGrowth}% increase across ${t.monthCount} months.`,
+        insight: `Revenue grew from ₦${_fmt(first.revenue)} (${monthLong(first.month)}) to ₦${_fmt(last.revenue)} (${monthLong(last.month)}), a ${totalGrowth}% increase across ${t.monthCount} months.`,
         soWhat: 'Growth is excellent, but rapid growth can strain cash flow (more inventory needed) and operations (more customers to serve). Ensure the growth is profitable, not just high-revenue.',
         recommendation: '1) Confirm that margins are holding — growth at the expense of margin is a trap. 2) Ensure you have adequate inventory financing for increased stock levels. 3) Identify which products are driving growth and double down on them. 4) Consider staffing needs if transaction counts are also rising.',
         expectedImpact: {

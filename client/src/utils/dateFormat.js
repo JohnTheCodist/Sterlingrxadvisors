@@ -64,3 +64,25 @@ export function makeDateFormatter(chartData, key = 'label') {
 
   return { tickFormatter, monthOnly: singleYear };
 }
+
+const LONG_MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+
+/**
+ * "2026-07" -> "July 2026".
+ *
+ * The month KEY stays "2026-07" everywhere — it is what the server sorts and
+ * groups on — so this is display only. Use it wherever a month is read as
+ * text (table cells, headings, sentences); chart tick labels keep using
+ * makeDateFormatter above, which deliberately abbreviates because axis labels
+ * have to fit between neighbouring ticks.
+ *
+ * Anything that isn't a recognisable year-month is returned unchanged rather
+ * than rendered as "undefined 2026".
+ */
+export function formatMonthLong(ym) {
+  const p = parseDateLabel(typeof ym === 'string' ? ym : String(ym ?? ''));
+  if (!p || p.month == null || p.year == null) return ym == null ? '' : String(ym);
+  const name = LONG_MONTH_NAMES[p.month - 1];
+  return name ? `${name} ${p.year}` : String(ym);
+}
