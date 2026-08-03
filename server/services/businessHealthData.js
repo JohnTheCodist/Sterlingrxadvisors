@@ -19,6 +19,35 @@ const roundTo = (n, d = 1) => {
 
 // ---- inventory stats ---------------------------------------------------
 
+/**
+ * Has this organization ever uploaded a file carrying real stock or expiry
+ * data?
+ *
+ * The stats below are derived from the product and sale tables, so they
+ * compute happily for a pharmacy that only ever uploaded sales — turnover
+ * from sales velocity, "dead stock" from products with no sales, near-expiry
+ * from the discontinued flag. Those are movement proxies, not inventory, and
+ * scoring them as Inventory Health penalises an owner for data they never
+ * supplied.
+ *
+ * dataset_registry is the authoritative record of what each upload actually
+ * contained — the same capability flags the dashboard uses to decide which
+ * sections to show — so it is the honest source for "is there anything here
+ * to assess".
+ */
+async function hasInventoryData(organizationId) {
+  assertOrgId(organizationId);
+  const db = getSql();
+  const rows = await db`
+    select capabilities from dataset_registry
+    where organization_id = ${organizationId}
+  `;
+  return rows.some((r) => {
+    const c = r.capabilities || {};
+    return c.inventory === true || c.expiry === true;
+  });
+}
+
 async function computeInventoryStats(organizationId) {
   assertOrgId(organizationId);
   const db = getSql();
@@ -95,6 +124,9 @@ async function computeInventoryStats(organizationId) {
   const overstockPct = activeProducts > 0 ? (overstockCount / activeProducts) * 100 : 0;
 
   return {
+    // Mirrors customerStats.hasCustomerData: the flag the scoring engine
+    // checks before deciding whether this pillar can be assessed at all.
+    hasInventoryData: await hasInventoryData(organizationId),
     turnoverRatio: roundTo(medianTurnover, 2),
     deadStockCount,
     deadStockPct: roundTo(deadStockPct, 1),
@@ -219,4 +251,4 @@ async function computeHealthStats(organizationId) {
   return { inventoryStats, customerStats };
 }
 
-module.exports = { computeInventoryStats, computeCustomerStats, computeHealthStats };
+module.exports = { computeInventoryStats, computeCustomerStats, computeHealthStats, hasInventoryData };

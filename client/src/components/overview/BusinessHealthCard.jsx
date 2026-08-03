@@ -37,7 +37,13 @@ export default function BusinessHealthCard({ bizHealth }) {
             </button>
           </div>
           <p className="mt-1 text-sm text-[var(--color-ink-soft)] leading-relaxed">
-            {bh.customerRedistributed && 'Customer Health unavailable. '}
+            {/* Names every pillar that could not be measured, not just
+                Customer. A sales-only upload skips Inventory too, and a score
+                that silently changed meaning is worse than one that says so. */}
+            {bh.unassessedPillars?.length > 0
+              ? `Scored on ${bh.pillars.filter((p) => p.assessed).length} of ${bh.pillars.length} pillars — `
+                + `${bh.unassessedPillars.map((p) => p.name).join(' and ')} not measurable from your uploads. `
+              : bh.customerRedistributed ? 'Customer Health unavailable. ' : ''}
             {bh.concerns?.length || 0} area{(bh.concerns?.length || 0) === 1 ? '' : 's'} need attention · {bh.strengths?.length || 0} performing well
           </p>
         </div>

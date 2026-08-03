@@ -953,6 +953,47 @@ function validateWeights() {
 }
 
 /**
+ * The result shape for a pillar whose underlying data does not exist.
+ *
+ * `assessed: false` is the important field — scoreBusinessHealth zeroes the
+ * pillar's weight and spreads it across the pillars that CAN be measured, so
+ * a missing capability neither scores 0 nor counts toward the total. The
+ * score/band remain 0/'critical' purely for shape compatibility with callers
+ * that read them; nothing consumes them once `assessed` is false, and the
+ * dashboard card already branches on `assessed` to render a reason instead of
+ * a number.
+ *
+ * @param {number} index    position in PILLARS
+ * @param {string} summary  shown on the pillar card
+ * @param {string} detail   what to upload to enable it
+ * @param {string} reason   one-line "Missing: …" for the concerns list
+ */
+function unassessedPillar(index, summary, detail, reason) {
+  const self = PILLARS[index];
+  return {
+    pillar: self.name,
+    assessed: false,
+    overallScore: 0,
+    band: 'critical',
+    weight: self.weight,
+    metrics: [{
+      name: self.name,
+      description: summary,
+      score: 0,
+      band: 'critical',
+      detail,
+      reason,
+      weight: 100,
+      contribution: 0,
+    }],
+    strengths: [],
+    concerns: [reason],
+    reasons: [reason],
+    notAssessedReason: detail,
+  };
+}
+
+/**
  * Score the Sales Performance pillar.
  *
  * @param {object} metrics — the full output of computeAllMetrics()
@@ -988,6 +1029,28 @@ function scoreProfitability(metrics, opts = {}) {
  *     lowStockCount, overstockCount, overstockPct, totalProducts }
  */
 function scoreInventoryHealth(metrics, opts = {}) {
+  // Inventory can only be judged against real stock/expiry data. Without it
+  // every metric in this pillar returns 0/'critical' — "no inventory data
+  // available", "stock-level data not available" — and the pillar's full 25%
+  // landed on the overall score as if the pharmacy were failing at inventory
+  // management, when it had simply uploaded a sales report. A pharmacy cannot
+  // be marked down for a file it never claimed to have.
+  //
+  // Absence is only concluded from an explicit signal. If no inventoryStats
+  // were supplied at all, the caller may be a context that never computes
+  // them, and silently dropping a quarter of the score there would be a
+  // second, quieter bug — so that case still scores as before.
+  const stats = opts?.inventoryStats;
+  if (stats && stats.hasInventoryData === false) {
+    return unassessedPillar(
+      2,
+      'Could not be assessed — no stock levels or expiry dates were found in your uploads. '
+      + 'The 25% weight has been redistributed across the pillars that can be measured.',
+      'No inventory data available. Upload a stock report (quantity on hand, reorder level) '
+      + 'or a batch/expiry report to enable inventory scoring.',
+      'Missing: stock quantities and expiry dates — the uploaded files carry sales only.',
+    );
+  }
   return _scorePillar(2, metrics, opts);
 }
 
@@ -1165,36 +1228,57 @@ function scoreBusinessHealth(metrics, opts = {}) {
   const customer = scoreCustomerHealth(metrics, opts);
   const ops      = scoreOperationalExcellence(metrics, opts);
 
-  const pillars = [
-    { name: sales.pillar,    weight: PILLARS[0].weight, adjustedWeight: PILLARS[0].weight, score: sales.overallScore,    band: sales.band,    assessed: true,  metrics: sales.metrics,    strengths: sales.strengths,    concerns: sales.concerns,    reasons: sales.reasons },
-    { name: profit.pillar,   weight: PILLARS[1].weight, adjustedWeight: PILLARS[1].weight, score: profit.overallScore,   band: profit.band,   assessed: true,  metrics: profit.metrics,   strengths: profit.strengths,   concerns: profit.concerns,   reasons: profit.reasons },
-    { name: inventory.pillar,weight: PILLARS[2].weight, adjustedWeight: PILLARS[2].weight, score: inventory.overallScore,band: inventory.band,assessed: true,  metrics: inventory.metrics,strengths: inventory.strengths,concerns: inventory.concerns,reasons: inventory.reasons },
-    { name: customer.pillar, weight: PILLARS[3].weight, adjustedWeight: PILLARS[3].weight, score: customer.overallScore, band: customer.band, assessed: customer.assessed !== false, metrics: customer.metrics, strengths: customer.strengths, concerns: customer.concerns, reasons: customer.reasons, notAssessedReason: customer.notAssessedReason || null },
-    { name: ops.pillar,      weight: PILLARS[4].weight, adjustedWeight: PILLARS[4].weight, score: ops.overallScore,      band: ops.band,      assessed: true,  metrics: ops.metrics,      strengths: ops.strengths,      concerns: ops.concerns,      reasons: ops.reasons },
-  ];
+  // `assessed` used to be hardcoded true for every pillar except Customer, so
+  // a pharmacy that uploaded only sales was scored on Inventory Health anyway
+  // — every metric in it returned 0 for want of stock data, and the pillar's
+  // full 25% dragged the overall score down. Each pillar now reports whether
+  // it could be measured, and the same redistribution Customer always had
+  // applies to any of them.
+  const results = [sales, profit, inventory, customer, ops];
+  const pillars = results.map((r, i) => ({
+    name: r.pillar,
+    weight: PILLARS[i].weight,
+    adjustedWeight: PILLARS[i].weight,
+    score: r.overallScore,
+    band: r.band,
+    assessed: r.assessed !== false,
+    metrics: r.metrics,
+    strengths: r.strengths,
+    concerns: r.concerns,
+    reasons: r.reasons,
+    notAssessedReason: r.notAssessedReason || null,
+  }));
 
-  let customerRedistributed = false;
-  let redistribution = null;
+  // Spread the weight of every unassessed pillar across the assessed ones, in
+  // proportion to their own weights, so the remaining weights still total 100
+  // and a 70 on the pillars that ARE measurable reads as 70 rather than being
+  // diluted toward zero by pillars nobody could score.
+  const unassessed = pillars.filter((p) => !p.assessed);
+  const assessed = pillars.filter((p) => p.assessed);
+  const freedWeight = unassessed.reduce((s, p) => s + p.weight, 0);
+  const assessedBase = assessed.reduce((s, p) => s + p.weight, 0);
 
-  // Redistribute Customer Health weight when not assessed
-  if (customer.assessed === false) {
-    customerRedistributed = true;
-    redistribution = customer.redistribution || [];
-
-    for (const r of redistribution) {
-      const pillar = pillars.find((p) => p.name === r.pillar);
-      if (pillar) {
-        pillar.adjustedWeight += r.addedWeight;
-      }
+  const redistribution = [];
+  if (freedWeight > 0 && assessedBase > 0) {
+    for (const p of assessed) {
+      const added = round((p.weight / assessedBase) * freedWeight, 1);
+      p.adjustedWeight = round(p.weight + added, 1);
+      redistribution.push({ pillar: p.name, addedWeight: added });
     }
-    // Customer Health contributes 0
-    pillars[3].adjustedWeight = 0;
   }
+  for (const p of unassessed) p.adjustedWeight = 0;
 
-  // Compute weighted overall score using adjusted weights
+  // Retained under its original name because the dashboard card reads it to
+  // print "Customer Health unavailable."; `unassessedPillars` is the general
+  // form for anything that wants the full picture.
+  const customerRedistributed = customer.assessed === false;
+
+  // Divide by the actual adjusted total rather than a hardcoded 100: rounding
+  // each redistributed share to one decimal can leave the sum at 99.9 or
+  // 100.1, which would quietly scale every score up or down.
   const adjustedTotal = pillars.reduce((s, p) => s + p.adjustedWeight, 0);
   const overallScore = adjustedTotal > 0
-    ? round(pillars.reduce((s, p) => s + (p.score * p.adjustedWeight) / 100, 0), 1)
+    ? round(pillars.reduce((s, p) => s + p.score * p.adjustedWeight, 0) / adjustedTotal, 1)
     : 0;
 
   // Aggregate across all pillars
@@ -1210,7 +1294,11 @@ function scoreBusinessHealth(metrics, opts = {}) {
     concerns: allConcerns,
     reasons: allReasons,
     customerRedistributed,
-    redistribution,
+    redistribution: redistribution.length > 0 ? redistribution : null,
+    // Which pillars could not be measured, and why — so the dashboard can say
+    // "scored on Sales, Profitability and Operations" instead of leaving the
+    // owner to wonder why a number moved.
+    unassessedPillars: unassessed.map((p) => ({ name: p.name, reason: p.notAssessedReason })),
     computedAt: new Date().toISOString(),
   };
 }
