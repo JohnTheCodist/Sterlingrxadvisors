@@ -1006,6 +1006,17 @@ function scoreSalesPerformance(metrics, opts = {}) {
 /**
  * Score the Profitability pillar.
  *
+ * Requires cost data to be meaningful: Gross Margin (40%), Gross Profit
+ * Growth (25%), and High-Margin Mix (20%) all depend on cost_price. Without
+ * it every metric returns 0/'critical' — "No cost data", "Insufficient
+ * profit data" — and the pillar's full 25% lands on the score as though the
+ * pharmacy were failing, when it had simply not uploaded cost prices.
+ *
+ * Discount Impact (15%) can score without costs, but three-quarters of the
+ * pillar cannot, so both halves are skipped or both scored together. The
+ * overall message is clearer that way — either "all profitability metrics"
+ * or none.
+ *
  * @param {object} metrics — the full output of computeAllMetrics()
  * @param {object} [opts]  — optional threshold overrides and extra data
  * @param {object} [opts.grossMargin]          — thresholds for gross margin %
@@ -1016,6 +1027,20 @@ function scoreSalesPerformance(metrics, opts = {}) {
  * @param {object} [opts.discountStats]        — pre-computed { avgDiscountRate, discountedPct, totalTransactions }
  */
 function scoreProfitability(metrics, opts = {}) {
+  // The same gate as scoreInventoryHealth: an explicit signal that real cost
+  // data was never uploaded. Without this check, every metric below returns
+  // 0/'critical', and the pillar's full 25% drags the score despite the
+  // pharmacy having uploaded exactly what it needed to.
+  if (metrics?.overview?.hasCostData === false) {
+    return unassessedPillar(
+      1,
+      'Could not be assessed — no cost prices or purchase prices were found in your uploads. '
+      + 'The 25% weight has been redistributed across the pillars that can be measured.',
+      'No cost data available. Upload a cost sheet (unit cost / purchase price per product) '
+      + 'to enable margin analysis and profitability scoring.',
+      'Missing: cost or purchase prices — the uploaded files carry selling prices only.',
+    );
+  }
   return _scorePillar(1, metrics, opts);
 }
 

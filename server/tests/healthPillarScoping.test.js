@@ -103,6 +103,34 @@ test('a pharmacy with no inventory file is not rated below its own sales perform
     `overall (${r.overallScore}) fell below sales performance (${sales.score}) with nothing else scoring badly`);
 });
 
+section('Profitability: same gate as Inventory');
+
+test('Profitability skips when no cost data was uploaded', () => {
+  // Same logic: Gross Margin (40%), Profit Growth (25%), High-Margin Mix (20%)
+  // all return 0/'critical' without cost prices. The pillar's 25% dragged the
+  // score despite the pharmacy having uploaded only selling prices, which is
+  // exactly what a POS export carries.
+  const noCost = {
+    overview: { totalRevenue: 10000000, grossProfit: null, grossMargin: null, hasCostData: false, transactionCount: 1000, averageTransactionValue: 10000, totalQuantitySold: 5000, averageSellingPrice: 2000 },
+    products: { allProducts: [{ name: 'A', revenue: 5000000, margin: null, quantity: 2500 }], totalDistinctProducts: 1 },
+    trends: { months: [{ month: '2026-07', revenue: 10000000, quantity: 5000, transactions: 1000, profit: null, margin: null }] },
+    health: { dataCompleteness: { productName: 100, quantity: 100, revenue: 100, date: 100 }, qualityDistribution: { excellent: 1000, good: 0, fair: 0, poor: 0 }, pipelineStages: { uploadedRows: 1000, structurallyValidRows: 1000 }, productRecognition: { recognizedCount: 1, unknownCount: 0, recognitionRate: 100 } },
+  };
+  const r = scoreBusinessHealth(noCost, { inventoryStats: NO_INVENTORY, customerStats: NO_CUSTOMER });
+  const prof = pillarNamed(r, 'Profitability');
+  eq(prof.assessed, false, 'Profitability must skip without cost data');
+  eq(prof.adjustedWeight, 0, 'unassessed Profitability contributes zero weight');
+  assert(prof.notAssessedReason, 'the owner should know why it was skipped');
+});
+
+test('Profitability is scored once cost data exists', () => {
+  const withCost = salesMetrics();
+  const r = scoreBusinessHealth(withCost, { inventoryStats: NO_INVENTORY, customerStats: NO_CUSTOMER });
+  const prof = pillarNamed(r, 'Profitability');
+  eq(prof.assessed, true, 'Profitability must be scored with cost data');
+  assert(prof.adjustedWeight > 0, 'an assessed pillar must carry weight');
+});
+
 section('Redistributed weight still totals 100');
 
 test('assessed weights sum to 100 when inventory and customer are both missing', () => {
