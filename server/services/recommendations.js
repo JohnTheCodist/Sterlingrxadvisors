@@ -495,7 +495,12 @@ function generateInsights(healthResult, metrics, opts = {}) {
 
   if (concentration.lowestMargin && concentration.top1) {
     const lm = concentration.lowestMargin;
-    if (lm.revenue / overview.totalRevenue > 0.15 && lm.margin < 25) {
+    // `lm.margin < 25` is TRUE when margin is null, which produced
+    // "X generates 25% of revenue at just N/A margin" — a low-profitability
+    // accusation against a product whose margin was never computed. Require a
+    // real number before calling anything low-margin.
+    if (typeof lm.margin === 'number' && Number.isFinite(lm.margin)
+        && lm.revenue / overview.totalRevenue > 0.15 && lm.margin < 25) {
       push({
         observation: `${lm.name} generates ${fmtPct(round(lm.revenue / overview.totalRevenue * 100, 0))} of revenue at just ${fmtPct(lm.margin)} margin. This product is effectively underwriting your operations at very low profitability.`,
         evidence: [
@@ -518,41 +523,80 @@ function generateInsights(healthResult, metrics, opts = {}) {
   // ── 10. Overall Summary (always included) ─────────────────────────
 
   const allProds = metrics.products?.allProducts || [];
-  const marginOk = overview.grossMargin >= 30;
+  // A metric that could not be computed is NOT a failing metric. `>=` against
+  // null quietly says otherwise -- null >= 30 is false -- which is how the
+  // brief came to read "margin at N/A needs improvement": an accusation built
+  // out of a number nobody has. Missing cost prices make gross margin
+  // genuinely unknowable (metrics.js returns null and sets hasCostData), and
+  // the honest response is to name the gap, not to score it as poor
+  // performance. Every threshold below is therefore guarded on the value
+  // actually existing first.
+  const known = (v) => typeof v === 'number' && Number.isFinite(v);
+
+  const marginKnown = known(overview.grossMargin);
   const growthOk = trend.summary === 'stable' || trend.summary === 'up';
   const txOk = avgTxMonth >= 50;
-  const concOk = concentration.top1Share < 40;
+  const concKnown = known(concentration.top1Share);
 
   const strengths = [];
   const weaknesses = [];
-  if (marginOk) strengths.push(`healthy margin of ${fmtPct(overview.grossMargin)}`);
-  else weaknesses.push(`margin at ${fmtPct(overview.grossMargin)} needs improvement`);
+  // Data gaps are tracked apart from weaknesses so they are never phrased as
+  // performance problems, and so "Areas to address" cannot be filled by
+  // something the owner has not actually done wrong.
+  const dataGaps = [];
+
+  if (!marginKnown) {
+    dataGaps.push('gross margin cannot be calculated yet — your uploads carry selling prices but no cost prices');
+  } else if (overview.grossMargin >= 30) {
+    strengths.push(`healthy margin of ${fmtPct(overview.grossMargin)}`);
+  } else {
+    weaknesses.push(`margin at ${fmtPct(overview.grossMargin)} needs improvement`);
+  }
+
   if (txCount >= 200) strengths.push(`${txCount.toLocaleString('en-NG')} transactions of reliable data`);
   else weaknesses.push(`only ${txCount} transactions — limited data for trend analysis`);
   if (allProds.length >= 5) strengths.push(`${allProds.length} distinct products`);
-  if (!concOk) weaknesses.push(`heavy reliance on ${concentration.top1 ? concentration.top1.name : 'one product'} (${fmtPct(concentration.top1Share)} of revenue)`);
+  // Same guard: an unknown concentration share must not produce
+  // "heavy reliance on X (N/A of revenue)".
+  if (concKnown && concentration.top1Share >= 40) {
+    weaknesses.push(`heavy reliance on ${concentration.top1 ? concentration.top1.name : 'one product'} (${fmtPct(concentration.top1Share)} of revenue)`);
+  }
 
-  if (strengths.length > 0 || weaknesses.length > 0) {
+  if (strengths.length > 0 || weaknesses.length > 0 || dataGaps.length > 0) {
     const strengthText = strengths.length > 0
       ? `Your business benefits from ${strengths.join(', ')}.`
       : '';
     const weaknessText = weaknesses.length > 0
       ? `Areas to address: ${weaknesses.join(', ')}.`
       : '';
+    const gapText = dataGaps.length > 0
+      ? `Not yet measurable: ${dataGaps.join(', ')}.`
+      : '';
 
     push({
-      observation: `${strengthText} ${weaknessText}`.trim(),
+      observation: `${strengthText} ${weaknessText} ${gapText}`.replace(/\s+/g, ' ').trim(),
       evidence: [
         `Revenue: ${fmtNaira(overview.totalRevenue)} over ${months.length} months.`,
-        `Gross profit: ${fmtNaira(overview.grossProfit)} (${fmtPct(overview.grossMargin)} margin).`,
+        // Stated as an absence rather than "N/A", which reads as a broken
+        // field rather than a fact about the data.
+        marginKnown
+          ? `Gross profit: ${fmtNaira(overview.grossProfit)} (${fmtPct(overview.grossMargin)} margin).`
+          : 'Gross profit and margin: not available — no cost prices in the uploaded data.',
         `${allProds.length} distinct products across ${months.length} months.`,
         `${txCount.toLocaleString('en-NG')} total transactions.`,
       ],
-      businessImpact: weaknessText || 'Maintaining current performance requires focused attention on the areas above.',
+      businessImpact: weaknessText || gapText || 'Maintaining current performance requires focused attention on the areas above.',
+      // With margin unmeasurable, "continue current strategy" would be advice
+      // given without knowing whether the strategy is profitable — so closing
+      // the data gap is itself the action worth taking first.
       recommendedAction: weaknesses.length > 0
         ? `Prioritise: ${weaknesses.slice(0, 2).join('; ')}.`
-        : `Continue current strategy. Monitor monthly trends to catch any slowdown early.`,
-      expectedOutcome: `Sustained business health with margin above 30% and diversified revenue sources.`,
+        : dataGaps.length > 0
+          ? 'Upload a file that includes cost or purchase prices — profitability cannot be assessed without them, and revenue alone does not show whether these sales are making money.'
+          : `Continue current strategy. Monitor monthly trends to catch any slowdown early.`,
+      expectedOutcome: marginKnown
+        ? `Sustained business health with margin above 30% and diversified revenue sources.`
+        : `Profitability becomes measurable once cost prices are uploaded, and can then be tracked against the 30% margin benchmark.`,
       confidence: confidenceBase,
       priorityScore: 5,
       impact: 1,
