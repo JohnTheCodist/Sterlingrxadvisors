@@ -15,6 +15,7 @@ const { getDataScope } = require('./advisorQueries');
 
 const LLM_API_KEY = process.env.LLM_API_KEY || '';
 const LLM_API_URL = process.env.LLM_API_URL || 'https://api.openai.com/v1/chat/completions';
+const { chatEndpoint } = require('./llmTransport');
 // Per-feature model override, falling back to the shared LLM_MODEL when
 // unset. The Advisor is the only consumer that depends on TOOL CALLING — it
 // gets every number it reports by calling a tool, so a model without
@@ -409,12 +410,13 @@ async function callLlmStreamOnce(messages, onDelta, withTools = true) {
   armStall();
 
   try {
-    const response = await fetch(LLM_API_URL, {
+    // Direct to the provider for the cloud product; via our relay for the
+    // desktop build, which has no provider key on the machine. The body below
+    // is unchanged either way -- see llmTransport.js for why that matters.
+    const { url: llmUrl, headers: llmHeaders } = chatEndpoint();
+    const response = await fetch(llmUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LLM_API_KEY}`,
-      },
+      headers: llmHeaders,
       body: JSON.stringify({
         model: LLM_MODEL,
         messages,
