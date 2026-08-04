@@ -3471,3 +3471,111 @@ p { margin: 0; }
   .empty-art__flatline { stroke-dashoffset: 0; opacity: 0.6; }
   .empty-art__sand-top { transform: scaleY(0.2); }
 }
+
+/* ---- desktop download page ------------------------------------------- */
+
+.download-panel {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2.5rem;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.download-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+/* Same mark as .brand-mark, sized for a page rather than a navbar, so the
+   download matches the icon the user is about to see on their desktop. */
+.download-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.download-head h2 { margin: 0 0 0.2rem; font-size: 1.25rem; }
+
+.download-meta {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.download-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.btn-lg { padding: 0.85rem 1.75rem; font-size: 1rem; }
+
+.download-req {
+  font-size: 0.8125rem;
+  color: var(--color-ink-faint);
+}
+
+/* Amber, not red: this is something to expect, not something that went
+   wrong. Red would tell the user the download itself is suspect. */
+.download-warning {
+  border-left: 3px solid var(--color-warning, #d97706);
+  background: color-mix(in oklch, var(--color-warning, #d97706) 7%, transparent);
+  padding: 0.9rem 1.1rem;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 1.5rem;
+}
+
+.download-warning strong {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+  color: var(--color-ink);
+}
+
+.download-warning p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+
+.download-steps {
+  margin: 0 0 1.5rem;
+  padding-left: 1.25rem;
+  color: var(--color-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.9;
+}
+
+.download-note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-ink-faint);
+  line-height: 1.6;
+}
+
+.download-note a { color: var(--color-primary); text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .download-panel { padding: 1.75rem 1.25rem; }
+  .download-actions { flex-direction: column; align-items: stretch; }
+  .download-actions .btn { width: 100%; text-align: center; }
+  .download-req { text-align: center; }
+}

@@ -78,7 +78,10 @@ app.get('/api/health', (req, res) => {
 // this middleware runs), contact (public marketing form), and organization
 // creation (a brand-new user has no membership yet — that's the point of
 // this endpoint).
-const PUBLIC_API_PATHS = new Set(['/contact']);
+// /desktop/release is public because a pharmacy evaluating the product has to
+// see the download before it has an account — gating it behind a login would
+// mean signing up to find out whether there is anything to sign up for.
+const PUBLIC_API_PATHS = new Set(['/contact', '/desktop/release']);
 app.use('/api', (req, res, next) => {
   if (PUBLIC_API_PATHS.has(req.path)) return next();
   if (req.path === '/organizations' && req.method === 'POST') return requireAuthOnly(req, res, next);
@@ -1480,6 +1483,14 @@ app.post('/api/contact', (req, res) => {
     message: "Thanks — we've got your message and will reply within one business day.",
   });
 });
+
+// Desktop installer download. Public and unauthenticated on purpose — a
+// pharmacy evaluating the product must be able to download it before it has an
+// account. Registered before the catch-all below, which would otherwise
+// swallow these paths and return index.html.
+const desktopRelease = require('./services/desktopRelease');
+app.get('/api/desktop/release', (req, res) => res.json(desktopRelease.releaseInfo()));
+app.get('/download/desktop', desktopRelease.sendInstaller);
 
 // Serve the built React app in production
 const clientDist = path.join(__dirname, '..', 'client', 'dist');

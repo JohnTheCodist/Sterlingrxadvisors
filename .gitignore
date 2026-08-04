@@ -11,3 +11,6 @@ server/rxnaija.db-wal
 # report PDFs — all regenerated at runtime and read by no code today.
 server/data/
 server/storage/
+# Desktop installers — build artefacts, rebuilt via "cd desktop && npm run dist".
+# A 78MB binary per release would bloat the repo permanently.
+releases/

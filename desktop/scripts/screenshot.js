@@ -12,11 +12,16 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+// Anything after the script that looks like a URL is loaded instead of the
+// bundled renderer, so the same tool can capture a dev-server page.
+const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+const urlArg = args.find((a) => /^https?:\/\//i.test(a));
 const RENDERER = path.join(__dirname, '..', 'renderer', 'index.html');
-const OUT = process.argv[2] || path.join(__dirname, '..', 'shell-window.png');
+const OUT = args.find((a) => a.toLowerCase().endsWith('.png'))
+  || path.join(__dirname, '..', 'shell-window.png');
 
 app.whenReady().then(async () => {
-  if (!fs.existsSync(RENDERER)) {
+  if (!urlArg && !fs.existsSync(RENDERER)) {
     console.error(`No renderer at ${RENDERER} — run "npm run build:renderer" first.`);
     app.exit(1);
     return;
@@ -31,7 +36,7 @@ app.whenReady().then(async () => {
   });
 
   try {
-    await win.loadFile(RENDERER);
+    await (urlArg ? win.loadURL(urlArg) : win.loadFile(RENDERER));
     // Let fonts, images and the first React paint settle, or the capture
     // catches a half-drawn frame and misrepresents the product.
     await new Promise((r) => setTimeout(r, 3500));

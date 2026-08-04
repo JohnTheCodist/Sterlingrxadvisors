@@ -15,6 +15,7 @@ import SignUp from './pages/SignUp.jsx';
 import SignIn from './pages/SignIn.jsx';
 import OnboardingOrg from './pages/OnboardingOrg.jsx';
 import Privacy from './pages/Privacy.jsx';
+import Download from './pages/Download.jsx';
 import Terms from './pages/Terms.jsx';
 
 
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/case-studies" element={<CaseStudies />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/download" element={<Download />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/signup" element={<SignUp />} />

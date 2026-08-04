@@ -30,7 +30,11 @@ const API_ORIGIN = process.env.RXNAIJA_API_ORIGIN || 'https://app.rxnaija.com';
 // root over file:// and leaving a blank window -- only exists on the PACKAGED
 // path, so there has to be a way to exercise that without building an
 // installer first.
-const isDev = !app.isPackaged && process.env.RXNAIJA_FORCE_RENDERER !== '1';
+// A CLI flag rather than an env var, because an inline `VAR=1 electron .` in an
+// npm script does not work on Windows without pulling in cross-env.
+const forceRenderer = process.argv.includes('--force-renderer')
+  || process.env.RXNAIJA_FORCE_RENDERER === '1';
+const isDev = !app.isPackaged && !forceRenderer;
 let mainWindow = null;
 
 function createWindow() {
