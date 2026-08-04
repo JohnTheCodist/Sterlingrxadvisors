@@ -1,6 +1,29 @@
 import { supabase } from './supabaseClient.js';
 
 /**
+ * Where the API lives.
+ *
+ * The web build leaves this empty, so paths stay relative ('/api/analytics')
+ * and are served by the same origin — exactly as before. Nothing changes for
+ * the deployed site.
+ *
+ * The desktop build sets VITE_API_BASE_URL at build time. An Electron window
+ * loads its UI from a local file, so a relative '/api/...' would resolve
+ * against that local origin and find nothing; the desktop bundle needs the
+ * absolute address of the hosted backend instead.
+ *
+ * Trailing slash is stripped so joining never produces '//api'.
+ */
+const API_BASE = (import.meta.env?.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+
+/** Absolute URLs are passed through; only app-relative paths get the base. */
+function resolve(path) {
+  if (!API_BASE) return path;
+  if (/^https?:\/\//i.test(path)) return path;
+  return API_BASE + (path.startsWith('/') ? path : `/${path}`);
+}
+
+/**
  * Thin fetch wrapper that attaches the current Supabase session's access
  * token to every request. Replaces the scattered raw fetch('/api/...')
  * calls across Dashboard.jsx/Upload.jsx — those never sent an auth header
@@ -34,5 +57,5 @@ export async function apiFetch(path, options = {}) {
   const headers = new Headers(options.headers || {});
   headers.set('Authorization', `Bearer ${token}`);
 
-  return fetch(path, { ...options, headers });
+  return fetch(resolve(path), { ...options, headers });
 }

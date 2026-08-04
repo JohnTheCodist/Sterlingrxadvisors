@@ -1,0 +1,8 @@
+# Build output from scripts/build-renderer.js — a copy of client/dist, so
+# committing it would mean two copies of the same bundle drifting apart.
+renderer/
+
+# electron-builder installers
+dist/
+
+node_modules/
