@@ -875,6 +875,18 @@ p { margin: 0; }
 .compare-row strong { display: block; margin-bottom: 4px; }
 .compare-row span { color: var(--muted-foreground); font-size: 0.9rem; }
 
+/* The rule above matches every span in the row, including the icon nested
+   inside <strong> — which would render the emoji at the muted body size and
+   make it look like a typo rather than a marker. Scoped selector wins on
+   specificity without touching the description styling. */
+.compare-row strong .compare-icon {
+  font-size: 1rem;
+  line-height: 1;
+  margin-right: 0.5rem;
+  /* Emoji carry their own colour; this only affects the fallback glyph. */
+  color: inherit;
+}
+
 @media (max-width: 760px) {
   .compare-table { grid-template-columns: 1fr; }
 }

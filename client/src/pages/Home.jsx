@@ -43,33 +43,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PROBLEM */}
+      {/* APPROACH — the .problem-* class names predate this copy and are left
+          alone deliberately: they are structural, shared with the stylesheet,
+          and renaming them would be a CSS change dressed up as a copy change. */}
       <section className="section">
         <div className="shell">
           <div className="problem-grid">
             <div>
-              <span className="eyebrow">The problem</span>
-              <h2>You're on your feet all day. Are you actually keeping what you earn?</h2>
+              <span className="eyebrow">The approach</span>
+              <h2>From what your pharmacy records to what it should do next.</h2>
               <div className="problem-list" style={{ marginTop: 32 }}>
                 <div className="problem-item">
                   <span className="num">01</span>
                   <div>
-                    <h3>Numbers that don't talk back</h3>
-                    <p>Your POS or ERP logs everything, but there's no single screen that tells you, plainly, how today actually went.</p>
+                    <h3>Your pharmacy produces data. We turn it into decisions.</h3>
+                    <p>Every sale, supplier invoice, and inventory movement tells a story. Most systems simply record it. We reveal what it means — and what management should do next.</p>
                   </div>
                 </div>
                 <div className="problem-item">
                   <span className="num">02</span>
                   <div>
-                    <h3>The blind spot in your orders</h3>
-                    <p>Which SKUs sell with zero margin? Which supplier deal quietly lost you money? Not knowing costs you cash, directly.</p>
+                    <h3>Every hidden inefficiency is money left on the table.</h3>
+                    <p>Poor product mix, shrinking margins, excess inventory, supplier performance, and expiry risk quietly erode profitability. We surface the issues that deserve immediate attention.</p>
                   </div>
                 </div>
                 <div className="problem-item">
                   <span className="num">03</span>
                   <div>
-                    <h3>Managing after the fact</h3>
-                    <p>You can't make March decisions on January's printouts. Getting back in control means seeing today, today.</p>
+                    <h3>Know today's priorities before they become tomorrow's problems.</h3>
+                    <p>Don't wait until month-end reports tell you what already happened. Make faster, evidence-based decisions with AI that continuously monitors your business and highlights the actions with the greatest financial impact.</p>
                   </div>
                 </div>
               </div>
@@ -104,40 +106,48 @@ export default function Home() {
             <div className="compare-col old">
               <div className="compare-col-head">Without RxNaija</div>
               <div className="compare-row">
-                <strong>The revenue illusion</strong>
-                <span>"I made ₦400K today, so business is good" — ignoring VAT and unpaid NHIA claims.</span>
+                <strong><span className="compare-icon" aria-hidden="true">⏳</span>4 hours building reports</strong>
+                <span>"It's already 8:30 PM. You're still exporting reports, combining Excel files, and trying to figure out why today's sales feel good but your bank balance doesn't."</span>
               </div>
               <div className="compare-row">
-                <strong>Sunday-night spreadsheets</strong>
-                <span>Whole afternoons spent squinting at printouts and rebuilding Excel sheets.</span>
+                <strong><span className="compare-icon" aria-hidden="true">💰</span>Revenue with no profit visibility</strong>
+                <span>You celebrate a ₦2.5M sales week, only to discover later that your highest-selling products were also your lowest-margin products.</span>
               </div>
               <div className="compare-row">
-                <strong>At suppliers' mercy</strong>
-                <span>Negotiating discounts and rebates on a rough guess, not real numbers.</span>
+                <strong><span className="compare-icon" aria-hidden="true">📦</span>Guessing what to reorder</strong>
+                <span>You reorder 30 packs of a product because it "usually sells," while your actual best-seller runs out three days later.</span>
               </div>
               <div className="compare-row">
-                <strong>Blind ordering</strong>
-                <span>Slow-moving SKUs sit on the shelf, hidden inside your total turnover figure.</span>
+                <strong><span className="compare-icon" aria-hidden="true">💸</span>Cash trapped in inventory</strong>
+                <span>₦1.8M is sitting on your shelves, but ₦450,000 of it hasn't moved in months and another ₦120,000 is approaching expiry.</span>
+              </div>
+              <div className="compare-row">
+                <strong><span className="compare-icon" aria-hidden="true">🚨</span>Reacting after problems occur</strong>
+                <span>You only notice expired products during stock count — or discover a stockout after customers have already gone elsewhere.</span>
               </div>
             </div>
 
             <div className="compare-col new">
               <div className="compare-col-head">With RxNaija</div>
               <div className="compare-row">
-                <strong>The real cash truth</strong>
-                <span>Commercial performance separated from actual collections. Revenue − Cost − Cash in hand.</span>
+                <strong><span className="compare-icon" aria-hidden="true">⚡</span>5 minutes to executive insights</strong>
+                <span>Upload your POS data and instantly see revenue, profit, inventory risks, and the actions that deserve your attention today.</span>
               </div>
               <div className="compare-row">
-                <strong>Three clicks, done</strong>
-                <span>A ready picture of the day, week, or month. Close the laptop, keep your evening.</span>
+                <strong><span className="compare-icon" aria-hidden="true">📈</span>Revenue, profit, margins &amp; cash flow in one place</strong>
+                <span>Know exactly which products generated profit, which reduced it, and where your biggest financial opportunities are hiding.</span>
               </div>
               <div className="compare-row">
-                <strong>Real negotiating power</strong>
-                <span>Walk into supplier talks with the hard sales numbers to back your ask.</span>
+                <strong><span className="compare-icon" aria-hidden="true">🎯</span>AI tells you exactly what to buy more — or less — of</strong>
+                <span>Prioritize fast-moving, high-margin products and avoid tying cash up in slow-moving inventory.</span>
               </div>
               <div className="compare-row">
-                <strong>Targeted restocking</strong>
-                <span>Revenue and margin broken down by category and brand — what to buy, what to drop.</span>
+                <strong><span className="compare-icon" aria-hidden="true">💼</span>Working capital optimized with data-backed decisions</strong>
+                <span>See where cash is locked up, what can be liquidated, and which products deserve additional investment.</span>
+              </div>
+              <div className="compare-row">
+                <strong><span className="compare-icon" aria-hidden="true">🛡️</span>Identify risks before they cost you money</strong>
+                <span>Receive early warnings for expiry risks, low stock, declining margins, and supplier issues before they impact your business.</span>
               </div>
             </div>
           </div>
