@@ -17,6 +17,8 @@ import OnboardingOrg from './pages/OnboardingOrg.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Download from './pages/Download.jsx';
 import Terms from './pages/Terms.jsx';
+import DesktopIntro from './components/DesktopIntro.jsx';
+import { isDesktop } from './lib/platform.js';
 
 
 export default function App() {
@@ -26,15 +28,22 @@ export default function App() {
   // either in marketing chrome puts a "Get Started" button above a form the
   // visitor is already using.
   const CHROMELESS = ['/dashboard', '/signin', '/signup', '/onboarding', '/upload'];
-  const isChromeless = CHROMELESS.includes(location.pathname);
+  // The desktop app has no marketing pages, so its root IS sign-in and must be
+  // chromeless too — otherwise the window opens with a nav bar advertising the
+  // product to someone who already bought it.
+  const isChromeless = CHROMELESS.includes(location.pathname)
+    || (isDesktop && location.pathname === '/');
 
   return (
     <>
       <ScrollToTop />
+      <DesktopIntro />
       {!isChromeless && <Navbar />}
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* Someone who installed the app has already been sold to. The
+              website keeps its homepage; the app opens on the door. */}
+          <Route path="/" element={isDesktop ? <SignIn /> : <Home />} />
           <Route path="/features" element={<Features />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/how-it-works" element={<HowItWorks />} />

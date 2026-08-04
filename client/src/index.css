@@ -3794,3 +3794,148 @@ p { margin: 0; }
   .capability:nth-child(2) { border-top: 1px solid var(--border); padding-top: 26px; }
   .capability:nth-child(1) { border-top: 0; padding-top: 0; }
 }
+
+/* ---- Desktop launch sequence ----------------------------------------- *
+ * Overlay only — the sign-in form is mounted and ready underneath the whole
+ * time. If every rule below failed to load, the app would still open on a
+ * working door.
+ *
+ * Everything animated is transform or opacity. Nothing here animates a layout
+ * property, so the sequence cannot cost a frame on a pharmacy's five-year-old
+ * counter PC. */
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(120% 90% at 50% 0%, oklch(0.30 0.055 194), transparent 60%),
+    oklch(0.20 0.030 220);
+  opacity: 1;
+  transition: opacity var(--dur-mid, 420ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.intro.is-leaving { opacity: 0; }
+
+.intro-stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  padding: 0 24px;
+}
+
+/* Rings read outward from the mark rather than pulsing in place: the product's
+   own language for taking a live reading. Behind the mark, never in front. */
+.intro-ring {
+  position: absolute;
+  top: 34px;
+  left: 50%;
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  border-radius: 50%;
+  border: 1px solid oklch(0.72 0.09 194 / 0.55);
+  opacity: 0;
+  transform: scale(0.55);
+  /* Finite, not infinite. The overlay only lives ~2.5s, so a forever-loop is
+     work nobody sees — and an animation that never settles keeps the
+     compositor from ever producing a stable frame, which hung a screenshot
+     of this very screen. */
+  animation: intro-ring 2.4s var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) 0.28s 2;
+}
+.intro-ring--2 { animation-delay: 0.72s; }
+.intro-ring--3 { animation-delay: 1.16s; }
+
+@keyframes intro-ring {
+  0%   { opacity: 0;    transform: scale(0.55); }
+  18%  { opacity: 0.85; }
+  100% { opacity: 0;    transform: scale(3.1); }
+}
+
+.intro-mark {
+  width: 84px;
+  height: 84px;
+  opacity: 0;
+  transform: scale(0.72);
+  animation: intro-mark 780ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) 120ms both;
+}
+
+.intro-mark svg { width: 100%; height: 100%; display: block; }
+
+.intro-tile { fill: oklch(0.52 0.088 194); }
+
+.intro-rx {
+  fill: oklch(0.99 0.005 190);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 34px;
+  font-weight: 700;
+}
+
+@keyframes intro-mark {
+  0%   { opacity: 0; transform: scale(0.72); }
+  60%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Letter-spacing settling as it arrives — the wordmark reads as coming into
+   focus rather than sliding in from somewhere. */
+.intro-word {
+  margin: 26px 0 0;
+  font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: oklch(0.99 0.005 190);
+  opacity: 0;
+  animation: intro-word 760ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) 540ms both;
+}
+
+@keyframes intro-word {
+  0%   { opacity: 0; letter-spacing: 0.20em; transform: translateY(6px); }
+  100% { opacity: 1; letter-spacing: 0.005em; transform: translateY(0); }
+}
+
+/* Three clauses, three beats — the motto lands as a sentence being spoken,
+   not a line of text appearing. */
+.intro-motto {
+  margin: 14px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 8px;
+  font-size: 0.95rem;
+  color: oklch(0.80 0.03 200);
+}
+
+.intro-motto span {
+  opacity: 0;
+  animation: intro-clause 620ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.intro-motto span:nth-child(1) { animation-delay: 1000ms; }
+.intro-motto span:nth-child(2) { animation-delay: 1180ms; }
+.intro-motto span:nth-child(3) { animation-delay: 1360ms; }
+
+@keyframes intro-clause {
+  0%   { opacity: 0; transform: translateY(7px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Reduced motion keeps the screen and its message, and drops the movement.
+   The brand still lands; nothing travels. */
+@media (prefers-reduced-motion: reduce) {
+  .intro-ring { display: none; }
+  .intro-mark,
+  .intro-word,
+  .intro-motto span {
+    animation: intro-fade 160ms linear both;
+    transform: none;
+    letter-spacing: normal;
+  }
+  .intro-word { letter-spacing: 0.005em; }
+  .intro-motto span:nth-child(1),
+  .intro-motto span:nth-child(2),
+  .intro-motto span:nth-child(3) { animation-delay: 0ms; }
+  @keyframes intro-fade { from { opacity: 0; } to { opacity: 1; } }
+}
