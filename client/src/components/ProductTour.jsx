@@ -20,7 +20,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react
  *   or a schema column to remember.
  */
 
-const STORAGE_PREFIX = 'rxnaija.tour.';
+const STORAGE_PREFIX = 'sterlingrx.tour.';
 const PADDING = 8;      // breathing room around the spotlit element
 const GAP = 14;         // distance from spotlight edge to the tooltip
 const CARD_MAX = 332;   // 20.75rem — must match the card's CSS width

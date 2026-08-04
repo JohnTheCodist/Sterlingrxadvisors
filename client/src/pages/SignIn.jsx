@@ -108,9 +108,9 @@ export default function SignIn() {
 
       <div className="auth__form-col">
         <div className="auth__inner">
-          <Link to="/" className="auth__wordmark">RxNaija <span>Analytics</span></Link>
+          <Link to="/" className="auth__wordmark">SterlingRx Advisors <span>Analytics</span></Link>
 
-          <h1 className="auth__title">Sign in to RxNaija</h1>
+          <h1 className="auth__title">Sign in to SterlingRx Advisors</h1>
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="auth__fields">

@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 
-const CONFIDENCE_PREF_KEY = 'rxnaija:showPriorityConfidence';
+const CONFIDENCE_PREF_KEY = 'sterlingrx:showPriorityConfidence';
 
 function severityLabel(impact) {
   if (impact >= 3) return { label: 'HIGH', cls: 'bg-destructive/10 text-destructive' };

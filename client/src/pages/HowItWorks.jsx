@@ -9,7 +9,7 @@ export default function HowItWorks() {
             <span className="eyebrow">How it works</span>
             <h1>No installs. No IT team. Just a file.</h1>
             <p className="lead">
-              You already have everything RxNaija needs — it's sitting inside your POS or ERP.
+              You already have everything SterlingRx Advisors needs — it's sitting inside your POS or ERP.
               We just help you see it clearly.
             </p>
           </div>
@@ -24,7 +24,7 @@ export default function HowItWorks() {
               <h3>Set up your export, once</h3>
               <p>
                 Together, we design the export template inside your existing dispensing or POS
-                system — the exact columns RxNaija needs, nothing more. This is a one-time setup.
+                system — the exact columns SterlingRx Advisors needs, nothing more. This is a one-time setup.
               </p>
             </div>
             <div className="step-card">
@@ -37,7 +37,7 @@ export default function HowItWorks() {
             </div>
             <div className="step-card">
               <div className="step-num">03</div>
-              <h3>Upload to RxNaija</h3>
+              <h3>Upload to SterlingRx Advisors</h3>
               <p>
                 Drag the file into your dashboard. It's parsed, checked, and matched against your
                 pharmacy's categories in under a minute.

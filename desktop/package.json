@@ -1,9 +1,9 @@
 {
-  "name": "rxnaija-desktop",
-  "productName": "RxNaija Analytics",
+  "name": "sterlingrx-desktop",
+  "productName": "SterlingRx Advisors",
   "version": "0.1.0",
   "private": true,
-  "description": "Desktop shell for RxNaija Analytics — same product, own window.",
+  "description": "Desktop shell for SterlingRx Advisors — same product, own window.",
   "main": "main.js",
   "scripts": {
     "build:renderer": "node scripts/build-renderer.js",
@@ -21,8 +21,8 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
-    "appId": "com.rxnaija.analytics",
-    "productName": "RxNaija Analytics",
+    "appId": "com.sterlingrx.advisors",
+    "productName": "SterlingRx Advisors",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -36,14 +36,14 @@
       "target": [
         { "target": "nsis", "arch": ["x64"] }
       ],
-      "artifactName": "RxNaija-Setup-${version}.${ext}"
+      "artifactName": "SterlingRx-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "RxNaija Analytics"
+      "shortcutName": "SterlingRx Advisors"
     }
   }
 }

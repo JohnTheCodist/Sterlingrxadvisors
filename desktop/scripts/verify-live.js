@@ -12,8 +12,8 @@
 
 const { app, BrowserWindow } = require('electron');
 
-const URL_UNDER_TEST = process.argv[2] || process.env.RXNAIJA_DEV_URL || 'http://localhost:5173';
-const API_PROBE = process.env.RXNAIJA_API_PROBE || '/api/health';
+const URL_UNDER_TEST = process.argv[2] || process.env.STERLINGRX_DEV_URL || 'http://localhost:5173';
+const API_PROBE = process.env.STERLINGRX_API_PROBE || '/api/health';
 
 app.whenReady().then(async () => {
   const win = new BrowserWindow({

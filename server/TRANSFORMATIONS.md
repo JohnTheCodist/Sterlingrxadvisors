@@ -1,4 +1,4 @@
-# RxNaija Analytics — Transformation Reference
+# SterlingRx Advisors — Transformation Reference
 
 Every transformation in the data pipeline, with rationale and examples.
 

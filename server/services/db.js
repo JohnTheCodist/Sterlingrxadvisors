@@ -1,5 +1,5 @@
 /**
- * Postgres-backed (Supabase) star schema for RxNaija Analytics — multi-tenant
+ * Postgres-backed (Supabase) star schema for SterlingRx Advisors — multi-tenant
  * replacement for the old SQLite-backed database.js.
  *
  * Every table is scoped by organization_id (see supabase/migrations/0001_init.sql).

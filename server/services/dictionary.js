@@ -1,5 +1,5 @@
 /**
- * RxNaija Analytics — Master Semantic Registry (Phase 1)
+ * SterlingRx Advisors — Master Semantic Registry (Phase 1)
  *
  * Canonical semantic fields organized by business domain.
  * Every uploaded column maps to one semantic field or is classified as IGNORED.

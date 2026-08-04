@@ -1288,7 +1288,7 @@ app.get('/api/export/dashboard-pdf', async (req, res) => {
       : null;
 
     const pdfBuffer = await buildDashboardPdf({
-      organizationName: org?.name || 'RxNaija Analytics',
+      organizationName: org?.name || 'SterlingRx Advisors',
       datasetLabel: latest?.filename ? `Current upload: ${latest.filename}` : null,
       dateRangeLabel,
       kpis,
@@ -1299,7 +1299,7 @@ app.get('/api/export/dashboard-pdf', async (req, res) => {
       inventory,
     });
 
-    const safeName = (org?.name || 'rxnaija').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const safeName = (org?.name || 'sterlingrx').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     const stamp = new Date().toISOString().slice(0, 10);
     res.set('Content-Type', 'application/pdf');
     res.set('Content-Disposition', `attachment; filename="${safeName}-dashboard-report-${stamp}.pdf"`);
@@ -1502,7 +1502,7 @@ if (fs.existsSync(clientDist)) {
 } else {
   app.get('/', (req, res) => {
     res.send(
-      'RxNaija Analytics API is running. Build the client (cd client && npm run build) to serve the site from here.'
+      'SterlingRx Advisors API is running. Build the client (cd client && npm run build) to serve the site from here.'
     );
   });
 }
@@ -1604,7 +1604,7 @@ app.post('/api/analysis', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`RxNaija Analytics server listening on http://localhost:${PORT}`);
+  console.log(`SterlingRx Advisors server listening on http://localhost:${PORT}`);
   // Stale-FactSales purging now happens per-organization inside
   // evaluateFromStore() — there's no single "current org" at startup
   // anymore, so the old blanket purge-on-boot call is gone.

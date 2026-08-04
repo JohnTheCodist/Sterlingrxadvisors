@@ -1320,7 +1320,7 @@ export default function Dashboard() {
       const blob = await res.blob();
       const disposition = res.headers.get('Content-Disposition') || '';
       const match = disposition.match(/filename="([^"]+)"/);
-      const filename = match ? match[1] : 'rxnaija-dashboard-report.pdf';
+      const filename = match ? match[1] : 'sterlingrx-dashboard-report.pdf';
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1459,7 +1459,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-3 px-5 pt-6 pb-4 border-b border-[var(--color-line)]">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--primary)] text-[11px] font-bold font-mono text-primary-foreground">Rx</div>
           <div>
-            <p className="text-sm font-semibold text-[var(--sidebar-ink-bright)]">RxNaija</p>
+            <p className="text-sm font-semibold text-[var(--sidebar-ink-bright)]">SterlingRx Advisors</p>
             <p className="text-[10px] text-[var(--sidebar-ink-dim)] font-mono tracking-wide">Analytics</p>
           </div>
         </div>
@@ -1550,7 +1550,7 @@ export default function Dashboard() {
           <button onClick={() => setSidebarOpen(true)} className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--muted-foreground)]">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
           </button>
-          <span className="text-sm font-semibold text-[var(--foreground)]">RxNaija Analytics</span>
+          <span className="text-sm font-semibold text-[var(--foreground)]">SterlingRx Advisors</span>
         </div>
 
         <div className="mx-auto max-w-[var(--max-width)] px-7 py-10">

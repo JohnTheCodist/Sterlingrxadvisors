@@ -1,5 +1,5 @@
 /**
- * RxNaija Desktop — Electron shell.
+ * SterlingRx Desktop — Electron shell.
  *
  * This process deliberately contains no business logic. It opens a window onto
  * the same React UI the web product serves, which talks to the same hosted
@@ -23,7 +23,7 @@ const path = require('path');
 
 // Where the hosted backend lives. Baked in at build time; the renderer gets it
 // through VITE_API_BASE_URL when the client bundle is built.
-const API_ORIGIN = process.env.RXNAIJA_API_ORIGIN || 'https://app.rxnaija.com';
+const API_ORIGIN = process.env.STERLINGRX_API_ORIGIN || 'https://app.sterlingrxadvisors.com';
 
 // Unpackaged normally means "developing", which loads the Vite dev server.
 // But the failure worth catching -- assets resolving against the filesystem
@@ -33,7 +33,7 @@ const API_ORIGIN = process.env.RXNAIJA_API_ORIGIN || 'https://app.rxnaija.com';
 // A CLI flag rather than an env var, because an inline `VAR=1 electron .` in an
 // npm script does not work on Windows without pulling in cross-env.
 const forceRenderer = process.argv.includes('--force-renderer')
-  || process.env.RXNAIJA_FORCE_RENDERER === '1';
+  || process.env.STERLINGRX_FORCE_RENDERER === '1';
 const isDev = !app.isPackaged && !forceRenderer;
 let mainWindow = null;
 
@@ -45,7 +45,7 @@ function createWindow() {
     minHeight: 700,
     show: false, // revealed on ready-to-show, so no white flash on launch
     backgroundColor: '#f7f8fa',
-    title: 'RxNaija Analytics',
+    title: 'SterlingRx Advisors',
     icon: path.join(__dirname, 'build', 'icon.png'),
     webPreferences: {
       // No Node in the renderer. The UI is ordinary web code and must not be
@@ -76,7 +76,7 @@ function createWindow() {
     // navigation during development was ejected into the system browser and
     // the app looked like it was refusing to work.
     const isDevServer = isDev && target.origin === new URL(
-      process.env.RXNAIJA_DEV_URL || 'http://localhost:5173',
+      process.env.STERLINGRX_DEV_URL || 'http://localhost:5173',
     ).origin;
     if (!isLocalUI && !isOurApi && !isDevServer) {
       event.preventDefault();
@@ -91,7 +91,7 @@ function createWindow() {
     dialog.showMessageBox(mainWindow, {
       type: 'warning',
       title: 'Could not load',
-      message: 'RxNaija could not load part of the application.',
+      message: 'SterlingRx Advisors could not load part of the application.',
       detail: `${description} (${code})\n${url}\n\n`
         + 'Check your internet connection and try again. If this keeps happening, '
         + 'contact support.',
@@ -104,7 +104,7 @@ function createWindow() {
 
   if (isDev) {
     // Point at the Vite dev server so the normal edit-reload loop still works.
-    mainWindow.loadURL(process.env.RXNAIJA_DEV_URL || 'http://localhost:5173');
+    mainWindow.loadURL(process.env.STERLINGRX_DEV_URL || 'http://localhost:5173');
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
@@ -144,14 +144,14 @@ function buildMenu() {
       submenu: [
         {
           label: 'Contact support',
-          click: () => shell.openExternal('mailto:support@rxnaija.com'),
+          click: () => shell.openExternal('mailto:support@sterlingrxadvisors.com'),
         },
         {
-          label: 'About RxNaija',
+          label: 'About SterlingRx Advisors',
           click: () => dialog.showMessageBox(mainWindow, {
             type: 'info',
-            title: 'About RxNaija Analytics',
-            message: `RxNaija Analytics ${app.getVersion()}`,
+            title: 'About SterlingRx Advisors',
+            message: `SterlingRx Advisors ${app.getVersion()}`,
             detail: `Connected to ${API_ORIGIN}`,
           }),
         },

@@ -22,7 +22,7 @@ import { isDesktop, webOrigin } from '../lib/platform.js';
  *   4. The session lands in the BROWSER. The desktop window still has none,
  *      so signing in again on the website changed nothing it could see.
  *
- * Making this work needs a custom protocol (rxnaija://) registered by the
+ * Making this work needs a custom protocol (sterlingrx://) registered by the
  * shell and added to Supabase's allowed redirect URLs, so the browser can
  * hand the session back. Until that exists, offering the button would be
  * offering a dead end, so the desktop build says so and points at the method

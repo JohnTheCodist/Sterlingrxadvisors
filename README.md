@@ -1,11 +1,11 @@
-# RxNaija Analytics
+# SterlingRx Advisors
 
 Pharmacy business intelligence site — React (Vite) frontend + Node.js/Express backend.
 
 ## Structure
 
 ```
-rxnaija-analytics/
+sterlingrx-analytics/
 ├── client/     React app (Vite + React Router) — all pages, white/light theme
 └── server/     Express API (contact form endpoint, serves the built client in production)
 ```

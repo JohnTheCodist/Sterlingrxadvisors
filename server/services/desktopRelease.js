@@ -35,7 +35,7 @@ function listBuilds() {
         path: full,
         bytes: stat.size,
         builtAt: stat.mtime.toISOString(),
-        // "RxNaija-Setup-0.1.0.exe" -> "0.1.0"
+        // "SterlingRx-Setup-0.1.0.exe" -> "0.1.0"
         version: (/(\d+\.\d+\.\d+)/.exec(f) || [])[1] || null,
       };
     })

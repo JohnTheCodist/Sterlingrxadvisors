@@ -1,5 +1,5 @@
 /**
- * Automated tests for the RxNaija Analytics cleaning pipeline.
+ * Automated tests for the SterlingRx Advisors cleaning pipeline.
  *
  * Run:  node tests/pipeline.test.js
  *

@@ -31,7 +31,7 @@ async function fetchPdfBytes(url) {
   try {
     const response = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RxNaijaAnalytics/1.0)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SterlingRxAdvisors/1.0)' },
     });
 
     if (response.status === 404) {

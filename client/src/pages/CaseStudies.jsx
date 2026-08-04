@@ -4,7 +4,7 @@ const cases = [
   {
     name: 'Ilupeju Community Pharmacy Group',
     result: 'Recovered ₦2.1M in unclaimed NHIA balances within one quarter',
-    body: "A 3-branch independent group was writing off missed NHIA claims as routine loss. RxNaija's collections tracker flagged every unclaimed and mismatched entry across branches, recovering balances that had been slipping through for months.",
+    body: "A 3-branch independent group was writing off missed NHIA claims as routine loss. SterlingRx Advisors's collections tracker flagged every unclaimed and mismatched entry across branches, recovering balances that had been slipping through for months.",
     figs: [
       { value: '₦2.1M', label: 'Recovered in unclaimed balances' },
       { value: '73%', label: 'Reduction in claim losses' },
@@ -39,7 +39,7 @@ export default function CaseStudies() {
             <span className="eyebrow">Customer success</span>
             <h1>Real pharmacies, real numbers</h1>
             <p className="lead">
-              How independent pharmacies and small groups have used RxNaija Analytics to recover
+              How independent pharmacies and small groups have used SterlingRx Advisors to recover
               cash, cut dead stock, and take back their evenings.
             </p>
           </div>
@@ -74,7 +74,7 @@ export default function CaseStudies() {
             <div>
               <blockquote>
                 "RWA-style reports were never built for how Nigerian pharmacies actually get
-                paid. RxNaija finally separates cash, claims, and margin the way we think about
+                paid. SterlingRx Advisors finally separates cash, claims, and margin the way we think about
                 the business day to day."
               </blockquote>
               <cite>— Owner, 2-branch independent pharmacy, Abuja</cite>

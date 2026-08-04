@@ -32,7 +32,7 @@ async function fetchReportsPageHtml() {
   try {
     const response = await fetch(NCDC_CONFIG.reportsPage, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RxNaijaAnalytics/1.0)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SterlingRxAdvisors/1.0)' },
     });
     if (!response.ok) {
       return { error: true, reason: `NCDC reports page returned HTTP ${response.status}.` };

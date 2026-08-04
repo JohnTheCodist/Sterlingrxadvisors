@@ -1,4 +1,4 @@
-# RxNaija Relay
+# SterlingRx Relay
 
 Credential broker and usage meter sitting between desktop installs and the LLM
 provider.

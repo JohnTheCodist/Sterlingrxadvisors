@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 // The key is namespaced by organization on purpose — a shared browser must
 // never flash one pharmacy's conversation to whoever signs in next.
 const CACHE_VERSION = 'v1';
-const cacheKey = (organizationId) => `rxnaija.advisor.${CACHE_VERSION}.${organizationId || 'anon'}`;
+const cacheKey = (organizationId) => `sterlingrx.advisor.${CACHE_VERSION}.${organizationId || 'anon'}`;
 
 function readCache(organizationId) {
   if (!organizationId) return null;

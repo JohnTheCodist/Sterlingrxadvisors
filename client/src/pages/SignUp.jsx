@@ -156,7 +156,7 @@ export default function SignUp() {
 
       <div className="auth__form-col">
         <div className="auth__inner">
-          <Link to="/" className="auth__wordmark">RxNaija <span>Analytics</span></Link>
+          <Link to="/" className="auth__wordmark">SterlingRx Advisors <span>Analytics</span></Link>
 
           <ol className="auth__steps">
             <li aria-current={step === 1 ? 'step' : undefined} data-done={step > 1 ? 'true' : undefined}>

@@ -59,7 +59,7 @@ export default function Contact() {
             <div className="contact-info">
               <div className="info-row">
                 <span className="k">Email</span>
-                <span>hello@rxnaija-analytics.com</span>
+                <span>hello@sterlingrxadvisors.com</span>
               </div>
               <div className="info-row">
                 <span className="k">Phone</span>

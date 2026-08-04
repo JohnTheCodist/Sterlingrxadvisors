@@ -31,7 +31,7 @@ const CLIENT_DIR = path.join(REPO_ROOT, 'client');
 const CLIENT_DIST = path.join(CLIENT_DIR, 'dist');
 const RENDERER_DIR = path.join(DESKTOP_DIR, 'renderer');
 
-const API_ORIGIN = process.env.RXNAIJA_API_ORIGIN || 'https://app.rxnaija.com';
+const API_ORIGIN = process.env.STERLINGRX_API_ORIGIN || 'https://app.sterlingrxadvisors.com';
 
 function run(cmd, args, opts) {
   execFileSync(cmd, args, { stdio: 'inherit', shell: process.platform === 'win32', ...opts });

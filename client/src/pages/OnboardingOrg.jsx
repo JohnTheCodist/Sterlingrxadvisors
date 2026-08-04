@@ -78,7 +78,7 @@ export default function OnboardingOrg() {
 
       <div className="auth__form-col">
         <div className="auth__inner">
-          <Link to="/" className="auth__wordmark">RxNaija <span>Analytics</span></Link>
+          <Link to="/" className="auth__wordmark">SterlingRx Advisors <span>Analytics</span></Link>
 
           <h1 className="auth__title">Tell us about your pharmacy</h1>
           <p className="auth__panel-sub">

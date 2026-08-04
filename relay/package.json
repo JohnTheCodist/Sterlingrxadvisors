@@ -1,5 +1,5 @@
 {
-  "name": "rxnaija-relay",
+  "name": "sterlingrx-relay",
   "version": "0.1.0",
   "private": true,
   "description": "Credential broker and usage meter between desktop installs and the LLM provider.",

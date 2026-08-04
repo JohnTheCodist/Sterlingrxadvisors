@@ -11,7 +11,7 @@ export default function Privacy() {
           <p className="legal-updated">Last updated: 27 July 2026</p>
 
           <div className="legal-notice">
-            This policy describes how RxNaija Analytics ("RxNaija", "we", "us") handles data in
+            This policy describes how SterlingRx Advisors ("SterlingRx Advisors", "we", "us") handles data in
             plain language. It is not a substitute for legal advice — before you rely on this
             page for a live product handling real customer and pharmacy data, have it reviewed by
             a lawyer familiar with the Nigeria Data Protection Act 2023 (NDPA) and, if you serve
@@ -56,7 +56,7 @@ export default function Privacy() {
 
           <h2>3. Who else sees your data</h2>
           <p>
-            RxNaija is built on a small number of infrastructure providers, each processing data
+            SterlingRx Advisors is built on a small number of infrastructure providers, each processing data
             only to the extent needed to run the service:
           </p>
           <ul>
@@ -100,7 +100,7 @@ export default function Privacy() {
 
           <h2>8. Contact</h2>
           <p>
-            Questions about this policy or your data? Email <strong>hello@rxnaija-analytics.com</strong>.
+            Questions about this policy or your data? Email <strong>hello@sterlingrxadvisors.com</strong>.
           </p>
         </div>
       </div>

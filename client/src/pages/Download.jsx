@@ -40,7 +40,7 @@ export default function Download() {
         <div className="shell">
           <div className="section-head center">
             <span className="eyebrow">Desktop app</span>
-            <h1>RxNaija on your counter PC.</h1>
+            <h1>SterlingRx Advisors on your counter PC.</h1>
             <p className="lead">
               The same dashboards, the same Advisor, in its own window — no browser tab
               to lose, no address to remember. Your data stays where it already is.
@@ -67,7 +67,7 @@ export default function Download() {
               <>
                 <h2>Not quite ready</h2>
                 <p className="download-note">
-                  The desktop app is in final testing. Use RxNaija in your browser in the
+                  The desktop app is in final testing. Use SterlingRx Advisors in your browser in the
                   meantime — it is the same product, and everything you upload now will be
                   there when you install.
                 </p>
@@ -83,7 +83,7 @@ export default function Download() {
                 <div className="download-head">
                   <div className="download-mark" aria-hidden="true">Rx</div>
                   <div>
-                    <h2>RxNaija Analytics for Windows</h2>
+                    <h2>SterlingRx Advisors for Windows</h2>
                     <p className="download-meta">
                       Version {release.version} · {release.sizeMB} MB
                       {release.builtAt && ` · Released ${fmtDate(release.builtAt)}`}
@@ -125,7 +125,7 @@ export default function Download() {
 
                 <p className="download-note">
                   Needs an internet connection. Prefer not to install anything?{' '}
-                  <Link to="/signin">Use RxNaija in your browser</Link> — it is the same product.
+                  <Link to="/signin">Use SterlingRx Advisors in your browser</Link> — it is the same product.
                 </p>
               </>
             )}

@@ -96,7 +96,7 @@ export default function Home() {
             <span className="eyebrow">The solution</span>
             <h2>Complete visibility. No more report chaos.</h2>
             <p className="lead">
-              You shouldn't need to be a data analyst to run your pharmacy. RxNaija Analytics
+              You shouldn't need to be a data analyst to run your pharmacy. SterlingRx Advisors
               works like your personal auditor — turning printout noise into direct financial
               answers, showing not just what you sold, but what actually made you money.
             </p>
@@ -104,7 +104,7 @@ export default function Home() {
 
           <div className="compare-table">
             <div className="compare-col old">
-              <div className="compare-col-head">Without RxNaija</div>
+              <div className="compare-col-head">Without SterlingRx Advisors</div>
               <div className="compare-row">
                 <strong><span className="compare-icon" aria-hidden="true">⏳</span>4 hours building reports</strong>
                 <span>"It's already 8:30 PM. You're still exporting reports, combining Excel files, and trying to figure out why today's sales feel good but your bank balance doesn't."</span>
@@ -128,7 +128,7 @@ export default function Home() {
             </div>
 
             <div className="compare-col new">
-              <div className="compare-col-head">With RxNaija</div>
+              <div className="compare-col-head">With SterlingRx Advisors</div>
               <div className="compare-row">
                 <strong><span className="compare-icon" aria-hidden="true">⚡</span>5 minutes to executive insights</strong>
                 <span>Upload your POS data and instantly see revenue, profit, inventory risks, and the actions that deserve your attention today.</span>
@@ -173,7 +173,7 @@ export default function Home() {
             <div className="step-card">
               <div className="step-num">02</div>
               <h3>Let AI do the heavy lifting</h3>
-              <p>Upload the file and let RxNaija clean, analyze, and interpret your data automatically.</p>
+              <p>Upload the file and let SterlingRx Advisors clean, analyze, and interpret your data automatically.</p>
               <span className="step-time">≈ 2 minutes</span>
             </div>
             <div className="step-card">

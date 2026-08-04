@@ -1,5 +1,5 @@
 /**
- * RxNaija Relay — credential broker and usage meter.
+ * SterlingRx Relay — credential broker and usage meter.
  *
  * Exists because the desktop build runs on a pharmacy's own PC, where a
  * bundled provider key could be read straight out of the Electron bundle in

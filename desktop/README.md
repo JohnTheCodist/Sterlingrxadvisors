@@ -1,4 +1,4 @@
-# RxNaija Desktop
+# SterlingRx Desktop
 
 An Electron window onto the same product the website serves. No business logic
 lives here.
@@ -15,7 +15,7 @@ close by accident, and auto-update. In this market that is worth real money, but
 it is packaging, not capability.
 
 **It needs internet.** Everything is server-side. If offline operation is ever
-required, see the "when to revisit" note in `RXNAIJA_DESKTOP_PLAN_FINAL.md` —
+required, see the "when to revisit" note in `STERLINGRX_DESKTOP_PLAN_FINAL.md` —
 `llmTransport.js` and `relay/` were built as the seam for it.
 
 ## Build
@@ -23,13 +23,13 @@ required, see the "when to revisit" note in `RXNAIJA_DESKTOP_PLAN_FINAL.md` —
 ```bash
 cd desktop
 npm install
-RXNAIJA_API_ORIGIN=https://app.rxnaija.com npm run dist
+STERLINGRX_API_ORIGIN=https://app.sterlingrxadvisors.com npm run dist
 ```
 
-Produces `dist/RxNaija-Setup-<version>.exe`.
+Produces `dist/SterlingRx-Setup-<version>.exe`.
 
-`RXNAIJA_API_ORIGIN` is baked into the bundle at build time. It defaults to
-`https://app.rxnaija.com`; point it elsewhere for staging.
+`STERLINGRX_API_ORIGIN` is baked into the bundle at build time. It defaults to
+`https://app.sterlingrxadvisors.com`; point it elsewhere for staging.
 
 ## Develop
 
@@ -43,7 +43,7 @@ cd desktop && npm run dev
 ```
 
 In dev the shell loads `http://localhost:5173`, so hot reload works normally.
-Override with `RXNAIJA_DEV_URL`.
+Override with `STERLINGRX_DEV_URL`.
 
 ## Two things that will bite
 
@@ -100,7 +100,7 @@ product. Skipping the executable edit means skipping `rcedit`, which is what
 writes the icon and version metadata into the exe. The result:
 
 ```
-ProductName:     Electron        ← should be RxNaija Analytics
+ProductName:     Electron        ← should be SterlingRx Advisors
 FileDescription: Electron
 FileVersion:     33.4.11         ← Electron's version, not ours
 icon:            Electron logo   ← should be the teal Rx mark

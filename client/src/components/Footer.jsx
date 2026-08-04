@@ -8,7 +8,7 @@ export default function Footer() {
           <div className="footer-brand">
             <div className="brand">
               <span className="brand-mark">Rx</span>
-              RxNaija Analytics
+              SterlingRx Advisors
             </div>
             <p>Pharmacy business intelligence for the Nigerian counter. Built in Lagos.</p>
           </div>
@@ -43,7 +43,7 @@ export default function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <span>© 2026 RxNaija Analytics. All rights reserved.</span>
+          <span>© 2026 SterlingRx Advisors. All rights reserved.</span>
           <span>Prices exclude VAT · No card required for trial</span>
         </div>
       </div>

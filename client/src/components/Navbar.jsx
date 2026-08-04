@@ -24,7 +24,7 @@ export default function Navbar() {
       <div className="shell">
         <NavLink to="/" className="brand" onClick={() => setOpen(false)}>
           <span className="brand-mark">Rx</span>
-          RxNaija Analytics
+          SterlingRx Advisors
         </NavLink>
 
         <nav className="nav-links">
