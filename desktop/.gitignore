@@ -10,3 +10,5 @@ node_modules/
 # Diagnostic capture from scripts/screenshot.js
 shell-window.png
 exe-icon.png
+signin-desktop.png
+download-page.png

@@ -3579,3 +3579,16 @@ p { margin: 0; }
   .download-actions .btn { width: 100%; text-align: center; }
   .download-req { text-align: center; }
 }
+
+/* Shown where "Continue with Google" sits on the web — the desktop app cannot
+   complete an OAuth redirect, so it explains rather than offering a dead end. */
+.oauth-unavailable {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px dashed var(--color-line);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--color-ink-faint);
+  text-align: center;
+}

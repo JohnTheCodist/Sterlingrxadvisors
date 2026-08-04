@@ -47,7 +47,9 @@ function main() {
 
   run('npx', ['vite', 'build', '--base', './'], {
     cwd: CLIENT_DIR,
-    env: { ...process.env, VITE_API_BASE_URL: API_ORIGIN },
+    // VITE_DESKTOP lets the UI hide anything that cannot work from file://,
+    // notably OAuth, which needs a real web origin to redirect back to.
+    env: { ...process.env, VITE_API_BASE_URL: API_ORIGIN, VITE_DESKTOP: 'true' },
   });
 
   if (!fs.existsSync(path.join(CLIENT_DIST, 'index.html'))) {

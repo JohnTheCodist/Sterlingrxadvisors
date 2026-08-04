@@ -71,7 +71,14 @@ function createWindow() {
     const target = new URL(url);
     const isLocalUI = target.protocol === 'file:';
     const isOurApi = target.origin === new URL(API_ORIGIN).origin;
-    if (!isLocalUI && !isOurApi) {
+    // In dev the UI is served from the Vite dev server, which is neither
+    // file:// nor the production API origin. Without this, every full-page
+    // navigation during development was ejected into the system browser and
+    // the app looked like it was refusing to work.
+    const isDevServer = isDev && target.origin === new URL(
+      process.env.RXNAIJA_DEV_URL || 'http://localhost:5173',
+    ).origin;
+    if (!isLocalUI && !isOurApi && !isDevServer) {
       event.preventDefault();
       shell.openExternal(url);
     }
