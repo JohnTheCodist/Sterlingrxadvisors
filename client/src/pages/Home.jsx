@@ -159,26 +159,42 @@ export default function Home() {
         <div className="shell">
           <div className="section-head center">
             <span className="eyebrow">The process</span>
-            <h2>3 steps. 1 file. 5 minutes a day.</h2>
-            <p className="lead">You need clear answers, not a software course. We removed every technical hurdle — no install, no special skills required.</p>
+            <h2>From pharmacy data to executive decisions — in just 3 steps.</h2>
+            <p className="lead">You need clear answers, not a software course. We removed every technical hurdle — no special skills required.</p>
           </div>
 
           <div className="steps">
             <div className="step-card">
               <div className="step-num">01</div>
-              <h3>Export</h3>
-              <p>Set up your export template once in your POS or ERP with the columns RxNaija needs. After that, just pull the file whenever you like.</p>
+              <h3>Export your report</h3>
+              <p>From your existing POS or pharmacy software, export your sales or inventory data.</p>
+              <span className="step-time">≈ 30 seconds</span>
             </div>
             <div className="step-card">
               <div className="step-num">02</div>
-              <h3>Upload</h3>
-              <p>Drop the file into RxNaija. No bridges, no permanent connection to your dispensing system required.</p>
+              <h3>Let AI do the heavy lifting</h3>
+              <p>Upload the file and let RxNaija clean, analyze, and interpret your data automatically.</p>
+              <span className="step-time">≈ 2 minutes</span>
             </div>
             <div className="step-card">
               <div className="step-num">03</div>
-              <h3>See it clearly</h3>
-              <p>Your performance picture is ready within minutes — check and act on it without the guesswork.</p>
+              <h3>Act with confidence</h3>
+              <p>Receive a complete business health assessment, executive dashboards, and clear recommendations on what to do next.</p>
+              <span className="step-time">≈ 2–3 minutes</span>
             </div>
+          </div>
+
+          <div className="outcome">
+            <p className="outcome-ask">
+              Instead of asking <em>"What happened?"</em> — you'll know:
+            </p>
+            <ul className="outcome-list">
+              <li>Where profit is growing</li>
+              <li>Where cash is trapped</li>
+              <li>Which products deserve more investment</li>
+              <li>Which products should leave your shelves</li>
+              <li>Which actions will have the biggest financial impact today</li>
+            </ul>
           </div>
         </div>
       </section>

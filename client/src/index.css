@@ -3604,3 +3604,81 @@ p { margin: 0; }
   color: var(--color-ink-faint);
   text-align: center;
 }
+
+/* ---- Process: per-step timing + outcome list ------------------------- */
+
+/* The timing is the quiet promise of the whole section — "5 minutes" is the
+   claim, and these three add up to it. Set in the mono face like every other
+   figure on the site so it reads as a measurement, not a caption. */
+.step-time {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-primary-tint);
+  color: var(--color-primary-dark);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.outcome {
+  margin-top: 40px;
+  padding: 28px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.outcome-ask {
+  margin: 0 0 18px;
+  font-size: 1rem;
+  color: var(--color-ink);
+  text-align: center;
+}
+
+.outcome-ask em {
+  font-style: normal;
+  color: var(--muted-foreground);
+}
+
+/* Two columns on desktop so five items do not become a long thin ladder,
+   collapsing to one on narrow screens. */
+.outcome-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.outcome-list li {
+  position: relative;
+  padding-left: 28px;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+/* The tick is decoration: generated content keeps it out of the accessibility
+   tree and out of anything copied to the clipboard, where a literal ✓ before
+   every line is noise. */
+.outcome-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0.42em;
+  width: 11px;
+  height: 6px;
+  border-left: 2px solid var(--primary);
+  border-bottom: 2px solid var(--primary);
+  transform: rotate(-45deg);
+}
+
+@media (max-width: 760px) {
+  .outcome { padding: 22px 20px; }
+  .outcome-list { grid-template-columns: 1fr; }
+}
