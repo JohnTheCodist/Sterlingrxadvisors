@@ -3727,3 +3727,70 @@ p { margin: 0; }
   .hero-copy .lead { margin-bottom: 20px; font-size: 1.02rem; }
   .hero-nos { margin-bottom: 20px; }
 }
+
+/* ---- Capability list (Features page) --------------------------------- *
+ * Hallmark · section: features · archetype: F3-derived (hairline rows,
+ * qualitative not quantitative) · theme: preserved-project-palette
+ * icons: hand-built inline SVG, 20x20 / 1.5 stroke / currentColor
+ *
+ * Ten items. As cards that is ten bordered boxes, each with its own shadow
+ * and hover lift, and the eye has nowhere to rest. As hairline-ruled rows it
+ * reads as one list with ten entries -- the substance the copy is claiming.
+ * Two columns because ten divides evenly by two; at three the last row is a
+ * single orphaned item. */
+
+.capability-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 56px;
+}
+
+.capability {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 18px;
+  padding: 26px 0;
+  border-top: 1px solid var(--border);
+}
+
+/* The first row of each column needs no rule above it -- the section head
+   already closes that edge, and a rule there reads as a stray line. */
+.capability:nth-child(1),
+.capability:nth-child(2) { border-top: 0; padding-top: 0; }
+
+.capability-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--color-primary-tint);
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.capability-icon svg { width: 19px; height: 19px; display: block; }
+
+.capability h3 {
+  font-size: 1.02rem;
+  letter-spacing: -0.008em;
+  margin-bottom: 5px;
+}
+
+.capability p {
+  font-size: 0.93rem;
+  line-height: 1.58;
+  color: var(--muted-foreground);
+  max-width: 46ch;
+}
+
+@media (max-width: 860px) {
+  .capability-list { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
+  /* Single column: only the true first item should lose its rule. */
+  .capability:nth-child(2) { border-top: 1px solid var(--border); padding-top: 26px; }
+  .capability:nth-child(1) { border-top: 0; padding-top: 0; }
+}

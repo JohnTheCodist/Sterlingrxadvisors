@@ -1,5 +1,17 @@
 [
   {
+    "date": "2026-08-04",
+    "scope": "section",
+    "macrostructure": "preserved (page owned by Features.jsx)",
+    "feature_archetype": "F3-derived — hairline-ruled rows, qualitative not quantitative",
+    "theme": "preserved-project-palette",
+    "theme_axes": "light / geometric-sans / cool-teal",
+    "enrichment": "Tier B hand-built inline SVG icon set (10, 20x20, 1.5 stroke)",
+    "nav": "owned by App.jsx (N/A)",
+    "footer": "owned by App.jsx (N/A)",
+    "brief": "SterlingRx Advisors — Features page: 6 icon cards replaced with 10 capabilities as a two-column hairline list; emoji rejected for cross-OS inconsistency and palette clash"
+  },
+  {
     "date": "2026-08-01",
     "scope": "page",
     "macrostructure": "preserved (Workbench-adjacent, popup treatment)",
