@@ -25,7 +25,12 @@ const path = require('path');
 // through VITE_API_BASE_URL when the client bundle is built.
 const API_ORIGIN = process.env.RXNAIJA_API_ORIGIN || 'https://app.rxnaija.com';
 
-const isDev = !app.isPackaged;
+// Unpackaged normally means "developing", which loads the Vite dev server.
+// But the failure worth catching -- assets resolving against the filesystem
+// root over file:// and leaving a blank window -- only exists on the PACKAGED
+// path, so there has to be a way to exercise that without building an
+// installer first.
+const isDev = !app.isPackaged && process.env.RXNAIJA_FORCE_RENDERER !== '1';
 let mainWindow = null;
 
 function createWindow() {
