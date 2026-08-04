@@ -9,14 +9,22 @@ export default function Home() {
         <div className="shell">
           <div className="hero-copy">
             <span className="eyebrow">Pharmacy Business Intelligence</span>
-            <h1>Know your pharmacy's real numbers in three minutes.</h1>
+            {/* Tight em-dashes, against the spaced style used elsewhere on the
+                page. Spaced, the line broke as "— and Losing —" on its own,
+                opening and closing a line with a dash. Keeping them closed up
+                binds each dash to its word and breaks cleanly. */}
+            <h1>Know Where Your Pharmacy Is Making&#8212;and Losing&#8212;Money.</h1>
             <p className="lead">
-              See what's actually selling, what's leaving you profit, and what's quietly
-              costing you money. Separate counter sales from e-channel, cash from NHIA claims —
-              from one file, no installs, no IT team.
+              Turn your pharmacy data into clear, actionable business decisions in under 5 minutes.
             </p>
+            <p className="hero-nos">No integrations. No spreadsheets. No data analyst required.</p>
             <div className="hero-actions">
-              <Link to="/contact" className="btn btn-primary">Start free trial</Link>
+              {/* Points at /signup, not /contact where "Start free trial" used to
+                  go. "Analyze My Pharmacy" promises the product, so landing on a
+                  contact form would be a broken promise on the first click. */}
+              <Link to="/signup" className="btn btn-primary">
+                Analyze My Pharmacy <span aria-hidden="true">→</span>
+              </Link>
               <Link to="/how-it-works" className="btn btn-ghost">See how it works</Link>
             </div>
             <div className="hero-microcopy">

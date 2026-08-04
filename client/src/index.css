@@ -3682,3 +3682,48 @@ p { margin: 0; }
   .outcome { padding: 22px 20px; }
   .outcome-list { grid-template-columns: 1fr; }
 }
+
+/* ---- Hero: longer headline + the "no X" reassurance line -------------- */
+
+/* No font-size override here on purpose. The global h1 clamp is tuned for a
+   headline of about this length, and a previous draft of the hero copy was
+   twice as long and needed shrinking — when it was replaced with a short one
+   again, leaving the smaller size behind would have quietly demoted the most
+   important line on the site. */
+.hero-copy h1 { line-height: 1.1; }
+
+/* Sits between the lead and the button: the last objection cleared before the
+   click. Deliberately not styled as the microcopy row below the CTA — that row
+   is about the trial's commercial terms, this is about effort. */
+.hero-nos {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--color-ink-soft, var(--muted-foreground));
+  margin-bottom: 26px;
+  max-width: 520px;
+}
+
+
+/* ---- Navbar brand at small widths ------------------------------------ */
+
+/* "SterlingRx Advisors" is wider than the name it replaced, and at 390px it
+   wrapped to two lines beside the Get Started button — a logo breaking in half
+   reads as a broken page, not a long name. Keep it on one line and let the
+   type shrink instead. */
+.brand { white-space: nowrap; }
+
+@media (max-width: 480px) {
+  .brand { font-size: 1rem; gap: 8px; }
+  .brand-mark { width: 30px; height: 30px; border-radius: 8px; font-size: 0.78rem; }
+
+  /* The navbar's Get Started duplicates the hero's primary button, which is
+     directly below it on a phone. Dropping it here buys the width the wordmark
+     needs; the same action is still in the menu. */
+  .nav-actions .btn-primary { display: none; }
+
+  /* Tighter hero rhythm so the call to action is not pushed off the first
+     screen by the longer headline. */
+  .hero { padding-top: 44px; }
+  .hero-copy .lead { margin-bottom: 20px; font-size: 1.02rem; }
+  .hero-nos { margin-bottom: 20px; }
+}
