@@ -40,7 +40,10 @@ const CLIENT_DIR = path.join(REPO_ROOT, 'client');
 const CLIENT_DIST = path.join(CLIENT_DIR, 'dist');
 const RENDERER_DIR = path.join(DESKTOP_DIR, 'renderer');
 
-const API_ORIGIN = process.env.STERLINGRX_API_ORIGIN || 'https://app.sterlingrxadvisors.com';
+// Must match desktop/main.js. The apex domain, not an app.* subdomain: the API
+// and the website are the same Express process, and app.sterlingrxadvisors.com
+// has never existed.
+const API_ORIGIN = process.env.STERLINGRX_API_ORIGIN || 'https://sterlingrxadvisors.com';
 
 function run(cmd, args, opts) {
   execFileSync(cmd, args, { stdio: 'inherit', shell: process.platform === 'win32', ...opts });

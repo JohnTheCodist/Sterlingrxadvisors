@@ -23,7 +23,13 @@ const path = require('path');
 
 // Where the hosted backend lives. Baked in at build time; the renderer gets it
 // through VITE_API_BASE_URL when the client bundle is built.
-const API_ORIGIN = process.env.STERLINGRX_API_ORIGIN || 'https://app.sterlingrxadvisors.com';
+//
+// This said app.sterlingrxadvisors.com, a subdomain that was assumed and never
+// created -- it does not resolve. The API and the website are one Express app
+// on the apex domain, so every request from a shipped installer would have
+// failed at DNS, before reaching any server we could debug. Baked in at build
+// time means no setting on the user's machine could correct it either.
+const API_ORIGIN = process.env.STERLINGRX_API_ORIGIN || 'https://sterlingrxadvisors.com';
 
 // Unpackaged normally means "developing", which loads the Vite dev server.
 // But the failure worth catching -- assets resolving against the filesystem
