@@ -9,7 +9,7 @@
     "dev": "node index.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.8",
+    "@supabase/auth-js": "^2.112.1",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "express": "^4.19.2",

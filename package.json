@@ -16,7 +16,7 @@
   },
   "//dependencies": "Everything the server needs at runtime, listed HERE rather than only in server/package.json. cPanel runs npm install from inside its virtualenv directory, not the app root, so a nested 'npm --prefix server install' resolves the prefix against the wrong place and fails with ENOENT. One manifest at the root is the only layout that survives that. Node still resolves these from server/*.js by walking up to the root node_modules. server/tests/deps.test.js fails the build if the two manifests drift apart.",
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.8",
+    "@supabase/auth-js": "^2.112.1",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
