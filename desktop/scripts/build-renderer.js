@@ -12,6 +12,15 @@
  *                          blank white window with console errors and no other
  *                          clue what went wrong.
  *
+ *   --outDir               Writes straight to desktop/renderer. This build used
+ *                          to land in client/dist and get copied here, which
+ *                          meant building the desktop app silently replaced the
+ *                          WEBSITE's bundle with one that has relative asset
+ *                          paths and a hard-coded API origin. Deploying after a
+ *                          desktop build then pointed the live site at whatever
+ *                          machine built it. Nothing writes to client/dist from
+ *                          here any more.
+ *
  *   VITE_API_BASE_URL      The web build leaves this empty and uses relative
  *                          '/api/...' against its own origin. From file:// there
  *                          is no origin to be relative to, so the desktop build
@@ -45,22 +54,36 @@ function main() {
 
   console.log(`Building renderer against ${API_ORIGIN}`);
 
-  run('npx', ['vite', 'build', '--base', './'], {
+  // Replace wholesale rather than merging, so a renamed or deleted asset from a
+  // previous build cannot linger and get shipped. --emptyOutDir is required
+  // because the target sits outside the Vite root; without it Vite refuses to
+  // clear a directory it did not create.
+  fs.rmSync(RENDERER_DIR, { recursive: true, force: true });
+
+  run('npx', ['vite', 'build', '--base', './', '--outDir', RENDERER_DIR, '--emptyOutDir'], {
     cwd: CLIENT_DIR,
     // VITE_DESKTOP lets the UI hide anything that cannot work from file://,
     // notably OAuth, which needs a real web origin to redirect back to.
     env: { ...process.env, VITE_API_BASE_URL: API_ORIGIN, VITE_DESKTOP: 'true' },
   });
 
-  if (!fs.existsSync(path.join(CLIENT_DIST, 'index.html'))) {
-    console.error('Client build produced no index.html — aborting.');
+  if (!fs.existsSync(path.join(RENDERER_DIR, 'index.html'))) {
+    console.error('Renderer build produced no index.html — aborting.');
     process.exit(1);
   }
 
-  // Replace wholesale rather than merging, so a renamed or deleted asset from a
-  // previous build cannot linger and get shipped.
-  fs.rmSync(RENDERER_DIR, { recursive: true, force: true });
-  fs.cpSync(CLIENT_DIST, RENDERER_DIR, { recursive: true });
+  // The website's bundle must be exactly what it was before this ran. If a
+  // future change reintroduces a write to client/dist, the deploy that follows
+  // would put desktop asset paths and a compiled-in API origin on the live
+  // site, so it is worth one assertion here rather than a production incident.
+  if (fs.existsSync(path.join(CLIENT_DIST, 'index.html'))) {
+    const webHtml = fs.readFileSync(path.join(CLIENT_DIST, 'index.html'), 'utf8');
+    if (/(?:src|href)="\.\//.test(webHtml)) {
+      console.error('\nclient/dist now contains relative asset paths — the desktop build leaked into the web bundle.');
+      console.error('Rebuild the site with:  cd client && npx vite build');
+      process.exit(1);
+    }
+  }
 
   // A packaged app that quietly ships absolute asset paths opens to a blank
   // window and is painful to diagnose after the fact. Catch it here instead.
