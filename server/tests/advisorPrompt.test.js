@@ -176,7 +176,7 @@ test('web-only formatting stays out of the WhatsApp variant', () => {
 section('Identity and confidentiality survive the upgrade');
 
 test('the model never names its provider', () => {
-  assert(has(web, "I'm Alafia, built for this platform"), 'identity answer missing');
+  assert(has(web, "I'm Lume, built for this platform"), 'identity answer missing');
   assert(has(web, 'never name any underlying AI provider'), 'provider confidentiality missing');
 });
 

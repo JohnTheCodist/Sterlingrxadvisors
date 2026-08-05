@@ -1,5 +1,5 @@
 /**
- * Safety net for WhatsApp replies. The system prompt already asks Alafia to
+ * Safety net for WhatsApp replies. The system prompt already asks Lume to
  * write WhatsApp-native (see channel='whatsapp' in advisorAgent.js), but
  * LLMs don't always follow formatting instructions consistently — this
  * strips any web-style markdown that slips through so the user never sees

@@ -767,7 +767,10 @@ export default function AdvisorChat({ analysisContext = null }) {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-[var(--color-ink)]">AI Advisor</p>
+          {/* The assistant introduces itself by name here because this is the
+              one surface it speaks from; the prompt in advisorAgent.js answers
+              to the same name, so the header and the replies agree. */}
+          <p className="text-sm font-semibold text-[var(--color-ink)]">Lume</p>
           <p className="text-[11px] text-[var(--color-ink-faint)]">Ask anything about your data</p>
         </div>
         <button

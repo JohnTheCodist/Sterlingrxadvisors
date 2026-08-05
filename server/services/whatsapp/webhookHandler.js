@@ -162,7 +162,7 @@ async function handleTextQuestion(organizationId, phoneNumber, messageBody, mess
   }
 
   // The tool-calling loop can take a few seconds (data lookups, sometimes
-  // more than one in sequence) — the typing bubble tells the user Alafia
+  // more than one in sequence) — the typing bubble tells the user Lume
   // is working instead of leaving them staring at silence.
   await sendTypingIndicator(messageSid);
 

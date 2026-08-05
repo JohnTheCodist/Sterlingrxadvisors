@@ -9,7 +9,7 @@ const { setOnboardingStatus } = require('./phoneResolver');
 const { provisionFromWhatsapp } = require('./orgProvisioning');
 
 const WELCOME =
-  "Welcome to SterlingRx Advisors! I'm Alafia, your pharmacy business assistant. " +
+  "Welcome to SterlingRx Advisors! I'm Lume, your pharmacy business assistant. " +
   "What's your pharmacy called?";
 
 const ASK_AGAIN = "Sorry, I didn't catch a name. What's your pharmacy called?";
