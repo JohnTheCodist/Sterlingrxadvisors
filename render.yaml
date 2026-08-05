@@ -1,0 +1,74 @@
+# Render Blueprint — one web service running the whole application.
+#
+# Same architecture as everywhere else: Express serves the API and the built
+# React bundle from a single Node process. Nothing is split apart for this.
+#
+# Why Render and not the cPanel host this was first aimed at: shared hosting
+# blocks outbound TCP on the PostgreSQL ports, so the app could serve pages but
+# never reach its own database, and no code change can open a port the host has
+# closed. See DEPLOYMENT.md.
+#
+# THE BUILD RUNS HERE, unlike on cPanel. A Vite build wants roughly a gigabyte
+# of memory, which shared hosting killed, so client/dist had to be built locally
+# and committed. Render has the memory, so the bundle is built from source on
+# every deploy and the committed copy is simply overwritten -- deploy what the
+# repository says, not what someone remembered to build.
+
+services:
+  - type: web
+    name: sterlingrx
+    runtime: node
+    region: frankfurt          # closest of Render's regions to Nigeria and to
+                               # the eu-west-1 Supabase project; every query
+                               # crosses this link, so it is worth matching.
+    plan: starter              # free works, but sleeps after 15 idle minutes
+                               # and takes ~50s to wake. A pharmacist opening
+                               # the dashboard reads that as broken.
+
+    # postinstall installs server dependencies; `build` installs the client
+    # toolchain and runs Vite. Kept as two npm scripts rather than spelled out
+    # here so a local build and a deployed build cannot drift apart.
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+
+    healthCheckPath: /api/health
+
+    envVars:
+      # supabase-js needs 22 for a global WebSocket. The server no longer uses
+      # that client -- see services/supabaseClient.js -- but 22 is current LTS
+      # and pinning it stops a silent bump from moving the ground underneath.
+      - key: NODE_VERSION
+        value: "22"
+
+      - key: NODE_ENV
+        value: production
+
+      # sync: false means Render prompts for the value and stores it encrypted,
+      # instead of it living in this file. Secrets do not belong in a repo.
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      # Absolute base for links the app emails or sends over WhatsApp. Render
+      # gives every service an onrender.com hostname; set this to the custom
+      # domain once one is attached.
+      - key: PUBLIC_BASE_URL
+        sync: false
+
+      # Optional. Each unset key disables one feature and logs which, rather
+      # than failing the boot -- a pharmacy with no Twilio account still gets a
+      # dashboard. LLM_API_KEY is the one that matters: without it, column
+      # mapping falls back to rules and the Lume advisor stays quiet.
+      - key: LLM_API_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_NUMBER
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
