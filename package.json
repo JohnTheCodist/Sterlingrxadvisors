@@ -7,9 +7,11 @@
     "node": ">=18.18.0"
   },
   "scripts": {
-    "postinstall": "npm --prefix server install && npm --prefix client install",
-    "build": "npm --prefix client run build",
-    "build:web": "npm --prefix client run build",
+    "//postinstall": "Server only. The server serves client/dist, which is prebuilt and committed, so it needs no client packages to run -- and installing them would put vite, rollup and esbuild on a shared host that charges for disk and may not finish the install at all.",
+    "postinstall": "npm --prefix server install",
+    "//build": "Installs the client toolchain first, so a fresh clone can build without a separate step. Run on your own machine, not the host.",
+    "build": "npm --prefix client install && npm --prefix client run build",
+    "build:web": "npm --prefix client install && npm --prefix client run build",
     "build:desktop": "npm --prefix desktop run build:renderer",
     "start": "node server/index.js",
     "test": "node --test server/tests/*.test.js"
