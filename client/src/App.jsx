@@ -18,6 +18,7 @@ import Privacy from './pages/Privacy.jsx';
 import Download from './pages/Download.jsx';
 import Terms from './pages/Terms.jsx';
 import DesktopIntro from './components/DesktopIntro.jsx';
+import DesktopRoot from './components/DesktopRoot.jsx';
 import { isDesktop } from './lib/platform.js';
 
 
@@ -42,8 +43,10 @@ export default function App() {
       <main>
         <Routes>
           {/* Someone who installed the app has already been sold to. The
-              website keeps its homepage; the app opens on the door. */}
-          <Route path="/" element={isDesktop ? <SignIn /> : <Home />} />
+              website keeps its homepage; the app opens on the door — and
+              DesktopRoot checks whether that door is already unlocked before
+              asking anyone for a key. */}
+          <Route path="/" element={isDesktop ? <DesktopRoot /> : <Home />} />
           <Route path="/features" element={<Features />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
