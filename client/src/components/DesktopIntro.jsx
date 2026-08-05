@@ -79,7 +79,7 @@ export default function DesktopIntro() {
         <div className="intro-mark">
           <svg viewBox="0 0 96 96" role="img" aria-label="SterlingRx Advisors">
             <rect className="intro-tile" x="4" y="4" width="88" height="88" rx="21" />
-            <text className="intro-rx" x="48" y="49" textAnchor="middle" dominantBaseline="central">Rx</text>
+            <text className="intro-letter" x="48" y="50" textAnchor="middle" dominantBaseline="central">S</text>
           </svg>
         </div>
 

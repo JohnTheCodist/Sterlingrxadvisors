@@ -354,7 +354,9 @@ p { margin: 0; }
   justify-content: center;
   color: var(--primary-foreground);
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  /* One letter carries less ink than the two this used to hold, so it is set
+     larger to keep the tile looking equally filled. */
+  font-size: 1.08rem;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -3515,7 +3517,7 @@ p { margin: 0; }
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
-  font-size: 1.15rem;
+  font-size: 1.6rem;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -3714,7 +3716,7 @@ p { margin: 0; }
 
 @media (max-width: 480px) {
   .brand { font-size: 1rem; gap: 8px; }
-  .brand-mark { width: 30px; height: 30px; border-radius: 8px; font-size: 0.78rem; }
+  .brand-mark { width: 30px; height: 30px; border-radius: 8px; font-size: 0.98rem; }
 
   /* The navbar's Get Started duplicates the hero's primary button, which is
      directly below it on a phone. Dropping it here buys the width the wordmark
@@ -3867,10 +3869,12 @@ p { margin: 0; }
 
 .intro-tile { fill: oklch(0.52 0.088 194); }
 
-.intro-rx {
+.intro-letter {
   fill: oklch(0.99 0.005 190);
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 34px;
+  /* 56% of the 96-unit tile — the same ratio make-icon.js uses, so the letter
+     that opens the app is the letter on the taskbar behind it. */
+  font-size: 54px;
   font-weight: 700;
 }
 

@@ -81,7 +81,7 @@ export default function Download() {
             {!failed && available && (
               <>
                 <div className="download-head">
-                  <div className="download-mark" aria-hidden="true">Rx</div>
+                  <div className="download-mark" aria-hidden="true">S</div>
                   <div>
                     <h2>SterlingRx Advisors for Windows</h2>
                     <p className="download-meta">

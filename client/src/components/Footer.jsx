@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="footer-top">
           <div className="footer-brand">
             <div className="brand">
-              <span className="brand-mark">Rx</span>
+              <span className="brand-mark">S</span>
               SterlingRx Advisors
             </div>
             <p>Pharmacy business intelligence for the Nigerian counter. Built in Lagos.</p>

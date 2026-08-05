@@ -27,8 +27,12 @@ const PRIMARY_FG = 'oklch(0.99 0.005 190)';
 
 /**
  * At 256px the mark needs slightly different proportions than at 34px: the
- * corner radius scales, and the wordmark is set larger relative to the tile so
+ * corner radius scales, and the letter is set larger relative to the tile so
  * it stays legible once Windows shrinks it into a taskbar.
+ *
+ * One letter, not two. "Rx" had to hold its own width at 16px in a taskbar and
+ * turned into a smudge; a single S keeps its counter open at that size, which
+ * is the only size that decides whether an icon is recognisable.
  */
 const html = (size) => `<!doctype html>
 <html><head><meta charset="utf-8">
@@ -41,12 +45,12 @@ const html = (size) => `<!doctype html>
     color: ${PRIMARY_FG};
     display: flex; align-items: center; justify-content: center;
     font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
-    font-size: ${Math.round(size * 0.40)}px;
+    font-size: ${Math.round(size * 0.56)}px;
     font-weight: 700;
-    letter-spacing: ${size * 0.005}px;
+    letter-spacing: 0;
   }
 </style></head>
-<body><div class="tile">Rx</div></body></html>`;
+<body><div class="tile">S</div></body></html>`;
 
 async function capture(size) {
   const win = new BrowserWindow({

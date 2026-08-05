@@ -1457,7 +1457,7 @@ export default function Dashboard() {
       <aside className={`dashboard-sidebar fixed left-0 top-0 z-50 h-screen w-64 flex flex-col border-r border-[var(--color-line)] transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         {/* Brand */}
         <div className="flex items-center gap-3 px-5 pt-6 pb-4 border-b border-[var(--color-line)]">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--primary)] text-[11px] font-bold font-mono text-primary-foreground">Rx</div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--primary)] text-[15px] font-bold font-mono text-primary-foreground">S</div>
           <div>
             <p className="text-sm font-semibold text-[var(--sidebar-ink-bright)]">SterlingRx Advisors</p>
             <p className="text-[10px] text-[var(--sidebar-ink-dim)] font-mono tracking-wide">Analytics</p>

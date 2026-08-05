@@ -23,7 +23,7 @@ export default function Navbar() {
     <header className="navbar">
       <div className="shell">
         <NavLink to="/" className="brand" onClick={() => setOpen(false)}>
-          <span className="brand-mark">Rx</span>
+          <span className="brand-mark">S</span>
           SterlingRx Advisors
         </NavLink>
 
