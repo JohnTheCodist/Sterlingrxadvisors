@@ -1,7 +1,13 @@
 node_modules
+
+# Real secrets never ship. .env.example is the opposite: it is the reference
+# for what has to be set on a host, carries placeholders only, and is useless
+# to anyone deploying if git hides it.
 .env
-.env.example
 server/.env
+client/.env
+relay/.env
+!.env.example
 server/rxnaija.db
 server/rxnaija.db-shm
 server/rxnaija.db-wal
@@ -14,3 +20,8 @@ server/storage/
 # Desktop installers — build artefacts, rebuilt via "cd desktop && npm run dist".
 # A 78MB binary per release would bloat the repo permanently.
 releases/
+
+# Runtime scratch: cached uploads (services/lastUploadStore.js) and multer's
+# streaming target for in-flight uploads. Both are regenerated and neither
+# should ever reach a deploy.
+tmp/
