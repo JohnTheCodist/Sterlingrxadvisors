@@ -34,13 +34,22 @@ const roundTo = (n, d = 1) => {
  * contained — the same capability flags the dashboard uses to decide which
  * sections to show — so it is the honest source for "is there anything here
  * to assess".
+ *
+ * Restricted to uploads that actually FINISHED. A file's capabilities are
+ * written the moment it is classified, which happens on the first screen of
+ * the upload flow — before column mapping, and so before the owner has agreed
+ * to ingest anything. Counting those rows meant abandoning a stock file at the
+ * mapping step still switched the Inventory pillar on, and it then scored
+ * against turnover and dead-stock figures derived from sales alone: a quarter
+ * of the health score answering for data the pharmacy never committed. Only
+ * 'processed' means the rows are really in the star schema.
  */
 async function hasInventoryData(organizationId) {
   assertOrgId(organizationId);
   const db = getSql();
   const rows = await db`
     select capabilities from dataset_registry
-    where organization_id = ${organizationId}
+    where organization_id = ${organizationId} and processing_status = 'processed'
   `;
   return rows.some((r) => {
     const c = r.capabilities || {};
