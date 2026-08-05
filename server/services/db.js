@@ -41,6 +41,34 @@ function getSql() {
     username: decodeURIComponent(url.username),
     password: decodeURIComponent(url.password),
     ssl: 'require',
+
+    // The pool is sized PER PROCESS, and cPanel runs several Passenger
+    // workers, so the number that reaches Postgres is this times the worker
+    // count. The library's default of 10 becomes 40 across four workers, which
+    // is more than a Supabase pooler hands a small project — and the way that
+    // failure presents is the worst part: connections are refused under load,
+    // so the site works while you are testing it alone and breaks once real
+    // users arrive. Five per worker leaves headroom on every plan.
+    max: Number(process.env.DB_POOL_MAX) || 5,
+
+    // Return connections to the pooler between bursts instead of holding them
+    // open. Shared hosting suspends idle apps, and a connection held across a
+    // suspend comes back dead.
+    idle_timeout: Number(process.env.DB_IDLE_TIMEOUT) || 30,
+
+    // Recycle before any intermediary decides to. A silently dropped
+    // long-lived connection surfaces as one random query failing.
+    max_lifetime: Number(process.env.DB_MAX_LIFETIME) || 60 * 30,
+
+    // Fail a request in seconds rather than letting it hang. Without this a
+    // database that is unreachable produces requests that never answer, and
+    // they pile up until the worker has nothing left to serve anyone with.
+    connect_timeout: Number(process.env.DB_CONNECT_TIMEOUT) || 15,
+
+    // The pooler closes idle connections on its own schedule. That is routine,
+    // not an incident, and logging a stack trace for it trains everyone to
+    // ignore this log.
+    onnotice: () => {},
   });
   return sql;
 }

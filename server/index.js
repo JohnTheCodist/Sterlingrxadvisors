@@ -2,6 +2,14 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+
+// Before anything else touches config. A missing DATABASE_URL should stop the
+// process with a sentence naming it, not surface later as a null dereference
+// inside a request nobody can debug from a shared host.
+require('./config/env').validateEnv();
 
 const fs = require('fs');
 const multer = require('multer');
@@ -36,9 +44,62 @@ const { handleIncomingWhatsapp, servePdfExport } = require('./services/whatsapp/
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const isProd = process.env.NODE_ENV === 'production';
 
+// cPanel puts Passenger (and usually a reverse proxy) in front of this app, so
+// the socket's peer address is the proxy, not the visitor. Without this,
+// req.ip is the proxy for everyone -- which would make the rate limiter below
+// count the whole internet as one client and lock everybody out together.
+app.set('trust proxy', 1);
+
+// Content-Security-Policy is left off deliberately rather than forgotten: the
+// pages load Google Fonts and talk to Supabase from the browser, and a default
+// policy blocks both. The rest of Helmet's headers are safe as they come.
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+
+// Shared hosting bills bandwidth and the JS bundle is over a megabyte before
+// gzip. Skipped for the installer download, which is an already-compressed
+// binary -- compressing it again spends CPU to make the file slightly bigger.
+app.use(compression({
+  filter: (req, res) => (req.path === '/download/desktop' ? false : compression.filter(req, res)),
+}));
+
+// Wide-open CORS is deliberate and load-bearing: the desktop app runs from
+// file://, whose Origin header is the string "null", so an allowlist cannot
+// include it. Every /api route is authenticated by bearer token rather than by
+// origin or cookie, so a permissive CORS header grants a third-party page
+// nothing it could not already get by calling the API directly without a
+// browser. Revisit only if cookie auth is ever introduced.
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+// A ceiling, not a throttle -- set high enough that ordinary dashboard use
+// never notices, low enough that a script cannot exhaust a shared-hosting
+// worker pool. Health checks are exempt so uptime monitors do not consume the
+// budget they are meant to be watching.
+app.use('/api', rateLimit({
+  windowMs: 60 * 1000,
+  limit: isProd ? 120 : 1000,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  skip: (req) => req.path === '/health',
+  message: { error: 'Too many requests. Wait a moment and try again.' },
+}));
+
+/**
+ * Wraps an async handler so a rejected promise reaches Express's error
+ * handler instead of vanishing.
+ *
+ * Express 4 does not await handlers. An async one that rejects returns a
+ * promise nobody is holding, so the request hangs until the client times out
+ * and the rejection escalates to the process-level handler at the bottom of
+ * this file. The user sees a request that never answers; the log shows an
+ * unhandled rejection with no route attached. This turns both into an ordinary
+ * 500 with the failing route in the message.
+ */
+function asyncRoute(handler) {
+  return (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
+}
 
 // ---------- Multer config ----------
 
@@ -51,18 +112,24 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+// Streams to disk rather than holding every concurrent upload in the heap.
+// withDiskUpload restores `file.buffer` as a lazy read and deletes the temp
+// file when the response ends, so every route below is untouched by the
+// change. See services/uploadStorage.js.
+const uploadStorage = require('./services/uploadStorage');
+
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: uploadStorage.storage,
   fileFilter,
-  limits: { fileSize: 50 * 1024 * 1024 },
+  limits: { fileSize: uploadStorage.MAX_BYTES },
 });
 
-const uploadFields = upload.fields([
+const uploadFields = uploadStorage.withDiskUpload(upload.fields([
   { name: 'sales', maxCount: 1 },
   { name: 'inventory', maxCount: 1 },
-]);
-const uploadSingle = upload.single('file');
-const uploadBatch = upload.array('files', 20);
+]));
+const uploadSingle = uploadStorage.withDiskUpload(upload.single('file'));
+const uploadBatch = uploadStorage.withDiskUpload(upload.array('files', 20));
 
 // In-memory store for contact form submissions
 const submissions = [];
@@ -228,8 +295,10 @@ app.post('/api/classify-dataset', (req, res) => {
     }
 
     try {
-      // Store for later use by inventory/supplier/expiry dashboards
-      setLastUpload(req.organizationId, file.buffer, file.mimetype);
+      // Store for later use by inventory/supplier/expiry dashboards. Awaited
+      // so a worker that handles the very next request finds the file already
+      // on disk rather than racing an unfinished write.
+      await setLastUpload(req.organizationId, file.buffer, file.mimetype);
 
       const sheets = parseSheet(file.buffer);
       const sheetKeys = Object.keys(sheets);
@@ -340,26 +409,22 @@ app.post('/api/classify-batch', (req, res) => {
 
 // ---------- Inventory Analytics -------------------------------------------------
 
-// In-memory store for the last uploaded file, per organization (a plain
-// module-global would leak one tenant's file into another tenant's
-// inventory-analytics call).
-const lastUploadByOrg = new Map();
-function setLastUpload(organizationId, buffer, mimeType) {
-  lastUploadByOrg.set(organizationId, { buffer, mimeType });
-}
-function getLastUpload(organizationId) {
-  return lastUploadByOrg.get(organizationId) || null;
-}
+// The last uploaded file, per organization. Backed by disk rather than a
+// module-level Map, because Passenger serves requests from several worker
+// processes and a Map is visible only inside the one that wrote it — see
+// services/lastUploadStore.js. Still scoped per organization: a plain global
+// would leak one tenant's file into another tenant's inventory call.
+const { setLastUpload, getLastUpload } = require('./services/lastUploadStore');
 
-app.post('/api/inventory-analytics', (req, res) => {
-  const existing = getLastUpload(req.organizationId);
+app.post('/api/inventory-analytics', async (req, res) => {
+  const existing = await getLastUpload(req.organizationId);
   if (!existing) {
-    // If no file in memory, accept a new upload
-    uploadSingle(req, res, (err) => {
+    // Nothing cached for this organization — accept a new upload instead.
+    uploadSingle(req, res, async (err) => {
       if (err) return res.status(400).json({ error: err.message });
       const file = req.file;
       if (!file) return res.status(400).json({ error: 'No file received.' });
-      setLastUpload(req.organizationId, file.buffer, file.mimetype);
+      await setLastUpload(req.organizationId, file.buffer, file.mimetype);
       return runInventoryAnalysis(file.buffer, res);
     });
     return;
@@ -1446,10 +1511,12 @@ app.post('/api/validate', (req, res) => {
 // The pharmacyId URL param is accepted for backward-compatible routing but
 // never used for scoping — the real tenant is always the authenticated
 // session's organization, never a client-supplied value.
-app.get('/api/mappings/:pharmacyId', async (req, res) => {
+// The one route with no error path of its own: a database hiccup here used to
+// reject into nothing, hanging the request until the client gave up.
+app.get('/api/mappings/:pharmacyId', asyncRoute(async (req, res) => {
   const mappings = await loadPharmacyMappings(req.organizationId);
   res.json({ mappings });
-});
+}));
 
 // ---------- Contact ----------
 
@@ -1489,8 +1556,8 @@ app.post('/api/contact', (req, res) => {
 // account. Registered before the catch-all below, which would otherwise
 // swallow these paths and return index.html.
 const desktopRelease = require('./services/desktopRelease');
-app.get('/api/desktop/release', (req, res) => res.json(desktopRelease.releaseInfo()));
-app.get('/download/desktop', desktopRelease.sendInstaller);
+app.get('/api/desktop/release', asyncRoute(async (req, res) => res.json(await desktopRelease.releaseInfo())));
+app.get('/download/desktop', asyncRoute(desktopRelease.sendInstaller));
 
 // Serve the built React app in production
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
@@ -1603,8 +1670,89 @@ app.post('/api/analysis', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`SterlingRx Advisors server listening on http://localhost:${PORT}`);
+/**
+ * The last thing in the stack: anything a route threw or passed to next().
+ *
+ * Registered after every route, which is the only place Express will treat a
+ * four-argument function as an error handler. Without it, Express's built-in
+ * fallback answers with an HTML error page carrying a stack trace -- served to
+ * whoever asked, telling them the absolute paths of files on the server.
+ *
+ * Multer's own errors are translated here rather than in each upload route,
+ * because there are eight of those and they all fail the same way.
+ */
+// eslint-disable-next-line no-unused-vars -- the 4th argument is what marks this an error handler
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    const message = err.code === 'LIMIT_FILE_SIZE'
+      ? `File exceeds the ${Math.round(uploadStorage.MAX_BYTES / 1048576)} MB limit.`
+      : err.message;
+    return res.status(400).json({ error: message });
+  }
+
+  console.error(`[error] ${req.method} ${req.originalUrl}:`, err.stack || err);
+
+  if (res.headersSent) return next(err);
+
+  // The message is deliberately generic in production. An exception's text
+  // routinely contains a connection string, a file path, or a fragment of SQL,
+  // and none of that belongs in a response to the public.
+  return res.status(err.status || 500).json({
+    error: isProd
+      ? 'Something went wrong on our end. Please try again.'
+      : (err.message || 'Internal server error'),
+  });
+});
+
+// Express catches synchronous throws and rejected promises in handlers that
+// await properly, but not a rejection from a fire-and-forget call -- a Twilio
+// send or an LLM request nobody awaited. Node makes those fatal by default
+// since v15, so one of them takes the whole worker down and, on shared
+// hosting, does it invisibly: Passenger restarts and the only trace is a user
+// whose request died.
+//
+// The distinction below is deliberate. An unhandled REJECTION is logged and
+// survived, because the process state is still sound and killing it would turn
+// one failed request into everyone's failed request. An uncaught EXCEPTION is
+// logged and then allowed to exit, because by then the process may hold a
+// half-finished transaction or a corrupt module, and serving from it is worse
+// than restarting. Passenger brings a fresh worker up either way.
+process.on('unhandledRejection', (reason) => {
+  const detail = reason instanceof Error ? reason.stack : String(reason);
+  console.error('[unhandled-rejection] request survived, process kept alive:\n', detail);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[uncaught-exception] shutting this worker down:\n', err.stack || err);
+  // Give the log line a moment to flush before the process goes.
+  setTimeout(() => process.exit(1), 100).unref();
+});
+
+// Passenger stops a worker by sending SIGTERM. Closing the listener first lets
+// in-flight requests finish instead of being cut mid-response -- which for a
+// 79 MB installer download or a PDF being streamed is the difference between a
+// clean finish and a truncated file.
+function shutdown(signal) {
+  console.log(`[shutdown] ${signal} received, closing server`);
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 10000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+const server = app.listen(PORT, () => {
+  console.log(`SterlingRx Advisors server listening on port ${PORT}`);
+
+  // Clear cached uploads past their TTL. Fire-and-forget with its own catch:
+  // housekeeping must never be the reason the server fails to come up.
+  require('./services/lastUploadStore').sweepExpired()
+    .then((n) => { if (n > 0) console.log(`[last-upload] swept ${n} expired entr${n === 1 ? 'y' : 'ies'}`); })
+    .catch((err) => console.error('[last-upload] sweep failed:', err.message));
+
+  // Temp files from uploads whose worker was killed before the response ended.
+  uploadStorage.sweepOrphans()
+    .then((n) => { if (n > 0) console.log(`[upload] swept ${n} orphaned temp file${n === 1 ? '' : 's'}`); })
+    .catch((err) => console.error('[upload] orphan sweep failed:', err.message));
   // Stale-FactSales purging now happens per-organization inside
   // evaluateFromStore() — there's no single "current org" at startup
   // anymore, so the old blanket purge-on-boot call is gone.
