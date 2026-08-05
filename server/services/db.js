@@ -65,6 +65,21 @@ function getSql() {
     // they pile up until the worker has nothing left to serve anyone with.
     connect_timeout: Number(process.env.DB_CONNECT_TIMEOUT) || 15,
 
+    // Prepared statements, on by default, are why this app needs Supabase's
+    // SESSION pooler (port 5432) rather than the transaction pooler (6543):
+    // transaction mode hands each statement a different backend, so a prepared
+    // statement is never found again.
+    //
+    // That matters when a host blocks outbound 5432, which shared hosting
+    // does. The symptom is a request that hangs rather than fails -- a blocked
+    // port drops packets instead of refusing them -- until the web server times
+    // it out and serves its own error page, so nothing in our logs explains it.
+    // Setting DB_PREPARE=false makes the transaction pooler usable, and 6543 is
+    // sometimes open where 5432 is not. Slower per query, and the right fix is
+    // still to get 5432 unblocked, but it is the difference between a working
+    // site and waiting on a support ticket.
+    prepare: process.env.DB_PREPARE !== 'false',
+
     // The pooler closes idle connections on its own schedule. That is routine,
     // not an incident, and logging a stack trace for it trains everyone to
     // ignore this log.
