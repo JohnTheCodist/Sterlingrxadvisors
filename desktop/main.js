@@ -29,7 +29,13 @@ const path = require('path');
 // on the apex domain, so every request from a shipped installer would have
 // failed at DNS, before reaching any server we could debug. Baked in at build
 // time means no setting on the user's machine could correct it either.
-const API_ORIGIN = process.env.STERLINGRX_API_ORIGIN || 'https://sterlingrxadvisors.com';
+//
+// www, not the apex. The host answers the apex with a 301 to www, on /api paths
+// as well as pages. Redirects are fine for a GET, but a client that follows a
+// 301 by reissuing it as GET turns an upload into a request with no body, and
+// the failure surfaces as a confusing server error rather than anything naming
+// a redirect. Pointing at the canonical hostname skips the hop entirely.
+const API_ORIGIN = process.env.STERLINGRX_API_ORIGIN || 'https://www.sterlingrxadvisors.com';
 
 // Unpackaged normally means "developing", which loads the Vite dev server.
 // But the failure worth catching -- assets resolving against the filesystem

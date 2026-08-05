@@ -40,10 +40,11 @@ const CLIENT_DIR = path.join(REPO_ROOT, 'client');
 const CLIENT_DIST = path.join(CLIENT_DIR, 'dist');
 const RENDERER_DIR = path.join(DESKTOP_DIR, 'renderer');
 
-// Must match desktop/main.js. The apex domain, not an app.* subdomain: the API
-// and the website are the same Express process, and app.sterlingrxadvisors.com
-// has never existed.
-const API_ORIGIN = process.env.STERLINGRX_API_ORIGIN || 'https://sterlingrxadvisors.com';
+// Must match desktop/main.js. Not an app.* subdomain -- the API and the website
+// are the same Express process, and app.sterlingrxadvisors.com has never
+// existed. And www rather than the apex, because the host 301s the apex to www
+// on /api paths too, which risks a redirected upload arriving without its body.
+const API_ORIGIN = process.env.STERLINGRX_API_ORIGIN || 'https://www.sterlingrxadvisors.com';
 
 function run(cmd, args, opts) {
   execFileSync(cmd, args, { stdio: 'inherit', shell: process.platform === 'win32', ...opts });
