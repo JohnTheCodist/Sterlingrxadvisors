@@ -7,16 +7,27 @@
     "node": ">=18.18.0"
   },
   "scripts": {
-    "//postinstall": "Server only. The server serves client/dist, which is prebuilt and committed, so it needs no client packages to run -- and installing them would put vite, rollup and esbuild on a shared host that charges for disk and may not finish the install at all.",
-    "postinstall": "npm --prefix server install",
-    "//build": "Installs the client toolchain first, so a fresh clone can build without a separate step. Run on your own machine, not the host.",
+    "//build": "Installs the client toolchain first, so a fresh clone can build without a separate step. Run on your own machine, not the host -- a Vite build needs more memory than shared hosting allows.",
     "build": "npm --prefix client install && npm --prefix client run build",
     "build:web": "npm --prefix client install && npm --prefix client run build",
     "build:desktop": "npm --prefix desktop run build:renderer",
     "start": "node server/index.js",
     "test": "node --test server/tests/*.test.js"
   },
+  "//dependencies": "Everything the server needs at runtime, listed HERE rather than only in server/package.json. cPanel runs npm install from inside its virtualenv directory, not the app root, so a nested 'npm --prefix server install' resolves the prefix against the wrong place and fails with ENOENT. One manifest at the root is the only layout that survives that. Node still resolves these from server/*.js by walking up to the root node_modules. server/tests/deps.test.js fails the build if the two manifests drift apart.",
   "dependencies": {
-    "dotenv": "^17.4.2"
+    "@supabase/supabase-js": "^2.110.8",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.6.2",
+    "helmet": "^8.3.0",
+    "multer": "^2.2.0",
+    "pdfjs-dist": "^6.1.200",
+    "pdfkit": "^0.19.1",
+    "postgres": "^3.4.9",
+    "twilio": "^6.0.2",
+    "xlsx": "^0.18.5"
   }
 }
