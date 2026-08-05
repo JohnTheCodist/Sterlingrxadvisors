@@ -52,6 +52,23 @@ services:
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
 
+      # REQUIRED AT BUILD TIME, not at runtime. Vite substitutes these into the
+      # browser bundle while compiling; the running server never reads them.
+      # Miss them and the build still succeeds -- it just emits a bundle with no
+      # auth configuration, which dies in the browser on "supabaseUrl is
+      # required" while the server log stays perfectly clean. scripts/check-env
+      # now fails the build instead.
+      #
+      # The anon key belongs in a browser and is public by design: it carries no
+      # privileges beyond what row level security allows. It is listed as a
+      # secret only to keep it out of this file, not because exposure would
+      # matter. The service role key above is the opposite and must never reach
+      # a browser.
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+
       # Absolute base for links the app emails or sends over WhatsApp. Render
       # gives every service an onrender.com hostname; set this to the custom
       # domain once one is attached.

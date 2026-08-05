@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/check-env.js && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -14,7 +14,8 @@
     "react-dom": "^18.3.1",
     "react-dropzone": "^17.0.0",
     "react-router-dom": "^6.26.0",
-    "recharts": "^3.9.2"
+    "recharts": "^3.9.2",
+    "sterlingrx-advisors": "file:.."
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.2",
