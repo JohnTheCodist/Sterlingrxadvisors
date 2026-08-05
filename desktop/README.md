@@ -23,13 +23,18 @@ required, see the "when to revisit" note in `STERLINGRX_DESKTOP_PLAN_FINAL.md` â
 ```bash
 cd desktop
 npm install
-STERLINGRX_API_ORIGIN=https://app.sterlingrxadvisors.com npm run dist
+npm run dist
 ```
 
 Produces `dist/SterlingRx-Setup-<version>.exe`.
 
-`STERLINGRX_API_ORIGIN` is baked into the bundle at build time. It defaults to
-`https://app.sterlingrxadvisors.com`; point it elsewhere for staging.
+`STERLINGRX_API_ORIGIN` is baked into the bundle at build time and defaults to
+`https://sterlingrxadvisors.com` â€” the apex domain, because the API and the
+website are one Express process. Set it only for staging.
+
+Baked in means baked in: an installer built against the wrong origin cannot be
+corrected on the user's machine, only replaced. Check the value before shipping
+a build to anyone.
 
 ## Develop
 
