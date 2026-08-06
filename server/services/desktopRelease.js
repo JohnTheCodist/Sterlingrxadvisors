@@ -24,6 +24,45 @@ const RELEASES_DIR = process.env.RELEASES_DIR
   || path.join(__dirname, '..', '..', 'releases');
 
 /**
+ * Where the installer lives when it is not on this machine's disk.
+ *
+ * The local-directory path assumes a server with storage you can put a file
+ * into and expect to find later. Render does not have one: the filesystem is
+ * rebuilt from the repository on every deploy, so an uploaded installer
+ * survives until the next push and then silently disappears. Committing 78 MB
+ * per release to git instead would trade a disappearing file for a repository
+ * that grows by 78 MB every time we ship.
+ *
+ * So: publish the binary somewhere built for binaries -- GitHub Releases, which
+ * is free, versioned, and serves from a CDN we do not pay for -- and set
+ * DESKTOP_DOWNLOAD_URL to the asset link. The route redirects instead of
+ * streaming.
+ *
+ * Version is read from the filename in the URL, the same way it is read from a
+ * local build, so the two paths report identically. Size cannot be known
+ * without fetching the file, so DESKTOP_RELEASE_BYTES supplies it when we want
+ * the page to show one; without it the page simply omits the size.
+ *
+ * Unset, everything below behaves exactly as it always has.
+ */
+function externalRelease() {
+  const url = process.env.DESKTOP_DOWNLOAD_URL;
+  if (!url) return null;
+
+  const filename = decodeURIComponent(url.split('/').pop().split('?')[0]) || 'SterlingRx-Setup.exe';
+  const bytes = Number(process.env.DESKTOP_RELEASE_BYTES) || null;
+
+  return {
+    url,
+    filename,
+    bytes,
+    version: process.env.DESKTOP_RELEASE_VERSION
+      || (/(\d+\.\d+\.\d+)/.exec(filename) || [])[1]
+      || null,
+  };
+}
+
+/**
  * The download page asks what is available on every render, and this used to
  * answer with a directory read plus a stat per file, synchronously, on the
  * request thread. Node has one of those per worker, so every one of those
@@ -82,6 +121,23 @@ const mb = (bytes) => Math.round((bytes / 1048576) * 10) / 10;
  * pharmacy has to be able to see the download before it has an account.
  */
 async function releaseInfo() {
+  // A configured URL wins over anything on disk: if someone set it, that is
+  // where the published build is, and a stale local file must not shadow it.
+  const remote = externalRelease();
+  if (remote) {
+    return {
+      available: true,
+      version: remote.version,
+      filename: remote.filename,
+      sizeBytes: remote.bytes,
+      sizeMB: remote.bytes ? mb(remote.bytes) : null,
+      builtAt: null,
+      platform: 'windows',
+      signed: process.env.DESKTOP_BUILD_SIGNED === 'true',
+      minimumOS: 'Windows 10 (64-bit) or later',
+    };
+  }
+
   const build = await latestBuild();
   if (!build) {
     return {
@@ -111,6 +167,12 @@ async function releaseInfo() {
  * progress bar.
  */
 async function sendInstaller(req, res) {
+  // 302, not 301. The installer URL changes with every release, and a browser
+  // that cached a permanent redirect would keep fetching the old version long
+  // after we published a new one, with no way for us to correct it.
+  const remote = externalRelease();
+  if (remote) return res.redirect(302, remote.url);
+
   const build = await latestBuild();
   if (!build) {
     return res.status(404).json({
