@@ -19,12 +19,25 @@
  * looks, from every server-side signal, entirely healthy.
  */
 
+// Vite's own loader, not process.env, because those are not the same set and
+// the difference is the whole point of this check. Vite reads .env files itself
+// once it starts; a plain node script running before it sees only real
+// environment variables, so this refused every local build -- client/.env sat
+// right there, correctly filled in, and was never consulted.
+//
+// loadEnv merges both sources: the .env files a developer uses, and the real
+// variables Render injects. That is exactly what the build will compile in, so
+// this checks the thing that matters instead of an approximation of it.
+import { loadEnv } from 'vite';
+
+const env = loadEnv('production', process.cwd(), 'VITE_');
+
 const REQUIRED = [
   ['VITE_SUPABASE_URL', 'Supabase project URL, e.g. https://xxxx.supabase.co'],
   ['VITE_SUPABASE_ANON_KEY', 'Supabase anon/publishable key (safe for browsers)'],
 ];
 
-const missing = REQUIRED.filter(([key]) => !process.env[key]);
+const missing = REQUIRED.filter(([key]) => !env[key]);
 
 if (missing.length > 0) {
   console.error('\nCannot build the client: required environment variables are not set.\n');
@@ -42,7 +55,7 @@ if (missing.length > 0) {
 // Catches the paste that grabbed the wrong key. The service role key bypasses
 // row level security entirely, and shipping it to browsers would hand every
 // visitor unrestricted access to the database.
-if (/service_role/i.test(process.env.VITE_SUPABASE_ANON_KEY || '')) {
+if (/service_role/i.test(env.VITE_SUPABASE_ANON_KEY || '')) {
   console.error('\nVITE_SUPABASE_ANON_KEY looks like a SERVICE ROLE key.\n');
   console.error('That key bypasses row level security and would be readable by');
   console.error('anyone who opens the site. Use the anon/publishable key.\n');
