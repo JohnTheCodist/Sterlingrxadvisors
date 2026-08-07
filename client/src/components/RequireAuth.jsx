@@ -29,6 +29,19 @@ export default function RequireAuth({ children }) {
     return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
+  // Signed in, but we do not yet know whether this user has a pharmacy. Every
+  // branch below answers that question, so deciding now means guessing, and the
+  // guess lands on /onboarding -- inviting an existing customer to create a
+  // second pharmacy. Wait instead. It is the same loading treatment as above,
+  // so the sign-in wait stays one continuous screen rather than two.
+  if (orgStatus === 'unknown') {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-7 py-24">
+        <LoadingState sub="Loading your pharmacy." />
+      </div>
+    );
+  }
+
   // Couldn't determine whether this user has a pharmacy. Say so and offer a
   // retry — never fall through to /onboarding, which would invite them to
   // "create" a pharmacy they may already have.

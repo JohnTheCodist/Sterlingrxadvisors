@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
 
 /**
@@ -48,8 +49,8 @@ function EyeIcon({ off }) {
 }
 
 export default function SignIn() {
-  const navigate = useNavigate();
   const location = useLocation();
+  const { session } = useAuth();
   // RequireAuth sends the page the user was trying to reach as state.from —
   // e.g. a session that expired mid-upload. Honour it so they land back where
   // they were instead of always the dashboard.
@@ -100,8 +101,20 @@ export default function SignIn() {
       return;
     }
 
-    navigate(redirectTo, { replace: true });
+    // Deliberately no navigate() here. This used to call it the moment
+    // signInWithPassword resolved, which is before onAuthStateChange has put
+    // the session into React state -- so RequireAuth rendered /dashboard
+    // against a still-null session and bounced straight back to /signin. The
+    // form reappeared as though nothing had happened, and the obvious next
+    // click was the wordmark, which is the homepage.
+    //
+    // Leaving `submitting` true keeps the button disabled meanwhile; the
+    // redirect below fires on the session the guard itself will read.
   }
+
+  // The one place the redirect happens, for both email and Google, and for
+  // someone who simply revisits /signin while already signed in.
+  if (session) return <Navigate to={redirectTo} replace />;
 
   return (
     <div className="auth">

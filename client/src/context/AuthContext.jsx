@@ -30,6 +30,19 @@ export function AuthProvider({ children }) {
       setOrgStatus('resolved'); // signed out: definitively no organization
       return;
     }
+
+    // Back to 'unknown' for the duration of the lookup, because the state we
+    // are leaving is a real answer to a different question.
+    //
+    // Signed out, the branch above sets organization null and orgStatus
+    // 'resolved' -- correct then, and poison the instant a session appears.
+    // SignIn navigates to /dashboard as soon as signInWithPassword resolves,
+    // which is before this request finishes, so RequireAuth read that leftover
+    // pair as "confirmed: this user has no pharmacy" and redirected an existing
+    // customer to /onboarding to create one they already had. Whether it
+    // happened came down to whether the network beat React's next render.
+    setOrgStatus('unknown');
+
     try {
       const res = await apiFetch('/api/organizations/me');
       if (res.status === 403) {
@@ -74,6 +87,10 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut();
     setSession(null);
     setOrganization(null);
+    // Left at whatever the previous session produced, this could be 'error',
+    // and the next sign-in would render the "can't reach the server" retry
+    // screen using a failure that belonged to someone else's session.
+    setOrgStatus('resolved');
   }, []);
 
   const refreshOrganization = useCallback(async () => {

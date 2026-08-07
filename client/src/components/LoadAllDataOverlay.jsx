@@ -76,14 +76,29 @@ export default function LoadAllDataOverlay({ status, errorMessage, onRetry, onDi
     return () => cancelAnimationFrame(rafRef.current);
   }, [status, reducedMotion]);
 
+  // Held in a ref so the effect below does not depend on it.
+  //
+  // The Dashboard passes `onComplete={() => setLoadAllStatus(null)}`, a new
+  // function on every one of its renders. With onComplete in the dependency
+  // array, any Dashboard re-render inside the 550ms hold changed the
+  // dependencies, so React ran the cleanup -- clearing the timer -- and then
+  // re-ran the effect, where completedRef was now true and no replacement timer
+  // was ever scheduled. The overlay sat at 100% with the data already loaded
+  // behind it, waiting for a callback that could no longer fire. It looked
+  // intermittent because it depended on whether anything re-rendered inside
+  // that half second, which for a screen this size it usually did.
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => { onCompleteRef.current = onComplete; });
+
   useEffect(() => {
-    if (status === 'success' && progress >= 100 && !completedRef.current) {
-      completedRef.current = true;
-      const t = setTimeout(() => onComplete?.(), 550);
-      return () => clearTimeout(t);
-    }
-    return undefined;
-  }, [status, progress, onComplete]);
+    if (status !== 'success' || progress < 100 || completedRef.current) return undefined;
+    completedRef.current = true;
+    // Depends on status and progress only, and neither changes again once the
+    // ring is full: progress is capped at 100 and setting it to the same value
+    // does not re-render. So this timer runs to completion.
+    const t = setTimeout(() => onCompleteRef.current?.(), 550);
+    return () => clearTimeout(t);
+  }, [status, progress]);
 
   const shown = Math.round(progress);
   const stage =
