@@ -233,16 +233,40 @@ test('abc123 — nonsense', () => assertEquals(parseDateString('abc123'), null))
 test('banana — pure text', () => assertEquals(parseDateString('banana'), null));
 
 section('\n=== Enterprise Date Parsing — Excel Serial Dates ===');
-test('Excel serial 45412 → 2024-04-29', async () => {
+// These two expected 2024-04-29 and so encoded the very off-by-one they were
+// meant to guard: serialToDate corrected Excel's 1900 leap-year bug a second
+// time, on top of the Dec-30-1899 epoch that exists to absorb it, and every
+// date came back a day early.
+//
+// 2024-04-30 is checked against two independently published anchors -- serial
+// 45292 = 2024-01-01 and serial 36526 = 2000-01-01 -- which agree, and agree
+// with each other. The boundary cases below pin the leap-year handling itself
+// so the correction cannot quietly be reintroduced at either end.
+test('Excel serial 45412 → 2024-04-30', async () => {
   const result = serialToDate(45412);
-  assertEquals(result, '2024-04-29');
+  assertEquals(result, '2024-04-30');
 });
 test('Excel serial in normalizeDate', async () => {
   // normalizeDate should handle Excel serial and return ISO
   const { normalize } = require('../services/normalizer');
   const rows = [{ Product: 'X', Qty: '2', Price: '100', Date: 45412 }];
   const result = await normalize(rows);
-  assertEquals(result.normalized[0].transaction_date, '2024-04-29');
+  assertEquals(result.normalized[0].transaction_date, '2024-04-30');
+});
+test('Excel serial 45658 → 2025-01-01 (a January 1st stays in January)', () => {
+  assertEquals(serialToDate(45658), '2025-01-01');
+});
+test('Excel serial 46022 → 2025-12-31 (a December 31st stays in December)', () => {
+  assertEquals(serialToDate(46022), '2025-12-31');
+});
+test('Excel serial 1 → 1900-01-01 (before the phantom leap day)', () => {
+  assertEquals(serialToDate(1), '1900-01-01');
+});
+test('Excel serial 59 → 1900-02-28 (last real day before it)', () => {
+  assertEquals(serialToDate(59), '1900-02-28');
+});
+test('Excel serial 61 → 1900-03-01 (first real day after it)', () => {
+  assertEquals(serialToDate(61), '1900-03-01');
 });
 
 section('\n=== Enterprise Date Parsing — Edge Cases ===');

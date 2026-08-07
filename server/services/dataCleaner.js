@@ -144,8 +144,22 @@ function serialToDate(serial) {
   const excelEpoch = Date.UTC(1899, 11, 30); // Dec 30, 1899 00:00 UTC
   const msPerDay = 86400000;
   const days = Math.floor(serial);
-  // Adjust for Excel leap year bug: serial 60 is Feb 29, 1900 (doesn't exist)
-  const adjustedDays = days >= 61 ? days - 1 : days;
+  // Excel's 1900 leap-year bug, corrected ONCE.
+  //
+  // Excel counts a Feb 29 1900 that never existed, so from serial 61 onward its
+  // numbering runs a day ahead of reality. Choosing Dec 30 1899 as the epoch --
+  // rather than Dec 31 -- is exactly how that is absorbed, which is why this is
+  // the conventional constant.
+  //
+  // This then subtracted another day for serial >= 61, correcting a bug the
+  // epoch had already handled, so every real-world date came out one day early:
+  // serial 45658 read as 2024-12-31 instead of 2025-01-01. Totals stayed right
+  // and the monthly chart did not, because sales on the 1st of a month moved
+  // into the previous one -- and a January upload grew a December.
+  //
+  // Serials below 60 predate the phantom day, so those need the day added back
+  // instead. Serial 60 itself is Excel's fiction and lands on Feb 28.
+  const adjustedDays = days < 60 ? days + 1 : days;
   const d = new Date(excelEpoch + adjustedDays * msPerDay);
   const y = d.getUTCFullYear();
   const m = String(d.getUTCMonth() + 1).padStart(2, '0');

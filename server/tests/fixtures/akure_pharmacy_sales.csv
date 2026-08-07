@@ -1,0 +1,1501 @@
+SaleID,Date,Time,Pharmacy,Area,City,State,Product,Category,Quantity,UnitPrice_NGN,TotalAmount_NGN,PaymentMethod,CustomerType
+AK-1000,2025-01-01,14:24,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Panadol Extra,Analgesic,2,710,1420,Transfer,Prescription
+AK-1001,2025-01-01,15:40,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Diclofenac Gel,Topical,1,1520,1520,Cash,Prescription
+AK-1002,2025-01-01,16:10,Akure City Pharmacy,Oja Oba,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,4,2360,9440,POS/Card,Prescription
+AK-1003,2025-01-01,17:55,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,230,230,Cash,Walk-in
+AK-1004,2025-01-01,18:56,Ondo State Pharmacy,FUTA Road,Akure,Ondo,ORS Sachet,Rehydration,10,120,1200,Transfer,Walk-in
+AK-1005,2025-01-02,09:22,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,420,840,Transfer,Insurance (HMO)
+AK-1006,2025-01-02,12:40,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,4,430,1720,Transfer,Prescription
+AK-1007,2025-01-02,17:15,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1740,3480,POS/Card,Walk-in
+AK-1008,2025-01-03,09:21,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,5,940,4700,Cash,Insurance (HMO)
+AK-1009,2025-01-03,09:29,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,1,110,110,POS/Card,Walk-in
+AK-1010,2025-01-03,12:42,Trust Pharmacy,Arakale,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,10,2390,23900,Transfer,Walk-in
+AK-1011,2025-01-03,15:47,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,640,640,POS/Card,Walk-in
+AK-1012,2025-01-03,15:49,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,3,380,1140,Cash,Insurance (HMO)
+AK-1013,2025-01-03,16:20,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Diclofenac Gel,Topical,2,1430,2860,Cash,Prescription
+AK-1014,2025-01-04,16:17,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,430,430,Cash,Prescription
+AK-1015,2025-01-04,18:55,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1020,2040,POS/Card,Insurance (HMO)
+AK-1016,2025-01-04,19:17,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,400,400,Cash,Walk-in
+AK-1017,2025-01-05,09:01,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1200,2400,Transfer,Walk-in
+AK-1018,2025-01-05,14:50,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,960,1920,POS/Card,Prescription
+AK-1019,2025-01-05,15:19,Trust Pharmacy,Arakale,Akure,Ondo,Vitamin C 1000mg,Supplement,3,1420,4260,Transfer,Walk-in
+AK-1020,2025-01-05,16:24,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2380,4760,POS/Card,Walk-in
+AK-1021,2025-01-05,16:26,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,3,940,2820,POS/Card,Prescription
+AK-1022,2025-01-05,18:27,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1010,2020,POS/Card,Walk-in
+AK-1023,2025-01-06,13:29,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,4,990,3960,POS/Card,Walk-in
+AK-1024,2025-01-06,18:41,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2400,4800,POS/Card,Walk-in
+AK-1025,2025-01-07,15:02,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,2,560,1120,Transfer,Prescription
+AK-1026,2025-01-07,16:10,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,390,390,POS/Card,Prescription
+AK-1027,2025-01-08,12:36,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Vitamin C 1000mg,Supplement,4,1330,5320,Transfer,Walk-in
+AK-1028,2025-01-09,15:02,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,680,1360,Cash,Walk-in
+AK-1029,2025-01-09,15:18,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1870,1870,Transfer,Prescription
+AK-1030,2025-01-09,16:03,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,ORS Sachet,Rehydration,1,180,180,Cash,Walk-in
+AK-1031,2025-01-10,14:26,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,420,420,POS/Card,Prescription
+AK-1032,2025-01-10,15:14,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,5,2280,11400,Cash,Walk-in
+AK-1033,2025-01-10,17:12,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,380,380,Cash,Insurance (HMO)
+AK-1034,2025-01-10,19:31,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Panadol Extra,Analgesic,1,690,690,POS/Card,Prescription
+AK-1035,2025-01-11,09:23,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1440,1440,POS/Card,Prescription
+AK-1036,2025-01-11,16:21,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,1,810,810,POS/Card,Walk-in
+AK-1037,2025-01-12,10:12,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,980,2940,Transfer,Walk-in
+AK-1038,2025-01-12,12:07,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,610,610,Transfer,Walk-in
+AK-1039,2025-01-12,13:55,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,700,1400,Transfer,Walk-in
+AK-1040,2025-01-13,08:42,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,960,960,Transfer,Insurance (HMO)
+AK-1041,2025-01-13,10:19,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,440,440,Cash,Insurance (HMO)
+AK-1042,2025-01-13,14:36,Trust Pharmacy,Arakale,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1450,1450,Cash,Prescription
+AK-1043,2025-01-13,15:12,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,4,310,1240,Cash,Walk-in
+AK-1044,2025-01-13,15:45,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,4,510,2040,Cash,Prescription
+AK-1045,2025-01-13,16:15,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1720,1720,POS/Card,Insurance (HMO)
+AK-1046,2025-01-13,18:24,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,780,1560,POS/Card,Walk-in
+AK-1047,2025-01-13,20:34,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Zinc + Vitamin C,Supplement,4,1170,4680,Transfer,Walk-in
+AK-1048,2025-01-14,15:05,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,840,1680,Transfer,Walk-in
+AK-1049,2025-01-14,16:13,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1280,2560,Cash,Prescription
+AK-1050,2025-01-14,16:37,Trust Pharmacy,Arakale,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,350,350,Cash,Walk-in
+AK-1051,2025-01-14,17:12,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,3,950,2850,Cash,Prescription
+AK-1052,2025-01-14,17:30,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Multivitamin Syrup,Supplement,3,1280,3840,POS/Card,Walk-in
+AK-1053,2025-01-14,17:39,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,260,260,Cash,Walk-in
+AK-1054,2025-01-15,10:03,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,4,430,1720,POS/Card,Insurance (HMO)
+AK-1055,2025-01-15,10:08,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,530,530,Cash,Walk-in
+AK-1056,2025-01-15,13:58,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,ORS Sachet,Rehydration,5,120,600,Transfer,Walk-in
+AK-1057,2025-01-15,17:26,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,6,1990,11940,POS/Card,Prescription
+AK-1058,2025-01-15,17:31,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Diclofenac Gel,Topical,2,1480,2960,Transfer,Prescription
+AK-1059,2025-01-16,12:20,Akure City Pharmacy,Oja Oba,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,410,410,POS/Card,Walk-in
+AK-1060,2025-01-16,18:59,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,6,760,4560,Cash,Insurance (HMO)
+AK-1061,2025-01-17,12:21,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1760,3520,Cash,Walk-in
+AK-1062,2025-01-17,19:56,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,10,520,5200,Cash,Prescription
+AK-1063,2025-01-18,13:46,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,330,330,Cash,Walk-in
+AK-1064,2025-01-18,14:43,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,3,350,1050,POS/Card,Insurance (HMO)
+AK-1065,2025-01-18,16:30,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1700,3400,Cash,Insurance (HMO)
+AK-1066,2025-01-18,20:51,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,6,630,3780,Cash,Insurance (HMO)
+AK-1067,2025-01-19,12:01,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,400,400,POS/Card,Walk-in
+AK-1068,2025-01-19,15:27,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,490,490,Cash,Prescription
+AK-1069,2025-01-19,15:43,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1020,2040,Transfer,Walk-in
+AK-1070,2025-01-19,17:22,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,3,600,1800,Cash,Insurance (HMO)
+AK-1071,2025-01-20,18:50,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,5,690,3450,Transfer,Walk-in
+AK-1072,2025-01-20,19:14,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,1,1670,1670,Cash,Prescription
+AK-1073,2025-01-21,11:22,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,2,580,1160,POS/Card,Walk-in
+AK-1074,2025-01-21,12:58,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,5,560,2800,Cash,Walk-in
+AK-1075,2025-01-21,13:19,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,4,550,2200,Cash,Walk-in
+AK-1076,2025-01-21,17:05,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Diclofenac Gel,Topical,1,1060,1060,Cash,Walk-in
+AK-1077,2025-01-21,19:27,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,310,620,Cash,Walk-in
+AK-1078,2025-01-22,09:04,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,ORS Sachet,Rehydration,5,190,950,Transfer,Walk-in
+AK-1079,2025-01-22,13:31,Trust Pharmacy,Arakale,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,3,410,1230,POS/Card,Walk-in
+AK-1080,2025-01-22,15:18,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1560,3120,POS/Card,Walk-in
+AK-1081,2025-01-22,15:45,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,320,640,Transfer,Walk-in
+AK-1082,2025-01-22,17:33,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,2400,4800,POS/Card,Prescription
+AK-1083,2025-01-22,19:28,Trust Pharmacy,Arakale,Akure,Ondo,Diclofenac Gel,Topical,3,1230,3690,POS/Card,Walk-in
+AK-1084,2025-01-23,08:14,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,860,860,Transfer,Walk-in
+AK-1085,2025-01-23,10:34,Akure City Pharmacy,Oja Oba,Akure,Ondo,ORS Sachet,Rehydration,2,200,400,POS/Card,Insurance (HMO)
+AK-1086,2025-01-23,10:44,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,2,420,840,Transfer,Walk-in
+AK-1087,2025-01-23,13:37,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1250,1250,POS/Card,Prescription
+AK-1088,2025-01-23,13:53,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1280,2560,POS/Card,Walk-in
+AK-1089,2025-01-23,15:59,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,380,380,Cash,Prescription
+AK-1090,2025-01-24,10:00,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,660,660,POS/Card,Prescription
+AK-1091,2025-01-24,12:20,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,4,370,1480,Cash,Walk-in
+AK-1092,2025-01-24,12:25,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1930,1930,Cash,Walk-in
+AK-1093,2025-01-24,18:08,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Vitamin C 1000mg,Supplement,3,1280,3840,POS/Card,Walk-in
+AK-1094,2025-01-24,19:22,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,900,1800,POS/Card,Walk-in
+AK-1095,2025-01-25,10:29,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,640,1920,Cash,Insurance (HMO)
+AK-1096,2025-01-25,11:06,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1080,2160,POS/Card,Prescription
+AK-1097,2025-01-25,18:32,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,5,1860,9300,POS/Card,Walk-in
+AK-1098,2025-01-26,13:36,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,3,810,2430,Transfer,Walk-in
+AK-1099,2025-01-26,14:31,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,700,700,Cash,Walk-in
+AK-1100,2025-01-26,15:39,Trust Pharmacy,Arakale,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,4,1240,4960,POS/Card,Walk-in
+AK-1101,2025-01-26,15:59,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,3,370,1110,Cash,Insurance (HMO)
+AK-1102,2025-01-26,17:07,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,490,980,Transfer,Walk-in
+AK-1103,2025-01-26,17:30,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1410,1410,Cash,Prescription
+AK-1104,2025-01-26,18:40,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,1,720,720,Cash,Prescription
+AK-1105,2025-01-27,08:15,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,3,550,1650,Transfer,Walk-in
+AK-1106,2025-01-27,10:40,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1190,2380,Cash,Prescription
+AK-1107,2025-01-27,10:43,Trust Pharmacy,Arakale,Akure,Ondo,Multivitamin Syrup,Supplement,2,1940,3880,POS/Card,Prescription
+AK-1108,2025-01-28,13:05,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,1,1510,1510,Transfer,Walk-in
+AK-1109,2025-01-28,13:14,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,3,1050,3150,POS/Card,Walk-in
+AK-1110,2025-01-28,14:06,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,380,760,Transfer,Prescription
+AK-1111,2025-01-29,08:45,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,1640,4920,Transfer,Prescription
+AK-1112,2025-01-29,11:49,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,6,800,4800,Cash,Walk-in
+AK-1113,2025-01-29,14:36,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2540,2540,Cash,Prescription
+AK-1114,2025-01-29,18:04,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,420,420,POS/Card,Walk-in
+AK-1115,2025-01-30,10:32,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,2280,2280,POS/Card,Prescription
+AK-1116,2025-01-30,11:33,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,320,320,Transfer,Walk-in
+AK-1117,2025-01-31,09:13,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,200,400,Transfer,Walk-in
+AK-1118,2025-01-31,11:04,Akure City Pharmacy,Oja Oba,Akure,Ondo,ORS Sachet,Rehydration,3,130,390,POS/Card,Walk-in
+AK-1119,2025-01-31,12:23,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1540,3080,Cash,Prescription
+AK-1120,2025-01-31,12:36,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,880,880,Cash,Insurance (HMO)
+AK-1121,2025-01-31,19:03,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,ORS Sachet,Rehydration,2,190,380,Cash,Prescription
+AK-1122,2025-02-01,14:40,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1330,2660,Cash,Prescription
+AK-1123,2025-02-02,08:17,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,420,840,POS/Card,Prescription
+AK-1124,2025-02-02,16:18,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,2,720,1440,POS/Card,Walk-in
+AK-1125,2025-02-03,13:36,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Panadol Extra,Analgesic,10,870,8700,POS/Card,Walk-in
+AK-1126,2025-02-03,18:41,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,5,1220,6100,Cash,Walk-in
+AK-1127,2025-02-04,10:51,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,4,1320,5280,Cash,Walk-in
+AK-1128,2025-02-04,12:01,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Panadol Extra,Analgesic,5,520,2600,POS/Card,Insurance (HMO)
+AK-1129,2025-02-04,16:16,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,650,650,POS/Card,Walk-in
+AK-1130,2025-02-05,12:01,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,1910,5730,POS/Card,Prescription
+AK-1131,2025-02-06,09:54,Trust Pharmacy,Arakale,Akure,Ondo,ORS Sachet,Rehydration,2,190,380,Cash,Walk-in
+AK-1132,2025-02-06,13:59,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,1,540,540,Transfer,Prescription
+AK-1133,2025-02-06,14:43,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,5,340,1700,Cash,Walk-in
+AK-1134,2025-02-06,14:46,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,520,1040,Transfer,Walk-in
+AK-1135,2025-02-07,10:53,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,3,2220,6660,POS/Card,Walk-in
+AK-1136,2025-02-07,11:16,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Folic Acid Tablets,Supplement,3,590,1770,Transfer,Walk-in
+AK-1137,2025-02-07,11:35,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,2150,4300,POS/Card,Walk-in
+AK-1138,2025-02-07,14:15,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,5,890,4450,Cash,Prescription
+AK-1139,2025-02-07,16:45,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2300,4600,Cash,Walk-in
+AK-1140,2025-02-07,19:24,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,700,2100,Cash,Insurance (HMO)
+AK-1141,2025-02-07,19:25,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Diclofenac Gel,Topical,1,1170,1170,Cash,Insurance (HMO)
+AK-1142,2025-02-08,15:38,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,2290,4580,POS/Card,Walk-in
+AK-1143,2025-02-08,18:51,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2410,2410,Transfer,Walk-in
+AK-1144,2025-02-09,08:04,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,5,1710,8550,Cash,Walk-in
+AK-1145,2025-02-09,12:55,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,1,550,550,POS/Card,Walk-in
+AK-1146,2025-02-09,13:16,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,4,410,1640,POS/Card,Walk-in
+AK-1147,2025-02-09,14:08,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,6,1540,9240,POS/Card,Prescription
+AK-1148,2025-02-09,17:43,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,520,1040,Cash,Walk-in
+AK-1149,2025-02-09,18:31,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Panadol Extra,Analgesic,10,610,6100,POS/Card,Walk-in
+AK-1150,2025-02-10,10:50,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,650,650,POS/Card,Walk-in
+AK-1151,2025-02-10,12:35,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,3,540,1620,Cash,Prescription
+AK-1152,2025-02-10,13:45,Trust Pharmacy,Arakale,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1960,3920,Transfer,Walk-in
+AK-1153,2025-02-10,14:07,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,500,1000,POS/Card,Prescription
+AK-1154,2025-02-10,14:41,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,3,1100,3300,Cash,Insurance (HMO)
+AK-1155,2025-02-10,15:49,Trust Pharmacy,Arakale,Akure,Ondo,Diclofenac Gel,Topical,1,1380,1380,Cash,Walk-in
+AK-1156,2025-02-10,16:43,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2540,2540,Cash,Walk-in
+AK-1157,2025-02-10,16:48,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,2,740,1480,Cash,Walk-in
+AK-1158,2025-02-10,17:03,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,5,420,2100,POS/Card,Walk-in
+AK-1159,2025-02-11,12:09,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,590,590,Cash,Prescription
+AK-1160,2025-02-11,13:05,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,640,1920,Cash,Walk-in
+AK-1161,2025-02-11,15:37,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,1980,3960,Cash,Insurance (HMO)
+AK-1162,2025-02-11,16:23,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,360,360,Cash,Prescription
+AK-1163,2025-02-12,09:23,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,480,960,Transfer,Walk-in
+AK-1164,2025-02-12,09:33,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,3,770,2310,POS/Card,Prescription
+AK-1165,2025-02-12,11:20,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Vitamin C 1000mg,Supplement,5,990,4950,Cash,Walk-in
+AK-1166,2025-02-12,12:11,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,390,780,POS/Card,Walk-in
+AK-1167,2025-02-12,12:15,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,990,2970,POS/Card,Prescription
+AK-1168,2025-02-12,17:54,Akure City Pharmacy,Oja Oba,Akure,Ondo,Multivitamin Syrup,Supplement,1,1930,1930,Transfer,Prescription
+AK-1169,2025-02-13,13:11,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,5,1060,5300,POS/Card,Prescription
+AK-1170,2025-02-13,13:24,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,6,240,1440,Transfer,Prescription
+AK-1171,2025-02-13,17:00,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1840,1840,Transfer,Prescription
+AK-1172,2025-02-13,17:38,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,3,540,1620,Transfer,Walk-in
+AK-1173,2025-02-13,18:01,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,ORS Sachet,Rehydration,2,190,380,Cash,Walk-in
+AK-1174,2025-02-14,10:44,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,1,520,520,Cash,Walk-in
+AK-1175,2025-02-14,18:45,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,2060,6180,POS/Card,Prescription
+AK-1176,2025-02-15,08:26,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,910,910,POS/Card,Prescription
+AK-1177,2025-02-15,10:55,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,370,740,Cash,Walk-in
+AK-1178,2025-02-15,11:32,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,680,2720,Transfer,Prescription
+AK-1179,2025-02-15,12:06,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,1,410,410,Cash,Walk-in
+AK-1180,2025-02-16,11:37,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,5,1770,8850,POS/Card,Walk-in
+AK-1181,2025-02-16,13:24,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,5,310,1550,Cash,Walk-in
+AK-1182,2025-02-16,14:45,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,480,480,Transfer,Walk-in
+AK-1183,2025-02-16,17:32,Akure City Pharmacy,Oja Oba,Akure,Ondo,Folic Acid Tablets,Supplement,3,340,1020,POS/Card,Walk-in
+AK-1184,2025-02-16,17:41,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,5,770,3850,Cash,Walk-in
+AK-1185,2025-02-17,13:22,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,1,970,970,POS/Card,Walk-in
+AK-1186,2025-02-18,13:17,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1050,2100,Cash,Walk-in
+AK-1187,2025-02-19,13:10,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,4,1410,5640,Transfer,Prescription
+AK-1188,2025-02-19,15:11,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,400,800,Cash,Prescription
+AK-1189,2025-02-19,16:21,Trust Pharmacy,Arakale,Akure,Ondo,Vitamin C 1000mg,Supplement,3,1370,4110,POS/Card,Walk-in
+AK-1190,2025-02-19,17:05,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,480,480,Cash,Walk-in
+AK-1191,2025-02-19,17:05,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Vitamin C 1000mg,Supplement,4,1120,4480,POS/Card,Insurance (HMO)
+AK-1192,2025-02-19,17:58,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,6,1190,7140,Cash,Walk-in
+AK-1193,2025-02-20,08:35,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,3,2600,7800,Cash,Prescription
+AK-1194,2025-02-20,11:46,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,3,750,2250,POS/Card,Insurance (HMO)
+AK-1195,2025-02-20,12:37,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1180,2360,POS/Card,Prescription
+AK-1196,2025-02-20,13:06,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,5,420,2100,Cash,Walk-in
+AK-1197,2025-02-20,16:16,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Diclofenac Gel,Topical,3,1300,3900,POS/Card,Walk-in
+AK-1198,2025-02-20,16:38,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1250,1250,POS/Card,Walk-in
+AK-1199,2025-02-20,17:00,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,350,350,Transfer,Walk-in
+AK-1200,2025-02-20,18:47,Trust Pharmacy,Arakale,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,5,2060,10300,Cash,Walk-in
+AK-1201,2025-02-20,19:43,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1260,1260,POS/Card,Walk-in
+AK-1202,2025-02-21,12:25,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,10,320,3200,Cash,Prescription
+AK-1203,2025-02-21,13:31,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,330,330,POS/Card,Walk-in
+AK-1204,2025-02-21,14:52,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,1900,5700,Cash,Prescription
+AK-1205,2025-02-22,10:31,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1350,1350,POS/Card,Walk-in
+AK-1206,2025-02-22,13:46,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,460,460,Cash,Walk-in
+AK-1207,2025-02-22,18:05,Akure City Pharmacy,Oja Oba,Akure,Ondo,Folic Acid Tablets,Supplement,6,360,2160,Cash,Walk-in
+AK-1208,2025-02-22,20:33,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,1850,3700,Cash,Prescription
+AK-1209,2025-02-23,09:00,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,3,970,2910,Transfer,Prescription
+AK-1210,2025-02-23,10:28,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,1530,3060,Cash,Prescription
+AK-1211,2025-02-23,10:58,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,420,420,Cash,Prescription
+AK-1212,2025-02-23,17:53,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1110,1110,POS/Card,Prescription
+AK-1213,2025-02-23,20:28,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Multivitamin Syrup,Supplement,2,1720,3440,Cash,Walk-in
+AK-1214,2025-02-23,20:58,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,280,840,POS/Card,Walk-in
+AK-1215,2025-02-24,11:38,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1110,1110,POS/Card,Walk-in
+AK-1216,2025-02-24,15:16,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1120,1120,POS/Card,Walk-in
+AK-1217,2025-02-24,17:19,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2480,2480,POS/Card,Prescription
+AK-1218,2025-02-25,10:39,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,1,340,340,Cash,Walk-in
+AK-1219,2025-02-25,13:36,Trust Pharmacy,Arakale,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,360,720,Cash,Walk-in
+AK-1220,2025-02-25,14:47,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,4,320,1280,Transfer,Walk-in
+AK-1221,2025-02-25,15:13,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,770,770,Cash,Walk-in
+AK-1222,2025-02-25,18:31,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1470,1470,Cash,Walk-in
+AK-1223,2025-02-26,11:33,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,ORS Sachet,Rehydration,1,130,130,Cash,Walk-in
+AK-1224,2025-02-26,12:48,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,930,2790,Cash,Walk-in
+AK-1225,2025-02-27,11:20,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,6,770,4620,Cash,Walk-in
+AK-1226,2025-02-27,13:20,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1230,1230,Transfer,Walk-in
+AK-1227,2025-02-28,10:36,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,2,800,1600,POS/Card,Walk-in
+AK-1228,2025-02-28,11:08,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,2,860,1720,POS/Card,Walk-in
+AK-1229,2025-02-28,14:17,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,480,1440,POS/Card,Prescription
+AK-1230,2025-02-28,17:35,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,920,1840,Transfer,Walk-in
+AK-1231,2025-02-28,20:54,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1960,1960,Transfer,Prescription
+AK-1232,2025-03-01,08:10,Akure City Pharmacy,Oja Oba,Akure,Ondo,Multivitamin Syrup,Supplement,3,1390,4170,Cash,Prescription
+AK-1233,2025-03-01,11:28,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,3,1860,5580,Cash,Walk-in
+AK-1234,2025-03-01,12:50,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,2,1470,2940,Cash,Walk-in
+AK-1235,2025-03-01,14:02,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,2200,4400,Cash,Walk-in
+AK-1236,2025-03-01,16:35,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,2500,7500,Cash,Walk-in
+AK-1237,2025-03-01,17:34,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Multivitamin Syrup,Supplement,2,1690,3380,Cash,Prescription
+AK-1238,2025-03-01,20:30,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,660,1320,Cash,Walk-in
+AK-1239,2025-03-02,13:27,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,ORS Sachet,Rehydration,1,200,200,Cash,Prescription
+AK-1240,2025-03-02,14:13,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Vitamin C 1000mg,Supplement,1,920,920,Cash,Prescription
+AK-1241,2025-03-02,14:49,Trust Pharmacy,Arakale,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,3,530,1590,Cash,Insurance (HMO)
+AK-1242,2025-03-02,16:19,Trust Pharmacy,Arakale,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1700,1700,POS/Card,Prescription
+AK-1243,2025-03-03,12:02,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,6,360,2160,POS/Card,Walk-in
+AK-1244,2025-03-03,12:53,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,5,940,4700,POS/Card,Prescription
+AK-1245,2025-03-03,18:54,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2080,4160,Transfer,Insurance (HMO)
+AK-1246,2025-03-04,10:20,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,260,260,Cash,Walk-in
+AK-1247,2025-03-04,12:32,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,6,300,1800,Cash,Prescription
+AK-1248,2025-03-04,12:45,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Panadol Extra,Analgesic,4,900,3600,Transfer,Walk-in
+AK-1249,2025-03-05,08:19,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,6,1680,10080,Cash,Insurance (HMO)
+AK-1250,2025-03-05,10:47,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,5,1090,5450,POS/Card,Walk-in
+AK-1251,2025-03-05,11:18,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,2,500,1000,Cash,Walk-in
+AK-1252,2025-03-05,11:26,Akure City Pharmacy,Oja Oba,Akure,Ondo,Vitamin C 1000mg,Supplement,4,1390,5560,POS/Card,Walk-in
+AK-1253,2025-03-06,15:01,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,1,170,170,Cash,Walk-in
+AK-1254,2025-03-06,15:08,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,300,300,Cash,Prescription
+AK-1255,2025-03-06,15:58,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1870,3740,Transfer,Prescription
+AK-1256,2025-03-06,17:09,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Diclofenac Gel,Topical,2,980,1960,Transfer,Walk-in
+AK-1257,2025-03-06,18:58,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,680,680,Transfer,Walk-in
+AK-1258,2025-03-07,10:06,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,2,880,1760,Transfer,Walk-in
+AK-1259,2025-03-07,11:49,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,610,1220,Cash,Walk-in
+AK-1260,2025-03-07,13:48,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Diclofenac Gel,Topical,1,1040,1040,Cash,Walk-in
+AK-1261,2025-03-07,18:01,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Diclofenac Gel,Topical,5,1440,7200,POS/Card,Walk-in
+AK-1262,2025-03-08,10:13,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Zinc + Vitamin C,Supplement,3,1100,3300,Transfer,Prescription
+AK-1263,2025-03-08,12:18,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,2,660,1320,Cash,Prescription
+AK-1264,2025-03-08,13:25,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,3,860,2580,POS/Card,Prescription
+AK-1265,2025-03-08,13:42,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Diclofenac Gel,Topical,6,1480,8880,Cash,Walk-in
+AK-1266,2025-03-08,14:15,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,2170,2170,Transfer,Walk-in
+AK-1267,2025-03-08,14:49,Trust Pharmacy,Arakale,Akure,Ondo,ORS Sachet,Rehydration,2,150,300,POS/Card,Walk-in
+AK-1268,2025-03-08,15:58,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Panadol Extra,Analgesic,2,820,1640,Transfer,Walk-in
+AK-1269,2025-03-09,08:50,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2780,2780,POS/Card,Prescription
+AK-1270,2025-03-09,13:17,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,660,2640,Cash,Walk-in
+AK-1271,2025-03-09,13:39,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Multivitamin Syrup,Supplement,1,1800,1800,POS/Card,Walk-in
+AK-1272,2025-03-09,14:19,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,5,2260,11300,Cash,Walk-in
+AK-1273,2025-03-09,14:23,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1420,1420,Cash,Walk-in
+AK-1274,2025-03-10,10:10,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1280,1280,Transfer,Walk-in
+AK-1275,2025-03-10,13:12,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,4,780,3120,Cash,Prescription
+AK-1276,2025-03-10,16:44,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2330,4660,POS/Card,Prescription
+AK-1277,2025-03-10,20:53,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,680,680,Cash,Walk-in
+AK-1278,2025-03-11,10:04,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,3,420,1260,Cash,Walk-in
+AK-1279,2025-03-11,12:00,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1320,5280,Cash,Prescription
+AK-1280,2025-03-11,16:12,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,610,610,Cash,Walk-in
+AK-1281,2025-03-11,17:19,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1010,2020,POS/Card,Walk-in
+AK-1282,2025-03-11,18:46,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1180,4720,POS/Card,Walk-in
+AK-1283,2025-03-12,08:41,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Vitamin C 1000mg,Supplement,3,1490,4470,Cash,Walk-in
+AK-1284,2025-03-12,16:28,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,5,1480,7400,POS/Card,Walk-in
+AK-1285,2025-03-13,08:44,Trust Pharmacy,Arakale,Akure,Ondo,Diclofenac Gel,Topical,1,1480,1480,Cash,Walk-in
+AK-1286,2025-03-13,09:38,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,390,390,POS/Card,Prescription
+AK-1287,2025-03-13,12:59,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1470,1470,Cash,Walk-in
+AK-1288,2025-03-13,13:30,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,6,1070,6420,Transfer,Prescription
+AK-1289,2025-03-13,15:49,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1150,3450,POS/Card,Prescription
+AK-1290,2025-03-13,18:58,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,2,1270,2540,Transfer,Walk-in
+AK-1291,2025-03-13,20:42,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,780,1560,Transfer,Walk-in
+AK-1292,2025-03-14,09:32,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,640,1280,POS/Card,Prescription
+AK-1293,2025-03-14,12:42,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Multivitamin Syrup,Supplement,2,1920,3840,POS/Card,Walk-in
+AK-1294,2025-03-14,13:13,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1200,2400,Transfer,Walk-in
+AK-1295,2025-03-14,15:15,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1550,1550,Cash,Walk-in
+AK-1296,2025-03-14,20:12,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,1,600,600,Transfer,Walk-in
+AK-1297,2025-03-15,10:51,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Zinc + Vitamin C,Supplement,5,1030,5150,Cash,Insurance (HMO)
+AK-1298,2025-03-15,16:11,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,630,630,POS/Card,Walk-in
+AK-1299,2025-03-15,19:38,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,270,810,Cash,Prescription
+AK-1300,2025-03-16,10:21,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1500,3000,POS/Card,Walk-in
+AK-1301,2025-03-17,11:31,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,2440,4880,Cash,Prescription
+AK-1302,2025-03-17,14:03,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,510,2040,Cash,Insurance (HMO)
+AK-1303,2025-03-17,14:19,Trust Pharmacy,Arakale,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,3,2280,6840,Transfer,Walk-in
+AK-1304,2025-03-17,15:44,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,3,390,1170,Cash,Walk-in
+AK-1305,2025-03-17,18:56,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,450,900,POS/Card,Prescription
+AK-1306,2025-03-18,11:18,Akure City Pharmacy,Oja Oba,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,480,480,Cash,Walk-in
+AK-1307,2025-03-18,13:00,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,3,1470,4410,Cash,Walk-in
+AK-1308,2025-03-18,13:21,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Multivitamin Syrup,Supplement,2,1930,3860,Transfer,Prescription
+AK-1309,2025-03-18,14:04,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,2210,2210,POS/Card,Prescription
+AK-1310,2025-03-18,14:37,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,550,550,Cash,Walk-in
+AK-1311,2025-03-18,14:37,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,560,1680,POS/Card,Prescription
+AK-1312,2025-03-18,17:28,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,1,850,850,Cash,Walk-in
+AK-1313,2025-03-18,18:30,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,260,780,POS/Card,Walk-in
+AK-1314,2025-03-19,08:54,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,1,870,870,POS/Card,Walk-in
+AK-1315,2025-03-19,10:55,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,ORS Sachet,Rehydration,1,170,170,Transfer,Insurance (HMO)
+AK-1316,2025-03-19,17:27,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,4,1100,4400,Transfer,Prescription
+AK-1317,2025-03-20,09:06,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,1,920,920,Cash,Prescription
+AK-1318,2025-03-20,09:55,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,350,1050,Cash,Insurance (HMO)
+AK-1319,2025-03-20,10:20,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2550,2550,Transfer,Insurance (HMO)
+AK-1320,2025-03-20,14:35,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,800,1600,Cash,Insurance (HMO)
+AK-1321,2025-03-20,17:54,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1360,1360,POS/Card,Prescription
+AK-1322,2025-03-20,19:38,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1440,2880,POS/Card,Insurance (HMO)
+AK-1323,2025-03-21,13:29,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1580,3160,Cash,Walk-in
+AK-1324,2025-03-21,16:13,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,610,2440,Transfer,Walk-in
+AK-1325,2025-03-21,18:43,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,3,1380,4140,POS/Card,Walk-in
+AK-1326,2025-03-21,19:38,Trust Pharmacy,Arakale,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,4,410,1640,Transfer,Prescription
+AK-1327,2025-03-21,20:13,Akure City Pharmacy,Oja Oba,Akure,Ondo,Multivitamin Syrup,Supplement,2,1520,3040,Cash,Walk-in
+AK-1328,2025-03-21,20:45,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1070,2140,Cash,Prescription
+AK-1329,2025-03-22,11:31,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,630,630,POS/Card,Prescription
+AK-1330,2025-03-22,12:17,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,5,780,3900,POS/Card,Walk-in
+AK-1331,2025-03-22,12:18,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,900,1800,POS/Card,Walk-in
+AK-1332,2025-03-22,18:39,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Zinc + Vitamin C,Supplement,3,880,2640,POS/Card,Walk-in
+AK-1333,2025-03-23,15:25,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,560,560,Cash,Walk-in
+AK-1334,2025-03-24,10:15,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,10,1920,19200,POS/Card,Prescription
+AK-1335,2025-03-24,14:43,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,6,970,5820,Cash,Walk-in
+AK-1336,2025-03-24,17:02,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,3,750,2250,POS/Card,Walk-in
+AK-1337,2025-03-24,18:33,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,600,2400,Cash,Walk-in
+AK-1338,2025-03-25,17:13,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2290,2290,Cash,Prescription
+AK-1339,2025-03-26,08:32,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,490,490,Transfer,Walk-in
+AK-1340,2025-03-26,10:44,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,6,1990,11940,POS/Card,Prescription
+AK-1341,2025-03-26,14:51,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,340,340,Cash,Walk-in
+AK-1342,2025-03-26,15:28,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,2140,6420,POS/Card,Insurance (HMO)
+AK-1343,2025-03-27,08:52,Ondo State Pharmacy,FUTA Road,Akure,Ondo,ORS Sachet,Rehydration,1,120,120,Transfer,Walk-in
+AK-1344,2025-03-27,11:07,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Vitamin C 1000mg,Supplement,4,1370,5480,Cash,Prescription
+AK-1345,2025-03-27,13:48,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,640,640,POS/Card,Walk-in
+AK-1346,2025-03-27,17:53,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,6,1710,10260,POS/Card,Prescription
+AK-1347,2025-03-28,08:49,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Diclofenac Gel,Topical,5,1500,7500,Cash,Insurance (HMO)
+AK-1348,2025-03-28,12:34,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,2310,6930,Cash,Prescription
+AK-1349,2025-03-28,13:14,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,10,1850,18500,Cash,Prescription
+AK-1350,2025-03-28,13:20,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,6,250,1500,Cash,Walk-in
+AK-1351,2025-03-28,13:27,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Zinc + Vitamin C,Supplement,4,790,3160,Cash,Walk-in
+AK-1352,2025-03-28,16:57,Akure City Pharmacy,Oja Oba,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,340,1020,Cash,Walk-in
+AK-1353,2025-03-28,19:15,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1650,3300,POS/Card,Walk-in
+AK-1354,2025-03-29,10:04,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,3,1520,4560,POS/Card,Walk-in
+AK-1355,2025-03-29,10:48,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1320,2640,Cash,Prescription
+AK-1356,2025-03-29,16:06,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,1630,4890,POS/Card,Walk-in
+AK-1357,2025-03-29,17:31,Akure City Pharmacy,Oja Oba,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,410,1230,POS/Card,Insurance (HMO)
+AK-1358,2025-03-30,12:11,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,370,740,Cash,Walk-in
+AK-1359,2025-03-30,13:10,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1790,1790,POS/Card,Walk-in
+AK-1360,2025-03-31,14:10,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,4,2030,8120,Cash,Walk-in
+AK-1361,2025-03-31,14:12,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,590,1770,Cash,Prescription
+AK-1362,2025-04-01,10:36,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Multivitamin Syrup,Supplement,3,1400,4200,POS/Card,Walk-in
+AK-1363,2025-04-01,13:49,Trust Pharmacy,Arakale,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,280,560,Transfer,Prescription
+AK-1364,2025-04-01,13:54,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,880,1760,POS/Card,Walk-in
+AK-1365,2025-04-01,16:06,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1340,1340,POS/Card,Prescription
+AK-1366,2025-04-01,18:30,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1460,1460,Transfer,Walk-in
+AK-1367,2025-04-02,10:13,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2060,2060,Cash,Walk-in
+AK-1368,2025-04-02,12:21,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,2240,2240,Cash,Walk-in
+AK-1369,2025-04-02,12:26,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,4,960,3840,POS/Card,Walk-in
+AK-1370,2025-04-03,08:21,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,5,470,2350,POS/Card,Prescription
+AK-1371,2025-04-03,08:32,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,810,1620,POS/Card,Walk-in
+AK-1372,2025-04-03,11:09,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,340,340,Transfer,Prescription
+AK-1373,2025-04-03,13:13,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,1,880,880,Cash,Walk-in
+AK-1374,2025-04-03,15:18,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,6,360,2160,Cash,Prescription
+AK-1375,2025-04-03,20:07,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,2,760,1520,Cash,Walk-in
+AK-1376,2025-04-04,14:54,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1360,2720,Cash,Walk-in
+AK-1377,2025-04-05,11:13,Akure City Pharmacy,Oja Oba,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,440,440,POS/Card,Walk-in
+AK-1378,2025-04-05,13:17,Akure City Pharmacy,Oja Oba,Akure,Ondo,Multivitamin Syrup,Supplement,1,1680,1680,POS/Card,Walk-in
+AK-1379,2025-04-05,15:38,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,3,1240,3720,Cash,Walk-in
+AK-1380,2025-04-05,17:13,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Vitamin C 1000mg,Supplement,3,1480,4440,Cash,Prescription
+AK-1381,2025-04-06,09:09,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,4,2100,8400,POS/Card,Prescription
+AK-1382,2025-04-06,13:01,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Multivitamin Syrup,Supplement,1,1820,1820,Cash,Prescription
+AK-1383,2025-04-07,08:03,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,2,1220,2440,Transfer,Walk-in
+AK-1384,2025-04-07,14:56,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Multivitamin Syrup,Supplement,4,1460,5840,POS/Card,Walk-in
+AK-1385,2025-04-07,19:17,Trust Pharmacy,Arakale,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,5,330,1650,POS/Card,Walk-in
+AK-1386,2025-04-08,08:25,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Zinc + Vitamin C,Supplement,10,1180,11800,POS/Card,Walk-in
+AK-1387,2025-04-08,11:15,Trust Pharmacy,Arakale,Akure,Ondo,ORS Sachet,Rehydration,1,130,130,Transfer,Walk-in
+AK-1388,2025-04-08,11:48,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1520,3040,POS/Card,Prescription
+AK-1389,2025-04-08,14:26,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1720,1720,Cash,Walk-in
+AK-1390,2025-04-08,15:49,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,420,1680,Transfer,Prescription
+AK-1391,2025-04-08,16:43,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,580,1740,Cash,Walk-in
+AK-1392,2025-04-09,09:42,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,5,300,1500,Transfer,Walk-in
+AK-1393,2025-04-09,10:00,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,1,1580,1580,Cash,Walk-in
+AK-1394,2025-04-09,12:38,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2020,4040,Cash,Insurance (HMO)
+AK-1395,2025-04-09,15:53,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1900,3800,Cash,Insurance (HMO)
+AK-1396,2025-04-09,16:12,Trust Pharmacy,Arakale,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,300,300,POS/Card,Prescription
+AK-1397,2025-04-09,18:38,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,310,930,Transfer,Prescription
+AK-1398,2025-04-10,11:08,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,410,410,POS/Card,Prescription
+AK-1399,2025-04-11,13:50,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Multivitamin Syrup,Supplement,4,1300,5200,Cash,Prescription
+AK-1400,2025-04-11,15:08,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1600,1600,Transfer,Walk-in
+AK-1401,2025-04-11,19:58,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,1500,3000,POS/Card,Walk-in
+AK-1402,2025-04-12,08:49,Akure City Pharmacy,Oja Oba,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,340,680,Cash,Insurance (HMO)
+AK-1403,2025-04-12,09:10,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,480,960,Transfer,Prescription
+AK-1404,2025-04-12,09:23,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,1,1830,1830,Cash,Walk-in
+AK-1405,2025-04-12,12:43,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,3,1540,4620,Cash,Prescription
+AK-1406,2025-04-12,14:11,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,1,1470,1470,POS/Card,Walk-in
+AK-1407,2025-04-12,17:44,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,420,840,Transfer,Walk-in
+AK-1408,2025-04-13,11:06,Akure City Pharmacy,Oja Oba,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2740,2740,Transfer,Walk-in
+AK-1409,2025-04-13,11:35,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,310,620,Transfer,Walk-in
+AK-1410,2025-04-13,14:32,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,2170,6510,Cash,Prescription
+AK-1411,2025-04-13,15:21,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2470,2470,POS/Card,Insurance (HMO)
+AK-1412,2025-04-13,16:18,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,10,1900,19000,Cash,Prescription
+AK-1413,2025-04-13,19:29,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,230,230,POS/Card,Walk-in
+AK-1414,2025-04-14,10:53,Trust Pharmacy,Arakale,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,430,860,Cash,Walk-in
+AK-1415,2025-04-14,13:06,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,800,800,POS/Card,Walk-in
+AK-1416,2025-04-14,13:35,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1280,1280,Cash,Walk-in
+AK-1417,2025-04-14,20:30,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,600,600,POS/Card,Walk-in
+AK-1418,2025-04-15,11:27,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,480,480,POS/Card,Walk-in
+AK-1419,2025-04-15,14:14,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,4,1600,6400,POS/Card,Prescription
+AK-1420,2025-04-16,09:54,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Folic Acid Tablets,Supplement,2,570,1140,Cash,Walk-in
+AK-1421,2025-04-16,09:55,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,2,1450,2900,POS/Card,Walk-in
+AK-1422,2025-04-16,10:18,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1190,3570,Cash,Walk-in
+AK-1423,2025-04-16,13:58,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1700,3400,Cash,Insurance (HMO)
+AK-1424,2025-04-16,15:06,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,2,730,1460,Transfer,Walk-in
+AK-1425,2025-04-17,08:12,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,780,780,POS/Card,Prescription
+AK-1426,2025-04-17,17:07,Akure City Pharmacy,Oja Oba,Akure,Ondo,Multivitamin Syrup,Supplement,5,1910,9550,Cash,Walk-in
+AK-1427,2025-04-18,11:39,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,ORS Sachet,Rehydration,2,180,360,Transfer,Walk-in
+AK-1428,2025-04-18,12:07,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,520,520,POS/Card,Walk-in
+AK-1429,2025-04-18,13:52,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,6,1990,11940,Cash,Walk-in
+AK-1430,2025-04-18,15:30,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,2,100,200,Transfer,Walk-in
+AK-1431,2025-04-18,16:41,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,2310,6930,Cash,Insurance (HMO)
+AK-1432,2025-04-18,17:51,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,240,720,POS/Card,Prescription
+AK-1433,2025-04-19,16:27,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,440,880,POS/Card,Prescription
+AK-1434,2025-04-19,20:55,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,ORS Sachet,Rehydration,1,120,120,Transfer,Walk-in
+AK-1435,2025-04-20,09:44,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,880,880,POS/Card,Prescription
+AK-1436,2025-04-20,15:05,MedPlus Pharmacy,Alagbaka,Akure,Ondo,ORS Sachet,Rehydration,5,200,1000,POS/Card,Walk-in
+AK-1437,2025-04-20,16:09,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,620,620,POS/Card,Insurance (HMO)
+AK-1438,2025-04-20,19:59,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,6,1440,8640,Transfer,Prescription
+AK-1439,2025-04-21,15:04,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,350,700,Cash,Walk-in
+AK-1440,2025-04-21,15:59,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Multivitamin Syrup,Supplement,10,1710,17100,POS/Card,Prescription
+AK-1441,2025-04-22,12:30,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1470,1470,POS/Card,Insurance (HMO)
+AK-1442,2025-04-22,16:02,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,1010,1010,POS/Card,Walk-in
+AK-1443,2025-04-22,18:18,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,480,960,POS/Card,Walk-in
+AK-1444,2025-04-22,19:04,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1920,3840,Cash,Insurance (HMO)
+AK-1445,2025-04-22,19:20,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,460,460,POS/Card,Walk-in
+AK-1446,2025-04-23,17:44,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,1,440,440,Cash,Prescription
+AK-1447,2025-04-23,19:29,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,2,760,1520,Transfer,Walk-in
+AK-1448,2025-04-24,10:23,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,860,1720,Cash,Walk-in
+AK-1449,2025-04-24,13:17,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,1,420,420,Cash,Prescription
+AK-1450,2025-04-24,20:43,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,ORS Sachet,Rehydration,1,150,150,POS/Card,Prescription
+AK-1451,2025-04-25,09:29,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,6,460,2760,POS/Card,Walk-in
+AK-1452,2025-04-25,11:05,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,5,1440,7200,Cash,Walk-in
+AK-1453,2025-04-25,11:27,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,4,1880,7520,Cash,Walk-in
+AK-1454,2025-04-25,14:41,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,380,380,Transfer,Prescription
+AK-1455,2025-04-25,20:23,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Vitamin C 1000mg,Supplement,1,950,950,Cash,Walk-in
+AK-1456,2025-04-26,13:05,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,5,1080,5400,Transfer,Walk-in
+AK-1457,2025-04-26,13:08,Trust Pharmacy,Arakale,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,390,390,Transfer,Insurance (HMO)
+AK-1458,2025-04-26,18:30,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,10,1440,14400,Cash,Walk-in
+AK-1459,2025-04-27,08:52,Akure City Pharmacy,Oja Oba,Akure,Ondo,Folic Acid Tablets,Supplement,1,510,510,Cash,Walk-in
+AK-1460,2025-04-27,13:07,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,920,1840,Cash,Walk-in
+AK-1461,2025-04-27,13:44,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,10,990,9900,POS/Card,Prescription
+AK-1462,2025-04-27,16:47,MedPlus Pharmacy,Alagbaka,Akure,Ondo,ORS Sachet,Rehydration,2,120,240,POS/Card,Walk-in
+AK-1463,2025-04-27,18:43,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,2000,2000,Transfer,Walk-in
+AK-1464,2025-04-28,11:00,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,5,1540,7700,Cash,Walk-in
+AK-1465,2025-04-28,12:48,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Diclofenac Gel,Topical,4,1410,5640,POS/Card,Insurance (HMO)
+AK-1466,2025-04-28,13:52,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1330,1330,Transfer,Walk-in
+AK-1467,2025-04-28,14:29,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,5,850,4250,Transfer,Walk-in
+AK-1468,2025-04-29,12:14,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1100,2200,POS/Card,Walk-in
+AK-1469,2025-04-29,17:36,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,1,1320,1320,POS/Card,Prescription
+AK-1470,2025-04-30,09:20,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1410,1410,POS/Card,Walk-in
+AK-1471,2025-04-30,09:44,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1020,1020,POS/Card,Prescription
+AK-1472,2025-04-30,12:51,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Panadol Extra,Analgesic,2,570,1140,POS/Card,Walk-in
+AK-1473,2025-04-30,13:42,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,1,820,820,Transfer,Walk-in
+AK-1474,2025-05-01,11:31,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Panadol Extra,Analgesic,1,880,880,Cash,Prescription
+AK-1475,2025-05-01,15:11,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,370,1110,POS/Card,Walk-in
+AK-1476,2025-05-01,17:02,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,4,2650,10600,Transfer,Prescription
+AK-1477,2025-05-01,20:35,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,3,2100,6300,Cash,Insurance (HMO)
+AK-1478,2025-05-02,09:39,Akure City Pharmacy,Oja Oba,Akure,Ondo,Multivitamin Syrup,Supplement,3,1590,4770,POS/Card,Walk-in
+AK-1479,2025-05-02,10:00,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,710,1420,Transfer,Insurance (HMO)
+AK-1480,2025-05-02,10:04,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,310,310,Cash,Walk-in
+AK-1481,2025-05-02,11:34,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,470,470,Transfer,Walk-in
+AK-1482,2025-05-02,12:52,Trust Pharmacy,Arakale,Akure,Ondo,Multivitamin Syrup,Supplement,1,1950,1950,Transfer,Walk-in
+AK-1483,2025-05-03,15:37,Akure City Pharmacy,Oja Oba,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,380,760,Cash,Walk-in
+AK-1484,2025-05-03,17:00,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,2,530,1060,Transfer,Prescription
+AK-1485,2025-05-03,18:00,Trust Pharmacy,Arakale,Akure,Ondo,Panadol Extra,Analgesic,1,760,760,POS/Card,Walk-in
+AK-1486,2025-05-03,18:13,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Zinc + Vitamin C,Supplement,6,900,5400,Cash,Walk-in
+AK-1487,2025-05-04,08:00,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,480,480,Transfer,Walk-in
+AK-1488,2025-05-04,10:18,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,4,950,3800,POS/Card,Insurance (HMO)
+AK-1489,2025-05-04,10:42,Akure City Pharmacy,Oja Oba,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,3,1640,4920,Transfer,Walk-in
+AK-1490,2025-05-04,11:54,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,4,980,3920,Cash,Insurance (HMO)
+AK-1491,2025-05-04,13:30,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,780,1560,POS/Card,Walk-in
+AK-1492,2025-05-04,14:22,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,2,880,1760,Transfer,Walk-in
+AK-1493,2025-05-05,09:46,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,1,110,110,Transfer,Prescription
+AK-1494,2025-05-05,10:26,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1230,4920,POS/Card,Walk-in
+AK-1495,2025-05-05,11:52,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2510,2510,Cash,Walk-in
+AK-1496,2025-05-05,12:24,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,3,600,1800,Transfer,Walk-in
+AK-1497,2025-05-05,13:26,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Diclofenac Gel,Topical,6,1010,6060,Cash,Walk-in
+AK-1498,2025-05-05,18:08,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Vitamin C 1000mg,Supplement,3,1380,4140,Transfer,Walk-in
+AK-1499,2025-05-06,09:32,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Panadol Extra,Analgesic,2,780,1560,Cash,Prescription
+AK-1500,2025-05-06,12:05,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Diclofenac Gel,Topical,3,1520,4560,Cash,Walk-in
+AK-1501,2025-05-06,16:47,Akure City Pharmacy,Oja Oba,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,410,820,Cash,Walk-in
+AK-1502,2025-05-06,17:24,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,880,1760,POS/Card,Walk-in
+AK-1503,2025-05-06,18:07,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,3,500,1500,Cash,Prescription
+AK-1504,2025-05-07,08:45,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2700,2700,POS/Card,Walk-in
+AK-1505,2025-05-07,10:53,Akure City Pharmacy,Oja Oba,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,480,960,Cash,Insurance (HMO)
+AK-1506,2025-05-07,12:05,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1010,1010,POS/Card,Walk-in
+AK-1507,2025-05-08,08:40,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,3,540,1620,POS/Card,Prescription
+AK-1508,2025-05-08,12:27,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Folic Acid Tablets,Supplement,1,480,480,POS/Card,Walk-in
+AK-1509,2025-05-09,13:22,Trust Pharmacy,Arakale,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1390,1390,Transfer,Walk-in
+AK-1510,2025-05-09,14:15,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,570,1140,Transfer,Prescription
+AK-1511,2025-05-09,15:01,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,4,1270,5080,Cash,Walk-in
+AK-1512,2025-05-09,15:46,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,5,420,2100,Cash,Walk-in
+AK-1513,2025-05-09,16:41,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,5,310,1550,Transfer,Insurance (HMO)
+AK-1514,2025-05-09,17:31,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,1,840,840,Cash,Prescription
+AK-1515,2025-05-09,20:15,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,500,500,POS/Card,Walk-in
+AK-1516,2025-05-10,09:44,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,360,360,Cash,Walk-in
+AK-1517,2025-05-10,17:24,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,310,310,Cash,Prescription
+AK-1518,2025-05-10,17:51,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,3,420,1260,Cash,Walk-in
+AK-1519,2025-05-10,19:35,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,690,690,Transfer,Prescription
+AK-1520,2025-05-11,10:28,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,6,1980,11880,Cash,Prescription
+AK-1521,2025-05-13,08:31,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1780,1780,POS/Card,Prescription
+AK-1522,2025-05-13,11:06,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,390,1170,POS/Card,Walk-in
+AK-1523,2025-05-13,11:23,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,240,240,Cash,Walk-in
+AK-1524,2025-05-13,13:41,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,2,1700,3400,Transfer,Walk-in
+AK-1525,2025-05-14,15:39,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,5,540,2700,Cash,Prescription
+AK-1526,2025-05-15,11:19,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Diclofenac Gel,Topical,1,1260,1260,POS/Card,Prescription
+AK-1527,2025-05-15,14:00,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,260,520,Cash,Prescription
+AK-1528,2025-05-15,14:11,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1690,1690,POS/Card,Walk-in
+AK-1529,2025-05-16,13:43,Trust Pharmacy,Arakale,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1380,1380,Transfer,Prescription
+AK-1530,2025-05-16,16:34,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,370,1110,Cash,Walk-in
+AK-1531,2025-05-16,17:52,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,5,750,3750,Cash,Walk-in
+AK-1532,2025-05-17,13:59,Akure City Pharmacy,Oja Oba,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,340,1020,POS/Card,Walk-in
+AK-1533,2025-05-17,14:22,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,3,1160,3480,Cash,Walk-in
+AK-1534,2025-05-17,18:08,Akure City Pharmacy,Oja Oba,Akure,Ondo,Vitamin C 1000mg,Supplement,6,1220,7320,Transfer,Insurance (HMO)
+AK-1535,2025-05-18,12:50,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,960,1920,Cash,Walk-in
+AK-1536,2025-05-18,13:22,Akure City Pharmacy,Oja Oba,Akure,Ondo,Folic Acid Tablets,Supplement,3,520,1560,Cash,Walk-in
+AK-1537,2025-05-18,18:43,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,380,380,Cash,Prescription
+AK-1538,2025-05-18,19:02,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,4,1420,5680,POS/Card,Walk-in
+AK-1539,2025-05-19,13:01,Akure City Pharmacy,Oja Oba,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1240,1240,Cash,Walk-in
+AK-1540,2025-05-19,14:50,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,660,660,Cash,Walk-in
+AK-1541,2025-05-19,14:58,Akure City Pharmacy,Oja Oba,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2350,2350,Cash,Prescription
+AK-1542,2025-05-19,16:44,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1740,3480,Cash,Walk-in
+AK-1543,2025-05-20,11:53,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Multivitamin Syrup,Supplement,2,1930,3860,POS/Card,Insurance (HMO)
+AK-1544,2025-05-21,09:40,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,1880,1880,POS/Card,Prescription
+AK-1545,2025-05-21,10:28,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,450,1350,Cash,Walk-in
+AK-1546,2025-05-21,12:08,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,1,1400,1400,Transfer,Prescription
+AK-1547,2025-05-21,15:03,Trust Pharmacy,Arakale,Akure,Ondo,Multivitamin Syrup,Supplement,10,1720,17200,Cash,Walk-in
+AK-1548,2025-05-21,15:38,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,ORS Sachet,Rehydration,1,120,120,Cash,Insurance (HMO)
+AK-1549,2025-05-21,17:35,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,1000,1000,POS/Card,Prescription
+AK-1550,2025-05-21,19:35,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,760,1520,Cash,Prescription
+AK-1551,2025-05-21,19:52,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,3,420,1260,Transfer,Insurance (HMO)
+AK-1552,2025-05-22,08:17,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,460,920,POS/Card,Prescription
+AK-1553,2025-05-22,09:07,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,1,880,880,Cash,Prescription
+AK-1554,2025-05-22,10:09,Trust Pharmacy,Arakale,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,4,460,1840,POS/Card,Prescription
+AK-1555,2025-05-22,10:22,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,2,980,1960,Cash,Prescription
+AK-1556,2025-05-22,10:50,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,1,170,170,POS/Card,Prescription
+AK-1557,2025-05-22,17:51,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1530,1530,POS/Card,Prescription
+AK-1558,2025-05-23,08:54,Trust Pharmacy,Arakale,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,4,500,2000,POS/Card,Walk-in
+AK-1559,2025-05-23,11:59,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,3,730,2190,Cash,Walk-in
+AK-1560,2025-05-23,14:04,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,2010,2010,POS/Card,Prescription
+AK-1561,2025-05-23,14:25,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Multivitamin Syrup,Supplement,4,1820,7280,Cash,Walk-in
+AK-1562,2025-05-23,17:34,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,5,950,4750,POS/Card,Walk-in
+AK-1563,2025-05-23,18:05,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,6,470,2820,POS/Card,Prescription
+AK-1564,2025-05-24,09:01,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,980,980,Transfer,Walk-in
+AK-1565,2025-05-24,09:47,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,1060,1060,Cash,Walk-in
+AK-1566,2025-05-24,10:42,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1300,2600,Transfer,Insurance (HMO)
+AK-1567,2025-05-24,13:38,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,10,2390,23900,Transfer,Walk-in
+AK-1568,2025-05-24,13:43,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1200,1200,POS/Card,Walk-in
+AK-1569,2025-05-24,14:46,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1590,4770,Cash,Walk-in
+AK-1570,2025-05-24,15:42,Trust Pharmacy,Arakale,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,530,530,POS/Card,Walk-in
+AK-1571,2025-05-24,16:51,Trust Pharmacy,Arakale,Akure,Ondo,Multivitamin Syrup,Supplement,2,1790,3580,POS/Card,Prescription
+AK-1572,2025-05-24,19:33,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,1050,1050,Cash,Prescription
+AK-1573,2025-05-25,12:35,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,710,710,POS/Card,Prescription
+AK-1574,2025-05-25,14:17,Akure City Pharmacy,Oja Oba,Akure,Ondo,ORS Sachet,Rehydration,1,150,150,Cash,Walk-in
+AK-1575,2025-05-25,14:22,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Diclofenac Gel,Topical,2,1580,3160,POS/Card,Walk-in
+AK-1576,2025-05-25,18:29,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Folic Acid Tablets,Supplement,2,480,960,Cash,Walk-in
+AK-1577,2025-05-25,18:36,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,1870,3740,Cash,Walk-in
+AK-1578,2025-05-26,09:13,Trust Pharmacy,Arakale,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,3,310,930,Cash,Insurance (HMO)
+AK-1579,2025-05-26,09:53,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,2,550,1100,Transfer,Walk-in
+AK-1580,2025-05-26,11:07,Trust Pharmacy,Arakale,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,670,1340,Transfer,Walk-in
+AK-1581,2025-05-26,13:25,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,6,1780,10680,Cash,Insurance (HMO)
+AK-1582,2025-05-26,18:20,Trust Pharmacy,Arakale,Akure,Ondo,Vitamin C 1000mg,Supplement,1,970,970,Cash,Prescription
+AK-1583,2025-05-27,10:17,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1660,1660,Transfer,Walk-in
+AK-1584,2025-05-27,19:29,Trust Pharmacy,Arakale,Akure,Ondo,Multivitamin Syrup,Supplement,2,1830,3660,Transfer,Prescription
+AK-1585,2025-05-28,08:31,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,5,500,2500,Cash,Prescription
+AK-1586,2025-05-28,12:32,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,3,2330,6990,POS/Card,Prescription
+AK-1587,2025-05-28,16:18,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1060,1060,POS/Card,Insurance (HMO)
+AK-1588,2025-05-28,16:54,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,430,430,Transfer,Prescription
+AK-1589,2025-05-28,19:44,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,2210,4420,Transfer,Walk-in
+AK-1590,2025-05-28,20:48,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,2,870,1740,Cash,Insurance (HMO)
+AK-1591,2025-05-29,10:57,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,1010,1010,POS/Card,Walk-in
+AK-1592,2025-05-29,11:56,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,1,1510,1510,POS/Card,Prescription
+AK-1593,2025-05-29,12:34,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Panadol Extra,Analgesic,3,530,1590,Transfer,Walk-in
+AK-1594,2025-05-29,13:13,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Multivitamin Syrup,Supplement,4,1950,7800,Transfer,Walk-in
+AK-1595,2025-05-29,13:25,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1560,3120,Cash,Prescription
+AK-1596,2025-05-30,12:08,Trust Pharmacy,Arakale,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,520,1040,Cash,Prescription
+AK-1597,2025-05-30,13:07,Trust Pharmacy,Arakale,Akure,Ondo,Diclofenac Gel,Topical,4,1230,4920,Cash,Prescription
+AK-1598,2025-05-30,13:50,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1930,3860,Transfer,Prescription
+AK-1599,2025-05-30,15:36,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,3,320,960,Cash,Walk-in
+AK-1600,2025-05-30,19:34,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2330,2330,POS/Card,Walk-in
+AK-1601,2025-05-31,10:46,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,770,770,Cash,Walk-in
+AK-1602,2025-05-31,14:03,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,1,1810,1810,POS/Card,Prescription
+AK-1603,2025-05-31,14:21,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,6,1000,6000,Cash,Walk-in
+AK-1604,2025-05-31,20:44,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,2040,2040,Cash,Walk-in
+AK-1605,2025-06-01,08:55,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1750,5250,POS/Card,Insurance (HMO)
+AK-1606,2025-06-01,11:41,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Diclofenac Gel,Topical,2,1530,3060,Cash,Walk-in
+AK-1607,2025-06-02,12:42,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2350,2350,Transfer,Walk-in
+AK-1608,2025-06-03,09:06,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,440,880,Cash,Walk-in
+AK-1609,2025-06-03,10:33,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1260,1260,Cash,Walk-in
+AK-1610,2025-06-03,11:19,Trust Pharmacy,Arakale,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1000,1000,POS/Card,Walk-in
+AK-1611,2025-06-03,13:24,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,960,960,Cash,Walk-in
+AK-1612,2025-06-03,14:24,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,5,590,2950,Cash,Walk-in
+AK-1613,2025-06-04,10:35,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1920,1920,Cash,Prescription
+AK-1614,2025-06-04,11:05,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,330,330,Cash,Walk-in
+AK-1615,2025-06-04,17:11,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Vitamin C 1000mg,Supplement,4,1100,4400,Cash,Walk-in
+AK-1616,2025-06-04,20:54,Akure City Pharmacy,Oja Oba,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1000,1000,Cash,Walk-in
+AK-1617,2025-06-05,13:27,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Panadol Extra,Analgesic,1,820,820,Cash,Prescription
+AK-1618,2025-06-05,15:49,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,540,540,Cash,Walk-in
+AK-1619,2025-06-06,09:37,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,3,960,2880,Cash,Walk-in
+AK-1620,2025-06-06,12:55,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,1,190,190,POS/Card,Walk-in
+AK-1621,2025-06-07,10:48,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,5,1070,5350,Cash,Insurance (HMO)
+AK-1622,2025-06-07,14:31,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,1,460,460,POS/Card,Insurance (HMO)
+AK-1623,2025-06-07,15:46,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,370,740,POS/Card,Prescription
+AK-1624,2025-06-08,11:11,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,1670,3340,POS/Card,Prescription
+AK-1625,2025-06-08,11:17,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1150,2300,Cash,Insurance (HMO)
+AK-1626,2025-06-08,14:12,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,390,390,Cash,Prescription
+AK-1627,2025-06-08,14:43,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1290,1290,Transfer,Walk-in
+AK-1628,2025-06-08,16:08,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Vitamin C 1000mg,Supplement,4,900,3600,Transfer,Insurance (HMO)
+AK-1629,2025-06-08,19:33,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,920,920,POS/Card,Prescription
+AK-1630,2025-06-09,10:30,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Multivitamin Syrup,Supplement,3,1240,3720,POS/Card,Walk-in
+AK-1631,2025-06-09,11:19,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Vitamin C 1000mg,Supplement,4,1410,5640,POS/Card,Insurance (HMO)
+AK-1632,2025-06-09,13:28,Trust Pharmacy,Arakale,Akure,Ondo,Vitamin C 1000mg,Supplement,4,910,3640,Transfer,Walk-in
+AK-1633,2025-06-09,13:45,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,1,1220,1220,POS/Card,Insurance (HMO)
+AK-1634,2025-06-09,15:17,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,ORS Sachet,Rehydration,6,160,960,Cash,Walk-in
+AK-1635,2025-06-09,15:21,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,620,620,Transfer,Walk-in
+AK-1636,2025-06-10,10:46,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,3,510,1530,Cash,Prescription
+AK-1637,2025-06-10,12:45,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,10,230,2300,Cash,Walk-in
+AK-1638,2025-06-10,13:06,Akure City Pharmacy,Oja Oba,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1250,1250,Cash,Prescription
+AK-1639,2025-06-10,14:30,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,5,750,3750,POS/Card,Prescription
+AK-1640,2025-06-10,15:21,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,420,420,Cash,Walk-in
+AK-1641,2025-06-10,18:42,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Multivitamin Syrup,Supplement,1,1700,1700,POS/Card,Walk-in
+AK-1642,2025-06-11,15:23,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Panadol Extra,Analgesic,1,610,610,Cash,Prescription
+AK-1643,2025-06-12,10:57,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,3,310,930,POS/Card,Walk-in
+AK-1644,2025-06-12,12:13,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,10,1360,13600,Cash,Prescription
+AK-1645,2025-06-12,13:05,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Panadol Extra,Analgesic,1,730,730,Cash,Prescription
+AK-1646,2025-06-12,13:07,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,ORS Sachet,Rehydration,1,160,160,POS/Card,Insurance (HMO)
+AK-1647,2025-06-12,14:50,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,6,540,3240,POS/Card,Walk-in
+AK-1648,2025-06-12,18:08,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,970,970,Cash,Walk-in
+AK-1649,2025-06-12,18:46,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,970,1940,Cash,Walk-in
+AK-1650,2025-06-12,19:10,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,5,480,2400,POS/Card,Walk-in
+AK-1651,2025-06-13,11:51,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,1740,3480,POS/Card,Insurance (HMO)
+AK-1652,2025-06-13,13:30,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,4,220,880,Transfer,Walk-in
+AK-1653,2025-06-13,15:04,Akure City Pharmacy,Oja Oba,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,250,500,POS/Card,Walk-in
+AK-1654,2025-06-13,19:22,Trust Pharmacy,Arakale,Akure,Ondo,Vitamin C 1000mg,Supplement,2,850,1700,Cash,Walk-in
+AK-1655,2025-06-13,20:28,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1750,3500,Cash,Prescription
+AK-1656,2025-06-14,13:38,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,5,2490,12450,Transfer,Walk-in
+AK-1657,2025-06-14,14:55,Trust Pharmacy,Arakale,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,550,550,Cash,Walk-in
+AK-1658,2025-06-14,16:54,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,5,1290,6450,POS/Card,Walk-in
+AK-1659,2025-06-14,19:23,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1620,3240,Cash,Walk-in
+AK-1660,2025-06-15,09:09,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,5,1510,7550,Transfer,Walk-in
+AK-1661,2025-06-15,11:40,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,6,2030,12180,Transfer,Prescription
+AK-1662,2025-06-15,12:28,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,2,1280,2560,POS/Card,Insurance (HMO)
+AK-1663,2025-06-15,12:43,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1570,3140,POS/Card,Walk-in
+AK-1664,2025-06-15,14:02,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,950,950,POS/Card,Walk-in
+AK-1665,2025-06-15,18:55,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,480,480,Transfer,Prescription
+AK-1666,2025-06-16,11:10,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1410,2820,POS/Card,Walk-in
+AK-1667,2025-06-16,11:57,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,450,450,Cash,Walk-in
+AK-1668,2025-06-16,12:02,Akure City Pharmacy,Oja Oba,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,300,900,Cash,Insurance (HMO)
+AK-1669,2025-06-16,12:40,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Diclofenac Gel,Topical,4,1040,4160,Cash,Insurance (HMO)
+AK-1670,2025-06-16,14:39,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,5,250,1250,POS/Card,Walk-in
+AK-1671,2025-06-16,16:17,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Zinc + Vitamin C,Supplement,1,960,960,Cash,Prescription
+AK-1672,2025-06-16,17:37,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,2,1230,2460,Transfer,Prescription
+AK-1673,2025-06-17,12:53,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Multivitamin Syrup,Supplement,2,1830,3660,POS/Card,Walk-in
+AK-1674,2025-06-17,16:37,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,870,1740,Cash,Walk-in
+AK-1675,2025-06-17,17:06,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,1,340,340,Transfer,Walk-in
+AK-1676,2025-06-17,19:27,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1360,5440,POS/Card,Walk-in
+AK-1677,2025-06-17,20:28,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,630,1260,POS/Card,Walk-in
+AK-1678,2025-06-18,11:42,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Diclofenac Gel,Topical,3,910,2730,Cash,Walk-in
+AK-1679,2025-06-18,13:38,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,2,460,920,Transfer,Walk-in
+AK-1680,2025-06-18,15:18,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,940,940,POS/Card,Insurance (HMO)
+AK-1681,2025-06-18,16:40,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,350,350,POS/Card,Walk-in
+AK-1682,2025-06-19,08:07,Ondo State Pharmacy,FUTA Road,Akure,Ondo,ORS Sachet,Rehydration,2,100,200,Cash,Walk-in
+AK-1683,2025-06-19,10:52,Trust Pharmacy,Arakale,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1360,1360,POS/Card,Prescription
+AK-1684,2025-06-19,11:53,Akure City Pharmacy,Oja Oba,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1200,1200,Cash,Walk-in
+AK-1685,2025-06-19,12:43,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,3,400,1200,Cash,Walk-in
+AK-1686,2025-06-19,15:05,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,2,460,920,POS/Card,Walk-in
+AK-1687,2025-06-19,17:25,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,6,1250,7500,Cash,Walk-in
+AK-1688,2025-06-20,08:04,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1350,1350,POS/Card,Walk-in
+AK-1689,2025-06-20,08:25,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,2170,4340,POS/Card,Prescription
+AK-1690,2025-06-20,09:30,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,550,550,POS/Card,Walk-in
+AK-1691,2025-06-20,13:54,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Folic Acid Tablets,Supplement,6,400,2400,Transfer,Walk-in
+AK-1692,2025-06-21,10:23,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,410,410,POS/Card,Prescription
+AK-1693,2025-06-21,12:56,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,940,940,POS/Card,Prescription
+AK-1694,2025-06-21,13:00,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,3,1260,3780,Cash,Walk-in
+AK-1695,2025-06-21,16:04,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,680,680,Cash,Prescription
+AK-1696,2025-06-21,16:20,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,6,630,3780,Transfer,Walk-in
+AK-1697,2025-06-21,16:33,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Diclofenac Gel,Topical,1,1560,1560,POS/Card,Walk-in
+AK-1698,2025-06-21,17:31,Trust Pharmacy,Arakale,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1250,1250,Transfer,Walk-in
+AK-1699,2025-06-22,08:34,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1330,5320,Cash,Walk-in
+AK-1700,2025-06-22,13:28,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,2140,2140,Cash,Walk-in
+AK-1701,2025-06-22,15:57,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,310,620,POS/Card,Prescription
+AK-1702,2025-06-23,09:59,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,10,580,5800,Cash,Walk-in
+AK-1703,2025-06-23,10:14,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1360,2720,POS/Card,Prescription
+AK-1704,2025-06-23,10:40,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,340,340,POS/Card,Walk-in
+AK-1705,2025-06-23,10:59,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Multivitamin Syrup,Supplement,2,1850,3700,Cash,Walk-in
+AK-1706,2025-06-23,14:16,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Multivitamin Syrup,Supplement,2,1490,2980,Cash,Prescription
+AK-1707,2025-06-23,17:46,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Zinc + Vitamin C,Supplement,3,1080,3240,Transfer,Walk-in
+AK-1708,2025-06-24,09:45,Trust Pharmacy,Arakale,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1170,1170,POS/Card,Insurance (HMO)
+AK-1709,2025-06-24,18:29,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,4,650,2600,Cash,Walk-in
+AK-1710,2025-06-24,20:08,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,5,1950,9750,POS/Card,Prescription
+AK-1711,2025-06-25,10:42,Ondo State Pharmacy,FUTA Road,Akure,Ondo,ORS Sachet,Rehydration,2,100,200,Cash,Prescription
+AK-1712,2025-06-25,11:34,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1020,2040,Cash,Prescription
+AK-1713,2025-06-25,13:25,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Multivitamin Syrup,Supplement,2,1420,2840,Cash,Prescription
+AK-1714,2025-06-25,15:35,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1650,4950,Transfer,Insurance (HMO)
+AK-1715,2025-06-25,16:20,Trust Pharmacy,Arakale,Akure,Ondo,ORS Sachet,Rehydration,2,140,280,POS/Card,Walk-in
+AK-1716,2025-06-26,10:31,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1310,3930,POS/Card,Walk-in
+AK-1717,2025-06-26,12:23,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,1,1420,1420,Cash,Walk-in
+AK-1718,2025-06-27,14:08,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,910,1820,Transfer,Prescription
+AK-1719,2025-06-27,19:12,Trust Pharmacy,Arakale,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,200,400,Cash,Prescription
+AK-1720,2025-06-27,19:25,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,440,880,Cash,Prescription
+AK-1721,2025-06-28,09:23,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,350,700,Cash,Walk-in
+AK-1722,2025-06-28,10:48,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Vitamin C 1000mg,Supplement,1,950,950,Cash,Walk-in
+AK-1723,2025-06-29,09:16,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1410,1410,POS/Card,Walk-in
+AK-1724,2025-06-29,10:04,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,700,2800,POS/Card,Prescription
+AK-1725,2025-06-30,08:03,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,340,1020,POS/Card,Walk-in
+AK-1726,2025-06-30,13:51,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,960,2880,Cash,Prescription
+AK-1727,2025-06-30,15:52,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,10,770,7700,Transfer,Walk-in
+AK-1728,2025-06-30,16:01,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,5,2290,11450,Cash,Prescription
+AK-1729,2025-07-01,10:31,Akure City Pharmacy,Oja Oba,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,480,480,Cash,Walk-in
+AK-1730,2025-07-01,15:06,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,680,680,Transfer,Prescription
+AK-1731,2025-07-01,16:19,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,520,1040,POS/Card,Prescription
+AK-1732,2025-07-02,10:46,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,4,1290,5160,Cash,Prescription
+AK-1733,2025-07-02,13:07,Trust Pharmacy,Arakale,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,6,320,1920,POS/Card,Walk-in
+AK-1734,2025-07-02,13:24,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,2050,2050,Cash,Walk-in
+AK-1735,2025-07-02,14:21,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,510,510,Cash,Walk-in
+AK-1736,2025-07-02,16:21,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,2170,2170,POS/Card,Prescription
+AK-1737,2025-07-02,17:49,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,920,920,POS/Card,Insurance (HMO)
+AK-1738,2025-07-03,09:13,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Panadol Extra,Analgesic,1,560,560,Transfer,Prescription
+AK-1739,2025-07-03,11:25,Trust Pharmacy,Arakale,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,390,390,Cash,Prescription
+AK-1740,2025-07-03,14:43,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1090,1090,Transfer,Walk-in
+AK-1741,2025-07-03,15:37,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,2,1390,2780,POS/Card,Walk-in
+AK-1742,2025-07-04,09:56,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,620,620,Transfer,Walk-in
+AK-1743,2025-07-04,10:01,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1380,2760,POS/Card,Prescription
+AK-1744,2025-07-04,11:30,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1380,2760,Cash,Walk-in
+AK-1745,2025-07-04,11:52,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1560,3120,Transfer,Insurance (HMO)
+AK-1746,2025-07-04,14:11,Trust Pharmacy,Arakale,Akure,Ondo,Multivitamin Syrup,Supplement,3,1490,4470,POS/Card,Walk-in
+AK-1747,2025-07-04,19:46,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Diclofenac Gel,Topical,2,970,1940,Cash,Prescription
+AK-1748,2025-07-05,10:40,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,3,400,1200,POS/Card,Walk-in
+AK-1749,2025-07-05,20:14,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1130,1130,Cash,Walk-in
+AK-1750,2025-07-06,10:57,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,6,2180,13080,POS/Card,Prescription
+AK-1751,2025-07-06,11:35,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,640,1280,POS/Card,Walk-in
+AK-1752,2025-07-06,12:08,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,2180,6540,Cash,Walk-in
+AK-1753,2025-07-06,14:29,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,5,1510,7550,Transfer,Walk-in
+AK-1754,2025-07-06,14:55,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,1760,1760,POS/Card,Walk-in
+AK-1755,2025-07-06,15:32,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,6,870,5220,Transfer,Walk-in
+AK-1756,2025-07-07,10:22,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,420,840,Cash,Walk-in
+AK-1757,2025-07-08,08:26,Trust Pharmacy,Arakale,Akure,Ondo,ORS Sachet,Rehydration,3,170,510,POS/Card,Walk-in
+AK-1758,2025-07-08,19:47,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,ORS Sachet,Rehydration,1,120,120,Transfer,Walk-in
+AK-1759,2025-07-09,10:18,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1550,1550,Cash,Walk-in
+AK-1760,2025-07-09,18:21,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1140,4560,POS/Card,Prescription
+AK-1761,2025-07-10,08:38,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,4,760,3040,Transfer,Walk-in
+AK-1762,2025-07-10,12:07,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,2580,5160,Cash,Walk-in
+AK-1763,2025-07-10,13:36,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,310,620,POS/Card,Insurance (HMO)
+AK-1764,2025-07-10,14:52,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,2,570,1140,Transfer,Walk-in
+AK-1765,2025-07-10,17:17,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1020,3060,POS/Card,Walk-in
+AK-1766,2025-07-11,09:52,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,460,920,Transfer,Walk-in
+AK-1767,2025-07-11,09:54,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Folic Acid Tablets,Supplement,2,420,840,Cash,Prescription
+AK-1768,2025-07-11,09:57,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1150,2300,Cash,Walk-in
+AK-1769,2025-07-11,11:40,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,450,900,Cash,Walk-in
+AK-1770,2025-07-11,13:02,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,6,990,5940,Cash,Prescription
+AK-1771,2025-07-11,13:37,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,980,980,Cash,Walk-in
+AK-1772,2025-07-11,15:34,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Folic Acid Tablets,Supplement,5,490,2450,Cash,Prescription
+AK-1773,2025-07-11,16:58,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,1,800,800,POS/Card,Prescription
+AK-1774,2025-07-11,17:43,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,ORS Sachet,Rehydration,1,150,150,Cash,Walk-in
+AK-1775,2025-07-11,17:53,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Diclofenac Gel,Topical,5,1210,6050,Transfer,Walk-in
+AK-1776,2025-07-11,18:18,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,5,1810,9050,Transfer,Prescription
+AK-1777,2025-07-12,20:09,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,520,520,Cash,Insurance (HMO)
+AK-1778,2025-07-13,09:22,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,560,560,POS/Card,Prescription
+AK-1779,2025-07-13,16:35,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,ORS Sachet,Rehydration,2,110,220,Cash,Walk-in
+AK-1780,2025-07-13,20:55,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,2160,2160,Cash,Walk-in
+AK-1781,2025-07-14,12:01,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,940,1880,Cash,Walk-in
+AK-1782,2025-07-14,13:48,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Panadol Extra,Analgesic,1,550,550,Cash,Insurance (HMO)
+AK-1783,2025-07-14,15:46,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2130,2130,Cash,Walk-in
+AK-1784,2025-07-14,16:17,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,4,630,2520,Cash,Walk-in
+AK-1785,2025-07-14,16:18,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,5,740,3700,POS/Card,Walk-in
+AK-1786,2025-07-14,18:30,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,380,380,Transfer,Prescription
+AK-1787,2025-07-15,09:47,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,6,1100,6600,POS/Card,Insurance (HMO)
+AK-1788,2025-07-15,12:37,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,380,380,Cash,Walk-in
+AK-1789,2025-07-15,14:29,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,750,1500,Transfer,Walk-in
+AK-1790,2025-07-15,15:49,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,4,1070,4280,POS/Card,Walk-in
+AK-1791,2025-07-15,19:26,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,3,370,1110,Transfer,Prescription
+AK-1792,2025-07-16,15:20,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,6,580,3480,Cash,Walk-in
+AK-1793,2025-07-16,15:32,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,920,1840,Cash,Walk-in
+AK-1794,2025-07-17,14:20,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,1,910,910,Transfer,Prescription
+AK-1795,2025-07-17,15:13,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,2030,2030,Cash,Walk-in
+AK-1796,2025-07-18,10:57,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,2210,2210,POS/Card,Prescription
+AK-1797,2025-07-18,12:25,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,3,840,2520,POS/Card,Walk-in
+AK-1798,2025-07-18,13:08,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,5,720,3600,POS/Card,Walk-in
+AK-1799,2025-07-18,13:37,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Multivitamin Syrup,Supplement,1,1810,1810,Cash,Prescription
+AK-1800,2025-07-19,11:13,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,1,580,580,POS/Card,Walk-in
+AK-1801,2025-07-20,11:40,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,540,540,POS/Card,Walk-in
+AK-1802,2025-07-20,11:59,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1750,5250,Transfer,Walk-in
+AK-1803,2025-07-20,16:38,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,2180,2180,Transfer,Prescription
+AK-1804,2025-07-20,17:52,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,220,660,Cash,Walk-in
+AK-1805,2025-07-20,18:25,Akure City Pharmacy,Oja Oba,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,3,370,1110,POS/Card,Walk-in
+AK-1806,2025-07-22,12:27,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Multivitamin Syrup,Supplement,3,1860,5580,Cash,Walk-in
+AK-1807,2025-07-22,14:38,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Multivitamin Syrup,Supplement,3,1360,4080,Cash,Walk-in
+AK-1808,2025-07-22,17:34,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,1,920,920,Cash,Walk-in
+AK-1809,2025-07-22,19:46,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Diclofenac Gel,Topical,2,1330,2660,Transfer,Prescription
+AK-1810,2025-07-23,12:28,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,790,1580,Cash,Walk-in
+AK-1811,2025-07-23,16:50,Trust Pharmacy,Arakale,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1180,3540,POS/Card,Walk-in
+AK-1812,2025-07-24,09:07,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,10,380,3800,POS/Card,Walk-in
+AK-1813,2025-07-24,15:41,Akure City Pharmacy,Oja Oba,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,5,340,1700,Cash,Walk-in
+AK-1814,2025-07-24,17:07,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1390,5560,POS/Card,Prescription
+AK-1815,2025-07-24,17:37,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1190,1190,Transfer,Walk-in
+AK-1816,2025-07-25,13:12,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,400,400,Transfer,Prescription
+AK-1817,2025-07-25,19:06,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,10,2100,21000,Cash,Insurance (HMO)
+AK-1818,2025-07-26,09:53,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Folic Acid Tablets,Supplement,4,560,2240,POS/Card,Walk-in
+AK-1819,2025-07-26,12:24,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1780,3560,POS/Card,Walk-in
+AK-1820,2025-07-27,14:01,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,5,570,2850,Cash,Walk-in
+AK-1821,2025-07-27,16:43,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1780,3560,Transfer,Walk-in
+AK-1822,2025-07-27,18:28,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Multivitamin Syrup,Supplement,3,1640,4920,Cash,Prescription
+AK-1823,2025-07-28,13:11,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,5,600,3000,POS/Card,Walk-in
+AK-1824,2025-07-29,10:56,Akure City Pharmacy,Oja Oba,Akure,Ondo,Vitamin C 1000mg,Supplement,1,840,840,Cash,Walk-in
+AK-1825,2025-07-29,11:11,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,10,450,4500,POS/Card,Prescription
+AK-1826,2025-07-29,11:52,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1090,3270,Cash,Prescription
+AK-1827,2025-07-29,12:27,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Diclofenac Gel,Topical,1,1450,1450,Cash,Insurance (HMO)
+AK-1828,2025-07-29,13:17,Trust Pharmacy,Arakale,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,360,360,Cash,Walk-in
+AK-1829,2025-07-29,13:23,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,700,700,Cash,Prescription
+AK-1830,2025-07-29,17:04,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,6,1130,6780,POS/Card,Insurance (HMO)
+AK-1831,2025-07-30,11:58,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Multivitamin Syrup,Supplement,1,1820,1820,Transfer,Prescription
+AK-1832,2025-07-30,12:09,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Panadol Extra,Analgesic,3,790,2370,POS/Card,Walk-in
+AK-1833,2025-07-30,12:35,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1040,1040,Transfer,Walk-in
+AK-1834,2025-07-30,13:10,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,1610,1610,POS/Card,Prescription
+AK-1835,2025-07-30,17:09,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,3,2080,6240,Cash,Prescription
+AK-1836,2025-07-31,12:04,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,5,1020,5100,Cash,Walk-in
+AK-1837,2025-07-31,12:59,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2060,4120,Cash,Insurance (HMO)
+AK-1838,2025-07-31,13:39,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,390,390,Cash,Walk-in
+AK-1839,2025-07-31,15:56,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,650,1300,POS/Card,Insurance (HMO)
+AK-1840,2025-08-01,10:14,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1510,1510,POS/Card,Prescription
+AK-1841,2025-08-01,13:26,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,5,670,3350,Cash,Prescription
+AK-1842,2025-08-01,13:49,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,2150,4300,Cash,Prescription
+AK-1843,2025-08-01,15:47,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1260,1260,Cash,Walk-in
+AK-1844,2025-08-02,10:46,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,580,1160,Cash,Walk-in
+AK-1845,2025-08-02,11:11,Trust Pharmacy,Arakale,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1460,1460,Cash,Walk-in
+AK-1846,2025-08-02,13:19,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,6,470,2820,Transfer,Prescription
+AK-1847,2025-08-02,16:40,Trust Pharmacy,Arakale,Akure,Ondo,Panadol Extra,Analgesic,1,630,630,POS/Card,Walk-in
+AK-1848,2025-08-02,16:55,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1300,2600,POS/Card,Walk-in
+AK-1849,2025-08-02,17:21,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,2230,4460,POS/Card,Walk-in
+AK-1850,2025-08-03,08:17,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,5,970,4850,POS/Card,Insurance (HMO)
+AK-1851,2025-08-03,15:40,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,4,1520,6080,POS/Card,Prescription
+AK-1852,2025-08-03,16:51,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1150,1150,POS/Card,Walk-in
+AK-1853,2025-08-03,18:17,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,410,410,Transfer,Prescription
+AK-1854,2025-08-04,09:43,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Multivitamin Syrup,Supplement,2,1730,3460,Transfer,Walk-in
+AK-1855,2025-08-04,10:19,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,6,1310,7860,POS/Card,Walk-in
+AK-1856,2025-08-04,15:20,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,450,1350,Cash,Walk-in
+AK-1857,2025-08-05,10:30,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1360,4080,Cash,Walk-in
+AK-1858,2025-08-05,12:22,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,1850,1850,POS/Card,Walk-in
+AK-1859,2025-08-05,13:22,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1240,1240,Cash,Walk-in
+AK-1860,2025-08-05,17:29,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1120,1120,Cash,Walk-in
+AK-1861,2025-08-06,10:20,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,3,1020,3060,Cash,Walk-in
+AK-1862,2025-08-06,12:07,Trust Pharmacy,Arakale,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,270,540,Cash,Walk-in
+AK-1863,2025-08-06,12:15,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,980,980,Cash,Prescription
+AK-1864,2025-08-06,12:41,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,330,330,POS/Card,Walk-in
+AK-1865,2025-08-06,14:55,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Vitamin C 1000mg,Supplement,4,1410,5640,Cash,Walk-in
+AK-1866,2025-08-06,16:44,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,580,1160,Transfer,Prescription
+AK-1867,2025-08-06,17:00,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,250,500,Cash,Walk-in
+AK-1868,2025-08-06,17:25,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1500,6000,POS/Card,Prescription
+AK-1869,2025-08-07,10:32,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,2200,2200,POS/Card,Insurance (HMO)
+AK-1870,2025-08-07,13:03,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,980,980,Cash,Walk-in
+AK-1871,2025-08-08,09:23,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,350,700,Cash,Prescription
+AK-1872,2025-08-08,11:09,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,740,1480,POS/Card,Prescription
+AK-1873,2025-08-08,11:54,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,3,800,2400,POS/Card,Walk-in
+AK-1874,2025-08-09,09:59,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,10,700,7000,POS/Card,Walk-in
+AK-1875,2025-08-09,10:17,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,ORS Sachet,Rehydration,3,120,360,Transfer,Walk-in
+AK-1876,2025-08-09,11:58,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,4,370,1480,POS/Card,Walk-in
+AK-1877,2025-08-09,12:06,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1240,2480,POS/Card,Walk-in
+AK-1878,2025-08-10,10:22,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1040,1040,Transfer,Prescription
+AK-1879,2025-08-10,14:43,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1500,1500,Cash,Walk-in
+AK-1880,2025-08-10,16:08,Trust Pharmacy,Arakale,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,4,530,2120,Cash,Walk-in
+AK-1881,2025-08-11,11:02,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,370,370,POS/Card,Walk-in
+AK-1882,2025-08-11,12:18,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,5,1430,7150,POS/Card,Prescription
+AK-1883,2025-08-11,14:59,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1410,1410,Transfer,Walk-in
+AK-1884,2025-08-11,16:07,Akure City Pharmacy,Oja Oba,Akure,Ondo,Folic Acid Tablets,Supplement,3,330,990,Cash,Prescription
+AK-1885,2025-08-11,16:47,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,570,570,Cash,Prescription
+AK-1886,2025-08-11,16:54,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,4,1770,7080,Cash,Prescription
+AK-1887,2025-08-12,09:24,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2000,4000,POS/Card,Walk-in
+AK-1888,2025-08-12,11:46,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Diclofenac Gel,Topical,2,910,1820,POS/Card,Prescription
+AK-1889,2025-08-12,16:12,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,6,440,2640,POS/Card,Insurance (HMO)
+AK-1890,2025-08-12,17:32,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,3,890,2670,POS/Card,Walk-in
+AK-1891,2025-08-13,08:14,Akure City Pharmacy,Oja Oba,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,310,310,POS/Card,Prescription
+AK-1892,2025-08-13,13:10,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,1,1000,1000,POS/Card,Prescription
+AK-1893,2025-08-14,11:03,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Folic Acid Tablets,Supplement,1,480,480,POS/Card,Prescription
+AK-1894,2025-08-14,13:49,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1210,1210,POS/Card,Walk-in
+AK-1895,2025-08-14,17:51,Trust Pharmacy,Arakale,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,4,1510,6040,POS/Card,Insurance (HMO)
+AK-1896,2025-08-14,18:02,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,1020,1020,POS/Card,Walk-in
+AK-1897,2025-08-15,12:00,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1260,1260,POS/Card,Walk-in
+AK-1898,2025-08-15,12:15,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,680,1360,POS/Card,Walk-in
+AK-1899,2025-08-15,16:23,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,2110,2110,Cash,Walk-in
+AK-1900,2025-08-15,18:10,Trust Pharmacy,Arakale,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1770,1770,POS/Card,Prescription
+AK-1901,2025-08-16,10:56,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,1,360,360,POS/Card,Insurance (HMO)
+AK-1902,2025-08-16,15:53,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1160,1160,POS/Card,Walk-in
+AK-1903,2025-08-16,16:33,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,5,860,4300,Cash,Insurance (HMO)
+AK-1904,2025-08-16,18:41,Trust Pharmacy,Arakale,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,5,380,1900,Transfer,Walk-in
+AK-1905,2025-08-18,08:25,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,2,820,1640,Transfer,Prescription
+AK-1906,2025-08-18,13:54,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,6,1380,8280,Cash,Walk-in
+AK-1907,2025-08-18,13:55,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,840,840,Cash,Insurance (HMO)
+AK-1908,2025-08-18,16:36,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,840,840,Transfer,Walk-in
+AK-1909,2025-08-18,20:19,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,370,1110,POS/Card,Walk-in
+AK-1910,2025-08-19,10:51,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1540,1540,POS/Card,Walk-in
+AK-1911,2025-08-19,11:27,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,3,1250,3750,Transfer,Walk-in
+AK-1912,2025-08-19,13:11,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1360,2720,Cash,Prescription
+AK-1913,2025-08-19,16:35,Trust Pharmacy,Arakale,Akure,Ondo,Diclofenac Gel,Topical,6,1040,6240,Transfer,Walk-in
+AK-1914,2025-08-19,17:15,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,5,1590,7950,Cash,Insurance (HMO)
+AK-1915,2025-08-19,17:41,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,6,1460,8760,POS/Card,Walk-in
+AK-1916,2025-08-20,08:50,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,300,300,Cash,Walk-in
+AK-1917,2025-08-20,12:45,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,1,360,360,Cash,Prescription
+AK-1918,2025-08-20,14:11,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,280,560,Cash,Walk-in
+AK-1919,2025-08-21,08:22,MedPlus Pharmacy,Alagbaka,Akure,Ondo,ORS Sachet,Rehydration,1,180,180,Cash,Walk-in
+AK-1920,2025-08-21,12:05,Akure City Pharmacy,Oja Oba,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,310,620,Cash,Walk-in
+AK-1921,2025-08-21,13:07,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,1680,3360,Cash,Insurance (HMO)
+AK-1922,2025-08-21,13:09,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,3,760,2280,Cash,Prescription
+AK-1923,2025-08-21,14:00,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1540,1540,Transfer,Walk-in
+AK-1924,2025-08-21,14:06,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Multivitamin Syrup,Supplement,1,1470,1470,POS/Card,Prescription
+AK-1925,2025-08-21,14:09,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1010,1010,POS/Card,Prescription
+AK-1926,2025-08-21,15:36,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,4,800,3200,Cash,Walk-in
+AK-1927,2025-08-21,16:07,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1560,1560,Transfer,Prescription
+AK-1928,2025-08-21,16:48,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1120,1120,POS/Card,Walk-in
+AK-1929,2025-08-21,20:33,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Diclofenac Gel,Topical,2,1130,2260,Cash,Walk-in
+AK-1930,2025-08-22,12:30,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1520,6080,Cash,Prescription
+AK-1931,2025-08-22,13:12,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,5,670,3350,Cash,Insurance (HMO)
+AK-1932,2025-08-22,15:27,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1180,2360,Cash,Walk-in
+AK-1933,2025-08-22,16:52,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Vitamin C 1000mg,Supplement,1,920,920,Transfer,Walk-in
+AK-1934,2025-08-23,11:17,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,4,2310,9240,Cash,Walk-in
+AK-1935,2025-08-23,11:55,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Multivitamin Syrup,Supplement,3,1300,3900,Cash,Insurance (HMO)
+AK-1936,2025-08-23,13:06,Akure City Pharmacy,Oja Oba,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,480,960,Cash,Prescription
+AK-1937,2025-08-23,13:37,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1470,1470,POS/Card,Prescription
+AK-1938,2025-08-23,15:03,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,1,1040,1040,POS/Card,Walk-in
+AK-1939,2025-08-23,15:15,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,1,120,120,Cash,Prescription
+AK-1940,2025-08-23,17:44,Trust Pharmacy,Arakale,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,4,440,1760,Cash,Walk-in
+AK-1941,2025-08-23,18:11,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,480,1920,Cash,Walk-in
+AK-1942,2025-08-24,14:57,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,5,330,1650,POS/Card,Walk-in
+AK-1943,2025-08-24,15:59,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Vitamin C 1000mg,Supplement,1,920,920,Cash,Prescription
+AK-1944,2025-08-24,17:16,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,1000,2000,Transfer,Prescription
+AK-1945,2025-08-25,14:21,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1260,3780,Cash,Prescription
+AK-1946,2025-08-25,15:19,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,990,990,Cash,Prescription
+AK-1947,2025-08-26,13:30,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,1,580,580,POS/Card,Prescription
+AK-1948,2025-08-26,16:22,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,1,1690,1690,Cash,Walk-in
+AK-1949,2025-08-26,17:39,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,2,500,1000,POS/Card,Prescription
+AK-1950,2025-08-27,16:05,Akure City Pharmacy,Oja Oba,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,500,500,Cash,Walk-in
+AK-1951,2025-08-27,19:25,Trust Pharmacy,Arakale,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,6,390,2340,Transfer,Prescription
+AK-1952,2025-08-28,11:48,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,6,550,3300,POS/Card,Walk-in
+AK-1953,2025-08-28,16:31,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,10,650,6500,Cash,Walk-in
+AK-1954,2025-08-29,16:47,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,10,2110,21100,POS/Card,Prescription
+AK-1955,2025-08-29,18:33,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Zinc + Vitamin C,Supplement,4,1210,4840,Cash,Walk-in
+AK-1956,2025-08-29,19:51,Trust Pharmacy,Arakale,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,5,450,2250,POS/Card,Walk-in
+AK-1957,2025-08-30,16:26,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1790,3580,Cash,Prescription
+AK-1958,2025-08-30,19:25,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Folic Acid Tablets,Supplement,3,350,1050,Cash,Walk-in
+AK-1959,2025-08-31,11:16,Trust Pharmacy,Arakale,Akure,Ondo,Multivitamin Syrup,Supplement,1,1240,1240,Cash,Walk-in
+AK-1960,2025-08-31,14:11,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,310,620,Transfer,Walk-in
+AK-1961,2025-08-31,14:50,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,440,880,POS/Card,Prescription
+AK-1962,2025-08-31,17:09,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Multivitamin Syrup,Supplement,1,1440,1440,Transfer,Walk-in
+AK-1963,2025-09-01,14:46,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1520,3040,Cash,Walk-in
+AK-1964,2025-09-01,15:09,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2090,4180,Cash,Walk-in
+AK-1965,2025-09-01,15:46,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,1610,3220,POS/Card,Walk-in
+AK-1966,2025-09-01,16:11,Trust Pharmacy,Arakale,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,6,880,5280,Cash,Insurance (HMO)
+AK-1967,2025-09-01,16:58,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,2090,2090,Cash,Insurance (HMO)
+AK-1968,2025-09-01,17:01,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,5,1050,5250,Cash,Prescription
+AK-1969,2025-09-02,12:04,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,580,580,Cash,Prescription
+AK-1970,2025-09-02,13:19,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,540,1080,Transfer,Walk-in
+AK-1971,2025-09-02,18:48,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,350,350,POS/Card,Insurance (HMO)
+AK-1972,2025-09-03,17:56,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1270,1270,Cash,Walk-in
+AK-1973,2025-09-03,20:44,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,950,1900,Cash,Walk-in
+AK-1974,2025-09-04,09:41,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,2,1270,2540,Cash,Walk-in
+AK-1975,2025-09-04,15:13,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,5,410,2050,Cash,Walk-in
+AK-1976,2025-09-04,15:21,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2710,2710,Cash,Insurance (HMO)
+AK-1977,2025-09-04,15:27,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2260,4520,Transfer,Prescription
+AK-1978,2025-09-04,15:31,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,520,520,Cash,Walk-in
+AK-1979,2025-09-05,11:42,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1700,1700,Cash,Walk-in
+AK-1980,2025-09-05,15:02,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Zinc + Vitamin C,Supplement,4,1290,5160,Transfer,Walk-in
+AK-1981,2025-09-05,17:05,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,4,900,3600,Cash,Prescription
+AK-1982,2025-09-05,19:39,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,4,1050,4200,Cash,Walk-in
+AK-1983,2025-09-05,20:48,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,440,880,Cash,Prescription
+AK-1984,2025-09-06,09:26,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,5,1280,6400,Cash,Walk-in
+AK-1985,2025-09-06,10:49,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,10,390,3900,Cash,Prescription
+AK-1986,2025-09-06,11:12,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,6,1630,9780,Cash,Walk-in
+AK-1987,2025-09-06,14:26,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,890,890,POS/Card,Walk-in
+AK-1988,2025-09-06,19:42,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,4,290,1160,Cash,Insurance (HMO)
+AK-1989,2025-09-06,20:52,Trust Pharmacy,Arakale,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,3,1990,5970,Cash,Prescription
+AK-1990,2025-09-07,12:41,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1630,3260,POS/Card,Walk-in
+AK-1991,2025-09-07,13:10,Akure City Pharmacy,Oja Oba,Akure,Ondo,ORS Sachet,Rehydration,3,150,450,Transfer,Prescription
+AK-1992,2025-09-07,16:43,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,630,1260,Cash,Walk-in
+AK-1993,2025-09-08,13:28,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,3,2290,6870,Cash,Prescription
+AK-1994,2025-09-08,14:58,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,1,480,480,Cash,Prescription
+AK-1995,2025-09-08,15:04,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Multivitamin Syrup,Supplement,1,1600,1600,Cash,Walk-in
+AK-1996,2025-09-08,16:10,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Diclofenac Gel,Topical,2,1560,3120,POS/Card,Prescription
+AK-1997,2025-09-08,17:03,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,420,420,POS/Card,Prescription
+AK-1998,2025-09-08,17:41,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,4,2760,11040,Cash,Walk-in
+AK-1999,2025-09-09,11:02,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Folic Acid Tablets,Supplement,2,340,680,POS/Card,Prescription
+AK-2000,2025-09-09,11:35,Akure City Pharmacy,Oja Oba,Akure,Ondo,ORS Sachet,Rehydration,1,120,120,Transfer,Walk-in
+AK-2001,2025-09-09,16:42,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1200,1200,POS/Card,Walk-in
+AK-2002,2025-09-09,16:47,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,5,1430,7150,POS/Card,Walk-in
+AK-2003,2025-09-09,19:45,Akure City Pharmacy,Oja Oba,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1240,2480,Cash,Prescription
+AK-2004,2025-09-10,12:43,Akure City Pharmacy,Oja Oba,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,350,1050,POS/Card,Walk-in
+AK-2005,2025-09-10,14:26,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,560,560,POS/Card,Walk-in
+AK-2006,2025-09-10,14:43,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,3,1080,3240,POS/Card,Walk-in
+AK-2007,2025-09-11,09:14,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1550,3100,Transfer,Walk-in
+AK-2008,2025-09-11,10:41,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Zinc + Vitamin C,Supplement,3,1120,3360,POS/Card,Prescription
+AK-2009,2025-09-11,11:47,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,480,1440,Cash,Prescription
+AK-2010,2025-09-11,18:06,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1400,2800,Cash,Walk-in
+AK-2011,2025-09-11,18:21,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Multivitamin Syrup,Supplement,1,1640,1640,POS/Card,Walk-in
+AK-2012,2025-09-11,19:21,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,5,1010,5050,Cash,Prescription
+AK-2013,2025-09-12,12:28,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Panadol Extra,Analgesic,3,590,1770,Cash,Insurance (HMO)
+AK-2014,2025-09-12,16:25,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,4,2370,9480,Cash,Prescription
+AK-2015,2025-09-13,13:05,Akure City Pharmacy,Oja Oba,Akure,Ondo,Folic Acid Tablets,Supplement,1,450,450,Cash,Walk-in
+AK-2016,2025-09-13,13:28,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,5,260,1300,Cash,Prescription
+AK-2017,2025-09-13,16:14,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,2290,2290,Cash,Walk-in
+AK-2018,2025-09-13,16:28,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,1,130,130,POS/Card,Walk-in
+AK-2019,2025-09-13,20:36,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,540,540,POS/Card,Walk-in
+AK-2020,2025-09-14,10:26,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,4,2030,8120,Transfer,Prescription
+AK-2021,2025-09-14,13:31,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1120,2240,Transfer,Insurance (HMO)
+AK-2022,2025-09-15,11:02,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,1900,1900,POS/Card,Walk-in
+AK-2023,2025-09-15,14:55,Akure City Pharmacy,Oja Oba,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,4,340,1360,Cash,Prescription
+AK-2024,2025-09-15,18:49,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,1,510,510,Cash,Walk-in
+AK-2025,2025-09-15,19:03,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Multivitamin Syrup,Supplement,2,1910,3820,Transfer,Walk-in
+AK-2026,2025-09-15,19:24,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,4,1310,5240,POS/Card,Walk-in
+AK-2027,2025-09-16,10:31,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,840,1680,Transfer,Prescription
+AK-2028,2025-09-16,12:00,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,5,950,4750,Cash,Walk-in
+AK-2029,2025-09-16,14:55,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Vitamin C 1000mg,Supplement,2,890,1780,Cash,Prescription
+AK-2030,2025-09-16,15:53,Trust Pharmacy,Arakale,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,440,440,Cash,Walk-in
+AK-2031,2025-09-16,20:25,Trust Pharmacy,Arakale,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,920,920,POS/Card,Walk-in
+AK-2032,2025-09-17,12:57,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Diclofenac Gel,Topical,2,1500,3000,Cash,Walk-in
+AK-2033,2025-09-17,14:00,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Vitamin C 1000mg,Supplement,2,960,1920,POS/Card,Prescription
+AK-2034,2025-09-17,14:39,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,4,410,1640,POS/Card,Walk-in
+AK-2035,2025-09-17,17:45,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Panadol Extra,Analgesic,1,750,750,POS/Card,Insurance (HMO)
+AK-2036,2025-09-17,20:42,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1300,2600,Transfer,Prescription
+AK-2037,2025-09-18,08:36,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,4,800,3200,POS/Card,Walk-in
+AK-2038,2025-09-18,09:47,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1330,1330,POS/Card,Insurance (HMO)
+AK-2039,2025-09-18,13:09,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,5,1210,6050,Cash,Walk-in
+AK-2040,2025-09-18,16:45,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,2,880,1760,Cash,Walk-in
+AK-2041,2025-09-18,18:21,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,6,490,2940,Transfer,Prescription
+AK-2042,2025-09-18,18:37,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,650,650,Cash,Walk-in
+AK-2043,2025-09-18,20:37,Trust Pharmacy,Arakale,Akure,Ondo,Diclofenac Gel,Topical,1,920,920,Cash,Prescription
+AK-2044,2025-09-19,11:52,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,380,380,Transfer,Insurance (HMO)
+AK-2045,2025-09-19,13:37,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,940,940,POS/Card,Prescription
+AK-2046,2025-09-19,17:02,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,1,1460,1460,Transfer,Walk-in
+AK-2047,2025-09-20,13:30,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,4,890,3560,Cash,Walk-in
+AK-2048,2025-09-20,13:47,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1180,1180,Cash,Walk-in
+AK-2049,2025-09-20,14:54,Akure City Pharmacy,Oja Oba,Akure,Ondo,Multivitamin Syrup,Supplement,3,1560,4680,POS/Card,Walk-in
+AK-2050,2025-09-20,15:05,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,3,380,1140,Transfer,Walk-in
+AK-2051,2025-09-20,15:24,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1210,1210,Cash,Insurance (HMO)
+AK-2052,2025-09-20,19:23,Ondo State Pharmacy,FUTA Road,Akure,Ondo,ORS Sachet,Rehydration,2,180,360,POS/Card,Insurance (HMO)
+AK-2053,2025-09-21,11:40,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,680,680,POS/Card,Prescription
+AK-2054,2025-09-21,11:43,Akure City Pharmacy,Oja Oba,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,5,2410,12050,POS/Card,Walk-in
+AK-2055,2025-09-21,14:19,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1540,1540,Cash,Walk-in
+AK-2056,2025-09-21,15:16,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,1,640,640,POS/Card,Walk-in
+AK-2057,2025-09-21,19:52,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,2,770,1540,POS/Card,Walk-in
+AK-2058,2025-09-22,08:52,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,520,520,Cash,Walk-in
+AK-2059,2025-09-22,10:27,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1160,1160,Cash,Insurance (HMO)
+AK-2060,2025-09-22,12:05,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Panadol Extra,Analgesic,1,740,740,Transfer,Prescription
+AK-2061,2025-09-22,15:20,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,4,410,1640,POS/Card,Walk-in
+AK-2062,2025-09-22,15:32,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Zinc + Vitamin C,Supplement,3,870,2610,Transfer,Prescription
+AK-2063,2025-09-22,19:05,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,500,1000,Cash,Prescription
+AK-2064,2025-09-23,09:02,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,530,1590,Transfer,Walk-in
+AK-2065,2025-09-23,14:22,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,2,540,1080,POS/Card,Walk-in
+AK-2066,2025-09-24,12:05,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1090,3270,Transfer,Walk-in
+AK-2067,2025-09-24,12:28,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1700,3400,POS/Card,Walk-in
+AK-2068,2025-09-24,17:18,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,680,1360,Transfer,Walk-in
+AK-2069,2025-09-24,18:35,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Diclofenac Gel,Topical,1,1420,1420,Transfer,Insurance (HMO)
+AK-2070,2025-09-25,12:39,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Folic Acid Tablets,Supplement,5,450,2250,Transfer,Insurance (HMO)
+AK-2071,2025-09-25,14:13,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,5,340,1700,POS/Card,Walk-in
+AK-2072,2025-09-25,16:03,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,1790,3580,Cash,Prescription
+AK-2073,2025-09-25,16:24,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,970,1940,Transfer,Prescription
+AK-2074,2025-09-25,17:00,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,240,480,Cash,Walk-in
+AK-2075,2025-09-25,19:44,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,1800,5400,Cash,Walk-in
+AK-2076,2025-09-26,10:33,Trust Pharmacy,Arakale,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,740,740,Cash,Prescription
+AK-2077,2025-09-26,12:04,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,ORS Sachet,Rehydration,2,100,200,Cash,Walk-in
+AK-2078,2025-09-26,13:58,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,6,2710,16260,POS/Card,Walk-in
+AK-2079,2025-09-26,14:03,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1490,4470,POS/Card,Walk-in
+AK-2080,2025-09-26,14:42,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1500,3000,Cash,Prescription
+AK-2081,2025-09-26,16:51,Trust Pharmacy,Arakale,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1580,1580,Cash,Prescription
+AK-2082,2025-09-27,09:41,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Diclofenac Gel,Topical,5,1370,6850,POS/Card,Walk-in
+AK-2083,2025-09-27,09:50,Trust Pharmacy,Arakale,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,400,1200,Transfer,Insurance (HMO)
+AK-2084,2025-09-27,16:11,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Zinc + Vitamin C,Supplement,6,730,4380,POS/Card,Walk-in
+AK-2085,2025-09-28,08:07,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1040,2080,Cash,Prescription
+AK-2086,2025-09-28,11:36,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,330,660,POS/Card,Walk-in
+AK-2087,2025-09-28,12:36,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,3,990,2970,Cash,Prescription
+AK-2088,2025-09-28,13:07,Akure City Pharmacy,Oja Oba,Akure,Ondo,ORS Sachet,Rehydration,2,100,200,POS/Card,Insurance (HMO)
+AK-2089,2025-09-28,15:28,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Panadol Extra,Analgesic,2,600,1200,Transfer,Prescription
+AK-2090,2025-09-28,18:39,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,300,600,POS/Card,Walk-in
+AK-2091,2025-09-29,10:49,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,510,1530,POS/Card,Walk-in
+AK-2092,2025-09-29,11:15,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,1,590,590,Transfer,Walk-in
+AK-2093,2025-09-29,13:19,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1620,3240,Cash,Prescription
+AK-2094,2025-09-29,14:54,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,460,460,Cash,Walk-in
+AK-2095,2025-09-29,18:19,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,460,1380,POS/Card,Walk-in
+AK-2096,2025-09-29,18:51,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,1,1690,1690,Transfer,Walk-in
+AK-2097,2025-09-30,08:49,Akure City Pharmacy,Oja Oba,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,1770,3540,Transfer,Walk-in
+AK-2098,2025-09-30,09:25,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,3,330,990,Cash,Prescription
+AK-2099,2025-09-30,12:32,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2190,2190,Transfer,Prescription
+AK-2100,2025-09-30,15:39,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,640,640,Cash,Walk-in
+AK-2101,2025-09-30,16:44,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,1,600,600,Transfer,Prescription
+AK-2102,2025-10-01,09:59,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,390,390,POS/Card,Prescription
+AK-2103,2025-10-01,14:18,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2360,4720,Cash,Prescription
+AK-2104,2025-10-01,18:33,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,10,520,5200,Transfer,Prescription
+AK-2105,2025-10-01,19:29,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,890,1780,POS/Card,Walk-in
+AK-2106,2025-10-02,11:47,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1300,1300,Transfer,Walk-in
+AK-2107,2025-10-02,14:41,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,580,2320,Cash,Prescription
+AK-2108,2025-10-02,15:48,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,2700,5400,POS/Card,Prescription
+AK-2109,2025-10-02,19:06,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,480,960,POS/Card,Prescription
+AK-2110,2025-10-03,12:35,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,3,730,2190,Cash,Walk-in
+AK-2111,2025-10-03,13:03,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,750,750,Cash,Walk-in
+AK-2112,2025-10-03,14:37,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Panadol Extra,Analgesic,2,840,1680,Transfer,Prescription
+AK-2113,2025-10-03,17:03,Akure City Pharmacy,Oja Oba,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,3,340,1020,POS/Card,Walk-in
+AK-2114,2025-10-03,20:36,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Panadol Extra,Analgesic,3,560,1680,Cash,Walk-in
+AK-2115,2025-10-04,11:44,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,5,1570,7850,POS/Card,Walk-in
+AK-2116,2025-10-04,12:24,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,10,2100,21000,Transfer,Walk-in
+AK-2117,2025-10-04,17:43,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,4,410,1640,Cash,Walk-in
+AK-2118,2025-10-04,18:08,Trust Pharmacy,Arakale,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1030,2060,Transfer,Walk-in
+AK-2119,2025-10-04,18:09,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1100,1100,Cash,Walk-in
+AK-2120,2025-10-05,08:30,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,2,1290,2580,Cash,Prescription
+AK-2121,2025-10-05,08:37,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1420,2840,Cash,Walk-in
+AK-2122,2025-10-05,08:41,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,710,710,Cash,Walk-in
+AK-2123,2025-10-05,09:00,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,520,520,Cash,Prescription
+AK-2124,2025-10-05,12:06,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,1710,3420,POS/Card,Walk-in
+AK-2125,2025-10-05,15:10,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,670,670,Transfer,Prescription
+AK-2126,2025-10-05,16:26,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,690,2760,POS/Card,Walk-in
+AK-2127,2025-10-05,18:19,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,ORS Sachet,Rehydration,3,170,510,POS/Card,Prescription
+AK-2128,2025-10-06,12:36,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Panadol Extra,Analgesic,4,680,2720,POS/Card,Prescription
+AK-2129,2025-10-06,13:19,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,3,1060,3180,Transfer,Prescription
+AK-2130,2025-10-06,13:25,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,4,370,1480,Transfer,Prescription
+AK-2131,2025-10-06,18:07,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Multivitamin Syrup,Supplement,3,1280,3840,POS/Card,Prescription
+AK-2132,2025-10-06,18:20,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,3,190,570,Cash,Prescription
+AK-2133,2025-10-07,15:35,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,2,930,1860,Cash,Walk-in
+AK-2134,2025-10-08,10:13,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,2,1070,2140,Cash,Walk-in
+AK-2135,2025-10-08,17:14,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,1,370,370,Transfer,Walk-in
+AK-2136,2025-10-09,08:27,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,390,1170,Cash,Walk-in
+AK-2137,2025-10-09,11:18,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,3,1050,3150,Transfer,Walk-in
+AK-2138,2025-10-09,12:27,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1070,2140,Cash,Walk-in
+AK-2139,2025-10-09,17:14,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,470,940,Cash,Walk-in
+AK-2140,2025-10-09,19:15,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,590,1180,Cash,Walk-in
+AK-2141,2025-10-09,19:54,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,3,1750,5250,Transfer,Insurance (HMO)
+AK-2142,2025-10-10,10:37,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Vitamin C 1000mg,Supplement,3,1430,4290,POS/Card,Walk-in
+AK-2143,2025-10-10,12:10,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,2,860,1720,Transfer,Walk-in
+AK-2144,2025-10-11,14:24,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,2,860,1720,POS/Card,Walk-in
+AK-2145,2025-10-11,15:29,Trust Pharmacy,Arakale,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,370,740,POS/Card,Walk-in
+AK-2146,2025-10-11,18:00,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,1,1140,1140,Cash,Walk-in
+AK-2147,2025-10-11,18:15,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,580,580,Cash,Walk-in
+AK-2148,2025-10-11,18:25,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1570,3140,POS/Card,Insurance (HMO)
+AK-2149,2025-10-11,19:57,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1700,3400,POS/Card,Prescription
+AK-2150,2025-10-12,13:09,MedPlus Pharmacy,Alagbaka,Akure,Ondo,ORS Sachet,Rehydration,2,140,280,POS/Card,Prescription
+AK-2151,2025-10-12,14:15,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,6,320,1920,Cash,Walk-in
+AK-2152,2025-10-12,16:54,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,10,1490,14900,Cash,Prescription
+AK-2153,2025-10-12,19:19,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,690,690,POS/Card,Walk-in
+AK-2154,2025-10-13,13:47,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,4,1530,6120,Cash,Walk-in
+AK-2155,2025-10-13,15:48,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,640,1280,POS/Card,Insurance (HMO)
+AK-2156,2025-10-13,16:46,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,2390,2390,Cash,Walk-in
+AK-2157,2025-10-13,16:56,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,4,700,2800,Cash,Walk-in
+AK-2158,2025-10-14,08:22,Trust Pharmacy,Arakale,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,1620,4860,Cash,Prescription
+AK-2159,2025-10-14,08:22,Akure City Pharmacy,Oja Oba,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,640,1280,Cash,Walk-in
+AK-2160,2025-10-14,09:50,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,2780,5560,Cash,Walk-in
+AK-2161,2025-10-14,11:20,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,ORS Sachet,Rehydration,3,160,480,Transfer,Walk-in
+AK-2162,2025-10-14,14:33,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2230,4460,Cash,Walk-in
+AK-2163,2025-10-14,15:36,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,1620,1620,Cash,Prescription
+AK-2164,2025-10-14,16:15,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1280,2560,Cash,Prescription
+AK-2165,2025-10-14,18:08,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Diclofenac Gel,Topical,1,1070,1070,POS/Card,Insurance (HMO)
+AK-2166,2025-10-15,13:10,Akure City Pharmacy,Oja Oba,Akure,Ondo,ORS Sachet,Rehydration,3,160,480,POS/Card,Walk-in
+AK-2167,2025-10-15,13:58,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1320,3960,Cash,Walk-in
+AK-2168,2025-10-15,15:05,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,3,1790,5370,Transfer,Walk-in
+AK-2169,2025-10-15,16:19,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,6,380,2280,Cash,Walk-in
+AK-2170,2025-10-15,19:05,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,690,690,Transfer,Walk-in
+AK-2171,2025-10-16,13:02,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,4,2250,9000,POS/Card,Walk-in
+AK-2172,2025-10-16,14:28,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1730,1730,Cash,Prescription
+AK-2173,2025-10-16,17:47,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,760,1520,POS/Card,Walk-in
+AK-2174,2025-10-16,19:29,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,10,1080,10800,POS/Card,Walk-in
+AK-2175,2025-10-17,10:56,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,1,780,780,Cash,Insurance (HMO)
+AK-2176,2025-10-17,14:20,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,350,350,POS/Card,Prescription
+AK-2177,2025-10-17,16:19,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,420,420,Cash,Walk-in
+AK-2178,2025-10-18,10:51,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,390,780,POS/Card,Prescription
+AK-2179,2025-10-18,12:42,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1970,1970,POS/Card,Prescription
+AK-2180,2025-10-18,17:08,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,380,380,Cash,Walk-in
+AK-2181,2025-10-19,13:59,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,6,1510,9060,Cash,Prescription
+AK-2182,2025-10-19,17:38,Trust Pharmacy,Arakale,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1110,1110,POS/Card,Walk-in
+AK-2183,2025-10-20,11:21,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,10,460,4600,Transfer,Insurance (HMO)
+AK-2184,2025-10-20,14:19,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1050,2100,Cash,Prescription
+AK-2185,2025-10-20,17:23,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1550,4650,Transfer,Walk-in
+AK-2186,2025-10-20,18:01,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,6,730,4380,POS/Card,Prescription
+AK-2187,2025-10-21,10:59,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,3,840,2520,Transfer,Walk-in
+AK-2188,2025-10-21,11:32,Trust Pharmacy,Arakale,Akure,Ondo,ORS Sachet,Rehydration,4,160,640,Cash,Prescription
+AK-2189,2025-10-21,11:49,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Panadol Extra,Analgesic,2,630,1260,Cash,Walk-in
+AK-2190,2025-10-21,15:08,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,920,920,Cash,Insurance (HMO)
+AK-2191,2025-10-21,17:21,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,1,910,910,Cash,Walk-in
+AK-2192,2025-10-21,19:30,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1050,2100,Cash,Walk-in
+AK-2193,2025-10-22,12:07,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1420,1420,Cash,Walk-in
+AK-2194,2025-10-22,12:43,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Panadol Extra,Analgesic,2,620,1240,Cash,Walk-in
+AK-2195,2025-10-22,13:05,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1690,3380,POS/Card,Prescription
+AK-2196,2025-10-22,14:21,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Folic Acid Tablets,Supplement,1,510,510,Cash,Walk-in
+AK-2197,2025-10-22,14:57,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,6,430,2580,Cash,Prescription
+AK-2198,2025-10-22,16:25,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,380,380,Cash,Prescription
+AK-2199,2025-10-22,18:49,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1670,1670,Cash,Walk-in
+AK-2200,2025-10-23,13:55,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,4,2180,8720,Cash,Prescription
+AK-2201,2025-10-23,16:31,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,770,770,Cash,Walk-in
+AK-2202,2025-10-23,17:12,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,3,450,1350,Transfer,Walk-in
+AK-2203,2025-10-23,17:42,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,1,120,120,Cash,Walk-in
+AK-2204,2025-10-23,19:33,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Vitamin C 1000mg,Supplement,6,1200,7200,Transfer,Walk-in
+AK-2205,2025-10-23,20:32,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,1,530,530,Transfer,Prescription
+AK-2206,2025-10-24,11:49,Akure City Pharmacy,Oja Oba,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,5,1460,7300,Cash,Walk-in
+AK-2207,2025-10-24,16:13,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,3,850,2550,Transfer,Walk-in
+AK-2208,2025-10-24,17:02,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,280,280,Cash,Walk-in
+AK-2209,2025-10-24,19:47,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Folic Acid Tablets,Supplement,2,410,820,POS/Card,Prescription
+AK-2210,2025-10-25,09:39,Trust Pharmacy,Arakale,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,400,400,Cash,Walk-in
+AK-2211,2025-10-25,11:07,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,1,330,330,Cash,Prescription
+AK-2212,2025-10-25,17:39,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,630,1890,POS/Card,Walk-in
+AK-2213,2025-10-26,12:29,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1190,1190,Cash,Prescription
+AK-2214,2025-10-26,13:42,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,2180,4360,Cash,Walk-in
+AK-2215,2025-10-26,14:29,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,5,2410,12050,Transfer,Walk-in
+AK-2216,2025-10-26,14:52,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,6,630,3780,Transfer,Prescription
+AK-2217,2025-10-26,16:05,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,980,980,POS/Card,Walk-in
+AK-2218,2025-10-26,18:29,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,420,840,POS/Card,Prescription
+AK-2219,2025-10-27,11:43,MedPlus Pharmacy,Alagbaka,Akure,Ondo,ORS Sachet,Rehydration,2,170,340,POS/Card,Walk-in
+AK-2220,2025-10-27,13:57,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Diclofenac Gel,Topical,2,910,1820,Transfer,Walk-in
+AK-2221,2025-10-27,15:17,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Folic Acid Tablets,Supplement,3,570,1710,POS/Card,Walk-in
+AK-2222,2025-10-27,16:54,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Zinc + Vitamin C,Supplement,6,1180,7080,Cash,Walk-in
+AK-2223,2025-10-27,20:28,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,6,400,2400,Cash,Walk-in
+AK-2224,2025-10-28,11:12,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1040,1040,Cash,Insurance (HMO)
+AK-2225,2025-10-28,18:24,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Panadol Extra,Analgesic,6,650,3900,Cash,Walk-in
+AK-2226,2025-10-29,16:14,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Diclofenac Gel,Topical,3,1310,3930,Cash,Walk-in
+AK-2227,2025-10-30,12:34,Trust Pharmacy,Arakale,Akure,Ondo,Diclofenac Gel,Topical,2,1560,3120,POS/Card,Walk-in
+AK-2228,2025-10-30,14:49,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Diclofenac Gel,Topical,5,1330,6650,Transfer,Walk-in
+AK-2229,2025-10-30,18:32,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,380,760,Cash,Walk-in
+AK-2230,2025-10-30,19:08,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Panadol Extra,Analgesic,10,660,6600,POS/Card,Prescription
+AK-2231,2025-10-30,19:27,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,450,450,Cash,Insurance (HMO)
+AK-2232,2025-10-31,09:06,Trust Pharmacy,Arakale,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,2210,4420,Cash,Insurance (HMO)
+AK-2233,2025-10-31,13:47,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,440,1320,Transfer,Walk-in
+AK-2234,2025-10-31,17:04,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Panadol Extra,Analgesic,1,610,610,Cash,Prescription
+AK-2235,2025-10-31,18:48,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2760,2760,Transfer,Walk-in
+AK-2236,2025-10-31,20:51,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1250,2500,POS/Card,Walk-in
+AK-2237,2025-11-01,08:12,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,2640,5280,Transfer,Walk-in
+AK-2238,2025-11-01,09:36,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,550,1100,Cash,Walk-in
+AK-2239,2025-11-01,14:54,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,5,1440,7200,Cash,Walk-in
+AK-2240,2025-11-01,16:01,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1390,2780,Cash,Prescription
+AK-2241,2025-11-01,17:51,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1570,3140,Cash,Prescription
+AK-2242,2025-11-01,19:13,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,370,370,POS/Card,Walk-in
+AK-2243,2025-11-02,09:05,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,4,1030,4120,POS/Card,Prescription
+AK-2244,2025-11-02,09:59,Akure City Pharmacy,Oja Oba,Akure,Ondo,Multivitamin Syrup,Supplement,1,1670,1670,POS/Card,Prescription
+AK-2245,2025-11-02,14:22,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1620,1620,Cash,Insurance (HMO)
+AK-2246,2025-11-03,12:03,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1070,1070,Transfer,Prescription
+AK-2247,2025-11-03,12:05,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,3,1780,5340,POS/Card,Walk-in
+AK-2248,2025-11-03,12:43,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,760,760,Transfer,Prescription
+AK-2249,2025-11-03,12:43,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Folic Acid Tablets,Supplement,2,520,1040,Transfer,Prescription
+AK-2250,2025-11-03,14:11,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1590,3180,Cash,Prescription
+AK-2251,2025-11-04,09:41,Akure City Pharmacy,Oja Oba,Akure,Ondo,Diclofenac Gel,Topical,4,1260,5040,POS/Card,Prescription
+AK-2252,2025-11-04,10:23,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,1,890,890,Transfer,Insurance (HMO)
+AK-2253,2025-11-04,12:26,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,3,1350,4050,POS/Card,Insurance (HMO)
+AK-2254,2025-11-04,16:59,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1950,1950,Cash,Prescription
+AK-2255,2025-11-05,10:19,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,690,690,Cash,Walk-in
+AK-2256,2025-11-05,11:13,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,5,960,4800,POS/Card,Walk-in
+AK-2257,2025-11-05,11:28,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,2130,4260,Transfer,Prescription
+AK-2258,2025-11-05,14:21,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Panadol Extra,Analgesic,1,700,700,Cash,Walk-in
+AK-2259,2025-11-05,15:42,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1590,1590,Transfer,Walk-in
+AK-2260,2025-11-05,16:25,Trust Pharmacy,Arakale,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1630,4890,Cash,Prescription
+AK-2261,2025-11-06,09:18,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,3,1750,5250,Cash,Insurance (HMO)
+AK-2262,2025-11-06,10:34,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,4,420,1680,POS/Card,Prescription
+AK-2263,2025-11-06,10:54,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,1,1390,1390,Transfer,Walk-in
+AK-2264,2025-11-06,13:10,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,5,1270,6350,POS/Card,Walk-in
+AK-2265,2025-11-06,13:49,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,4,320,1280,POS/Card,Walk-in
+AK-2266,2025-11-06,17:41,Akure City Pharmacy,Oja Oba,Akure,Ondo,Folic Acid Tablets,Supplement,2,510,1020,Transfer,Walk-in
+AK-2267,2025-11-07,08:55,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2460,2460,Cash,Insurance (HMO)
+AK-2268,2025-11-07,10:20,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Diclofenac Gel,Topical,3,1420,4260,POS/Card,Walk-in
+AK-2269,2025-11-07,10:46,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Vitamin C 1000mg,Supplement,2,1270,2540,POS/Card,Prescription
+AK-2270,2025-11-07,12:53,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,420,1260,Cash,Walk-in
+AK-2271,2025-11-07,13:57,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,860,860,POS/Card,Walk-in
+AK-2272,2025-11-07,16:08,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,460,460,Cash,Insurance (HMO)
+AK-2273,2025-11-07,16:13,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,3,1070,3210,POS/Card,Walk-in
+AK-2274,2025-11-08,13:01,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,560,560,Transfer,Prescription
+AK-2275,2025-11-08,16:39,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1500,6000,Cash,Walk-in
+AK-2276,2025-11-08,20:14,Trust Pharmacy,Arakale,Akure,Ondo,Panadol Extra,Analgesic,2,880,1760,Cash,Walk-in
+AK-2277,2025-11-08,20:58,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Multivitamin Syrup,Supplement,1,1210,1210,POS/Card,Walk-in
+AK-2278,2025-11-09,17:19,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,330,330,POS/Card,Walk-in
+AK-2279,2025-11-09,17:47,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,10,1000,10000,Cash,Walk-in
+AK-2280,2025-11-09,20:19,Trust Pharmacy,Arakale,Akure,Ondo,ORS Sachet,Rehydration,6,140,840,POS/Card,Walk-in
+AK-2281,2025-11-10,11:35,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Panadol Extra,Analgesic,4,710,2840,POS/Card,Walk-in
+AK-2282,2025-11-10,12:56,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,940,940,Cash,Prescription
+AK-2283,2025-11-10,14:42,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Panadol Extra,Analgesic,2,520,1040,POS/Card,Insurance (HMO)
+AK-2284,2025-11-10,15:28,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,680,680,Cash,Walk-in
+AK-2285,2025-11-10,18:28,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,1,840,840,Transfer,Walk-in
+AK-2286,2025-11-10,19:43,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,3,2190,6570,POS/Card,Walk-in
+AK-2287,2025-11-11,14:03,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,740,740,Cash,Prescription
+AK-2288,2025-11-11,19:46,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,3,420,1260,POS/Card,Insurance (HMO)
+AK-2289,2025-11-12,11:33,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,440,880,Transfer,Prescription
+AK-2290,2025-11-12,13:00,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Diclofenac Gel,Topical,1,1480,1480,Cash,Walk-in
+AK-2291,2025-11-12,13:51,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1030,1030,POS/Card,Walk-in
+AK-2292,2025-11-12,16:09,Trust Pharmacy,Arakale,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,210,210,Transfer,Walk-in
+AK-2293,2025-11-12,16:33,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1940,1940,Transfer,Walk-in
+AK-2294,2025-11-13,14:51,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,5,1260,6300,Cash,Insurance (HMO)
+AK-2295,2025-11-13,16:39,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Vitamin C 1000mg,Supplement,4,920,3680,Transfer,Prescription
+AK-2296,2025-11-13,16:58,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,2100,4200,Cash,Walk-in
+AK-2297,2025-11-14,16:41,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,1,220,220,POS/Card,Walk-in
+AK-2298,2025-11-14,19:36,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Panadol Extra,Analgesic,1,640,640,Cash,Prescription
+AK-2299,2025-11-15,15:20,Trust Pharmacy,Arakale,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,6,1560,9360,Cash,Walk-in
+AK-2300,2025-11-16,09:07,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,10,370,3700,Cash,Prescription
+AK-2301,2025-11-16,11:31,Trust Pharmacy,Arakale,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,610,610,POS/Card,Walk-in
+AK-2302,2025-11-16,13:18,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,1,490,490,POS/Card,Walk-in
+AK-2303,2025-11-16,13:23,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1770,1770,POS/Card,Walk-in
+AK-2304,2025-11-16,14:11,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Vitamin C 1000mg,Supplement,3,1310,3930,POS/Card,Prescription
+AK-2305,2025-11-16,19:32,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,6,1640,9840,Transfer,Prescription
+AK-2306,2025-11-17,12:14,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Zinc + Vitamin C,Supplement,4,1260,5040,Cash,Prescription
+AK-2307,2025-11-17,12:41,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,4,530,2120,POS/Card,Prescription
+AK-2308,2025-11-17,13:26,Trust Pharmacy,Arakale,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,530,530,POS/Card,Prescription
+AK-2309,2025-11-17,17:20,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,780,1560,Transfer,Prescription
+AK-2310,2025-11-17,20:30,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,10,490,4900,POS/Card,Walk-in
+AK-2311,2025-11-18,10:28,Trust Pharmacy,Arakale,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,1000,1000,Transfer,Walk-in
+AK-2312,2025-11-18,12:05,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Diclofenac Gel,Topical,1,970,970,Cash,Walk-in
+AK-2313,2025-11-18,13:40,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,760,760,Cash,Walk-in
+AK-2314,2025-11-19,11:46,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1150,1150,POS/Card,Walk-in
+AK-2315,2025-11-19,16:01,Trust Pharmacy,Arakale,Akure,Ondo,Diclofenac Gel,Topical,1,950,950,POS/Card,Walk-in
+AK-2316,2025-11-20,08:57,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1260,1260,Transfer,Walk-in
+AK-2317,2025-11-20,10:45,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1080,1080,Cash,Prescription
+AK-2318,2025-11-20,11:42,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,360,360,Transfer,Walk-in
+AK-2319,2025-11-20,12:17,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2200,2200,Cash,Walk-in
+AK-2320,2025-11-20,14:19,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Diclofenac Gel,Topical,4,1190,4760,Cash,Prescription
+AK-2321,2025-11-20,16:42,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2640,2640,POS/Card,Walk-in
+AK-2322,2025-11-20,19:30,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,4,740,2960,Transfer,Prescription
+AK-2323,2025-11-21,08:53,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,4,460,1840,Transfer,Walk-in
+AK-2324,2025-11-21,13:50,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,10,770,7700,Cash,Walk-in
+AK-2325,2025-11-21,14:50,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,450,450,POS/Card,Walk-in
+AK-2326,2025-11-21,14:52,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,960,1920,Cash,Prescription
+AK-2327,2025-11-21,16:35,Akure City Pharmacy,Oja Oba,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,3,1690,5070,Cash,Walk-in
+AK-2328,2025-11-21,16:49,Trust Pharmacy,Arakale,Akure,Ondo,Diclofenac Gel,Topical,1,1120,1120,POS/Card,Walk-in
+AK-2329,2025-11-21,17:44,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,2180,4360,POS/Card,Walk-in
+AK-2330,2025-11-22,12:28,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,880,1760,Cash,Walk-in
+AK-2331,2025-11-22,12:45,Trust Pharmacy,Arakale,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1260,1260,Cash,Walk-in
+AK-2332,2025-11-22,15:12,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Vitamin C 1000mg,Supplement,3,1260,3780,POS/Card,Walk-in
+AK-2333,2025-11-23,10:40,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,2,110,220,Transfer,Walk-in
+AK-2334,2025-11-23,12:17,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,360,720,Cash,Walk-in
+AK-2335,2025-11-23,12:49,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,ORS Sachet,Rehydration,4,200,800,Cash,Walk-in
+AK-2336,2025-11-23,14:17,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,1,1240,1240,POS/Card,Walk-in
+AK-2337,2025-11-23,15:51,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,470,470,Cash,Prescription
+AK-2338,2025-11-23,17:00,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1540,1540,POS/Card,Walk-in
+AK-2339,2025-11-24,12:17,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,4,1410,5640,Cash,Walk-in
+AK-2340,2025-11-24,14:44,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1740,5220,Transfer,Walk-in
+AK-2341,2025-11-24,16:57,Akure City Pharmacy,Oja Oba,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,3,360,1080,Cash,Prescription
+AK-2342,2025-11-24,19:29,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1020,1020,Transfer,Walk-in
+AK-2343,2025-11-25,09:47,Akure City Pharmacy,Oja Oba,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,4,240,960,Cash,Prescription
+AK-2344,2025-11-25,11:53,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,4,1450,5800,Transfer,Prescription
+AK-2345,2025-11-25,12:36,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,4,370,1480,Cash,Walk-in
+AK-2346,2025-11-25,13:57,Trust Pharmacy,Arakale,Akure,Ondo,ORS Sachet,Rehydration,4,170,680,Transfer,Walk-in
+AK-2347,2025-11-25,18:18,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Diclofenac Gel,Topical,1,1550,1550,Transfer,Prescription
+AK-2348,2025-11-26,14:19,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Folic Acid Tablets,Supplement,5,550,2750,Cash,Walk-in
+AK-2349,2025-11-27,11:15,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1140,3420,Cash,Walk-in
+AK-2350,2025-11-27,13:23,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2080,4160,Cash,Walk-in
+AK-2351,2025-11-27,13:40,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,3,2010,6030,POS/Card,Walk-in
+AK-2352,2025-11-27,17:25,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,2350,4700,POS/Card,Walk-in
+AK-2353,2025-11-27,17:57,Akure City Pharmacy,Oja Oba,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,300,600,POS/Card,Walk-in
+AK-2354,2025-11-27,18:34,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,3,1730,5190,Cash,Walk-in
+AK-2355,2025-11-27,18:52,Akure City Pharmacy,Oja Oba,Akure,Ondo,ORS Sachet,Rehydration,2,150,300,POS/Card,Prescription
+AK-2356,2025-11-27,19:41,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1020,1020,Transfer,Walk-in
+AK-2357,2025-11-28,15:55,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1490,4470,Cash,Insurance (HMO)
+AK-2358,2025-11-28,16:59,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,550,1100,POS/Card,Walk-in
+AK-2359,2025-11-28,18:11,Akure City Pharmacy,Oja Oba,Akure,Ondo,Vitamin C 1000mg,Supplement,2,910,1820,POS/Card,Walk-in
+AK-2360,2025-11-29,08:10,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,2270,4540,POS/Card,Walk-in
+AK-2361,2025-11-29,08:15,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Diclofenac Gel,Topical,2,1050,2100,POS/Card,Walk-in
+AK-2362,2025-11-29,18:07,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1900,3800,POS/Card,Prescription
+AK-2363,2025-11-29,19:15,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Chloroquine Phosphate,Antimalarial,3,630,1890,Cash,Prescription
+AK-2364,2025-11-29,20:24,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,940,940,Cash,Walk-in
+AK-2365,2025-11-30,09:59,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,6,1000,6000,POS/Card,Walk-in
+AK-2366,2025-11-30,12:17,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,3,470,1410,Cash,Insurance (HMO)
+AK-2367,2025-11-30,16:17,Trust Pharmacy,Arakale,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,5,1560,7800,Transfer,Walk-in
+AK-2368,2025-11-30,18:24,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,2090,6270,Cash,Prescription
+AK-2369,2025-11-30,20:05,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,2290,4580,POS/Card,Prescription
+AK-2370,2025-11-30,20:20,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1710,1710,Cash,Walk-in
+AK-2371,2025-12-01,08:40,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,5,750,3750,Cash,Prescription
+AK-2372,2025-12-01,10:51,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,4,760,3040,Cash,Prescription
+AK-2373,2025-12-01,11:34,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,2,1550,3100,Transfer,Walk-in
+AK-2374,2025-12-01,16:31,Trust Pharmacy,Arakale,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,900,900,Cash,Walk-in
+AK-2375,2025-12-01,16:48,Trust Pharmacy,Arakale,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1110,2220,Cash,Prescription
+AK-2376,2025-12-02,13:06,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,2060,4120,POS/Card,Insurance (HMO)
+AK-2377,2025-12-02,16:03,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Multivitamin Syrup,Supplement,3,1650,4950,POS/Card,Walk-in
+AK-2378,2025-12-02,17:28,Akure City Pharmacy,Oja Oba,Akure,Ondo,Multivitamin Syrup,Supplement,6,1840,11040,POS/Card,Prescription
+AK-2379,2025-12-02,18:23,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,540,1080,Transfer,Walk-in
+AK-2380,2025-12-03,11:51,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,440,880,Cash,Walk-in
+AK-2381,2025-12-03,13:12,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,2040,2040,Transfer,Prescription
+AK-2382,2025-12-03,15:04,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Vitamin C 1000mg,Supplement,5,1290,6450,Cash,Walk-in
+AK-2383,2025-12-03,15:43,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,ORS Sachet,Rehydration,1,180,180,POS/Card,Prescription
+AK-2384,2025-12-03,15:48,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,860,860,Cash,Prescription
+AK-2385,2025-12-03,16:47,Trust Pharmacy,Arakale,Akure,Ondo,Vitamin C 1000mg,Supplement,5,1200,6000,Transfer,Prescription
+AK-2386,2025-12-04,08:06,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Zinc + Vitamin C,Supplement,1,960,960,Cash,Walk-in
+AK-2387,2025-12-04,10:12,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,4,1330,5320,Cash,Walk-in
+AK-2388,2025-12-04,10:41,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,3,1100,3300,Transfer,Prescription
+AK-2389,2025-12-04,12:25,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,2,390,780,Cash,Walk-in
+AK-2390,2025-12-04,13:43,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,3,320,960,Cash,Walk-in
+AK-2391,2025-12-04,14:50,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,2,530,1060,Transfer,Walk-in
+AK-2392,2025-12-04,18:49,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,410,820,Cash,Insurance (HMO)
+AK-2393,2025-12-05,13:02,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1730,3460,Cash,Prescription
+AK-2394,2025-12-05,14:49,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amoxicillin 500mg (Cap),Antibiotic,1,1560,1560,Transfer,Prescription
+AK-2395,2025-12-05,16:16,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,450,450,Cash,Insurance (HMO)
+AK-2396,2025-12-05,18:55,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,3,2220,6660,Cash,Prescription
+AK-2397,2025-12-06,12:44,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Zinc + Vitamin C,Supplement,2,1050,2100,Cash,Prescription
+AK-2398,2025-12-06,14:35,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1750,3500,Transfer,Prescription
+AK-2399,2025-12-07,10:17,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,1060,1060,POS/Card,Walk-in
+AK-2400,2025-12-07,12:58,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,1960,1960,POS/Card,Walk-in
+AK-2401,2025-12-07,15:42,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1600,4800,Cash,Walk-in
+AK-2402,2025-12-08,11:02,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,2530,2530,Cash,Walk-in
+AK-2403,2025-12-08,11:03,Akure City Pharmacy,Oja Oba,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,3,2610,7830,Cash,Prescription
+AK-2404,2025-12-08,11:30,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,1000,1000,POS/Card,Walk-in
+AK-2405,2025-12-08,11:48,Trust Pharmacy,Arakale,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,690,690,Transfer,Prescription
+AK-2406,2025-12-08,19:31,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,3,1950,5850,Cash,Prescription
+AK-2407,2025-12-09,10:10,Akure City Pharmacy,Oja Oba,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,6,370,2220,POS/Card,Prescription
+AK-2408,2025-12-09,10:11,Akure City Pharmacy,Oja Oba,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,2160,4320,POS/Card,Prescription
+AK-2409,2025-12-09,12:48,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,380,380,POS/Card,Walk-in
+AK-2410,2025-12-09,14:00,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,4,760,3040,POS/Card,Insurance (HMO)
+AK-2411,2025-12-09,19:19,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Multivitamin Syrup,Supplement,4,1290,5160,Transfer,Walk-in
+AK-2412,2025-12-09,19:35,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Panadol Extra,Analgesic,2,760,1520,Cash,Prescription
+AK-2413,2025-12-10,13:01,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,250,500,POS/Card,Walk-in
+AK-2414,2025-12-10,13:07,Akure City Pharmacy,Oja Oba,Akure,Ondo,Folic Acid Tablets,Supplement,5,500,2500,Cash,Prescription
+AK-2415,2025-12-10,17:45,Trust Pharmacy,Arakale,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1070,3210,POS/Card,Walk-in
+AK-2416,2025-12-11,11:01,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Diclofenac Gel,Topical,2,1550,3100,Transfer,Walk-in
+AK-2417,2025-12-11,13:40,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Vitamin C 1000mg,Supplement,3,930,2790,Cash,Walk-in
+AK-2418,2025-12-11,14:54,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,4,390,1560,Cash,Walk-in
+AK-2419,2025-12-11,18:34,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,4,840,3360,POS/Card,Prescription
+AK-2420,2025-12-12,09:03,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,4,870,3480,Cash,Walk-in
+AK-2421,2025-12-12,18:24,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,3,570,1710,POS/Card,Prescription
+AK-2422,2025-12-12,19:11,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1080,2160,POS/Card,Prescription
+AK-2423,2025-12-13,08:59,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Vitamin C 1000mg,Supplement,4,1370,5480,Transfer,Prescription
+AK-2424,2025-12-13,09:47,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,4,570,2280,POS/Card,Prescription
+AK-2425,2025-12-13,11:47,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,6,2180,13080,Cash,Walk-in
+AK-2426,2025-12-13,12:27,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,300,600,POS/Card,Walk-in
+AK-2427,2025-12-13,13:55,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,800,800,Cash,Prescription
+AK-2428,2025-12-13,16:57,Akure City Pharmacy,Oja Oba,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,600,600,POS/Card,Insurance (HMO)
+AK-2429,2025-12-14,10:15,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,460,460,POS/Card,Walk-in
+AK-2430,2025-12-14,11:51,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,2,520,1040,Cash,Walk-in
+AK-2431,2025-12-14,13:42,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Multivitamin Syrup,Supplement,1,1890,1890,POS/Card,Walk-in
+AK-2432,2025-12-14,15:48,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Multivitamin Syrup,Supplement,2,1900,3800,Cash,Walk-in
+AK-2433,2025-12-15,14:16,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,2,460,920,Cash,Prescription
+AK-2434,2025-12-15,17:37,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1440,1440,POS/Card,Prescription
+AK-2435,2025-12-16,15:31,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,510,510,POS/Card,Insurance (HMO)
+AK-2436,2025-12-16,17:00,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,10,210,2100,POS/Card,Walk-in
+AK-2437,2025-12-17,08:13,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,620,1240,Cash,Prescription
+AK-2438,2025-12-17,09:50,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Vitamin C 1000mg,Supplement,3,980,2940,POS/Card,Prescription
+AK-2439,2025-12-17,13:27,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,2,800,1600,POS/Card,Prescription
+AK-2440,2025-12-17,14:13,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1700,3400,Cash,Walk-in
+AK-2441,2025-12-17,14:14,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,240,480,POS/Card,Prescription
+AK-2442,2025-12-17,15:09,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,340,340,Cash,Insurance (HMO)
+AK-2443,2025-12-17,18:57,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1420,2840,Cash,Prescription
+AK-2444,2025-12-18,08:55,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,5,330,1650,Cash,Walk-in
+AK-2445,2025-12-18,12:04,Akure City Pharmacy,Oja Oba,Akure,Ondo,Zinc + Vitamin C,Supplement,1,810,810,Cash,Insurance (HMO)
+AK-2446,2025-12-18,16:51,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1670,1670,Cash,Walk-in
+AK-2447,2025-12-18,18:59,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,2,1360,2720,Transfer,Walk-in
+AK-2448,2025-12-19,12:09,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1040,3120,POS/Card,Walk-in
+AK-2449,2025-12-19,13:00,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Multivitamin Syrup,Supplement,1,1270,1270,Cash,Walk-in
+AK-2450,2025-12-19,14:10,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,10,1100,11000,POS/Card,Prescription
+AK-2451,2025-12-19,17:34,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,400,400,POS/Card,Prescription
+AK-2452,2025-12-20,10:19,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,790,790,POS/Card,Walk-in
+AK-2453,2025-12-20,10:47,Akure City Pharmacy,Oja Oba,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1230,2460,Cash,Walk-in
+AK-2454,2025-12-20,11:15,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Folic Acid Tablets,Supplement,1,300,300,Cash,Walk-in
+AK-2455,2025-12-20,12:03,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,1,1620,1620,POS/Card,Prescription
+AK-2456,2025-12-20,14:07,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Amlodipine 5mg (Tab),Antihypertensive,2,1690,3380,POS/Card,Walk-in
+AK-2457,2025-12-20,14:25,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,2,1720,3440,Cash,Walk-in
+AK-2458,2025-12-20,16:03,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,2,910,1820,Transfer,Prescription
+AK-2459,2025-12-20,16:19,Trust Pharmacy,Arakale,Akure,Ondo,Zinc + Vitamin C,Supplement,2,720,1440,Cash,Walk-in
+AK-2460,2025-12-20,16:34,Trust Pharmacy,Arakale,Akure,Ondo,Condoms (Gold Circle) 3pk,Family Planning,2,280,560,Transfer,Prescription
+AK-2461,2025-12-20,17:07,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,4,1220,4880,Cash,Walk-in
+AK-2462,2025-12-20,17:38,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,ORS Sachet,Rehydration,1,160,160,Cash,Walk-in
+AK-2463,2025-12-21,10:26,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1250,2500,Transfer,Walk-in
+AK-2464,2025-12-21,12:23,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Folic Acid Tablets,Supplement,3,480,1440,Transfer,Walk-in
+AK-2465,2025-12-21,19:03,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,5,600,3000,Transfer,Prescription
+AK-2466,2025-12-22,09:01,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,1,1950,1950,Transfer,Prescription
+AK-2467,2025-12-22,10:48,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Panadol Extra,Analgesic,2,770,1540,Transfer,Insurance (HMO)
+AK-2468,2025-12-22,14:26,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,6,480,2880,Cash,Walk-in
+AK-2469,2025-12-22,16:12,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,920,920,POS/Card,Insurance (HMO)
+AK-2470,2025-12-23,11:14,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,790,790,Cash,Walk-in
+AK-2471,2025-12-23,19:14,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Vitamin C 1000mg,Supplement,1,1400,1400,Cash,Walk-in
+AK-2472,2025-12-23,20:25,MedPlus Pharmacy,Alagbaka,Akure,Ondo,ORS Sachet,Rehydration,4,140,560,Cash,Prescription
+AK-2473,2025-12-24,13:46,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Panadol Extra,Analgesic,4,650,2600,Cash,Walk-in
+AK-2474,2025-12-24,14:23,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,580,1160,Transfer,Walk-in
+AK-2475,2025-12-25,17:10,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,1,2120,2120,Transfer,Prescription
+AK-2476,2025-12-25,18:50,Akure City Pharmacy,Oja Oba,Akure,Ondo,Panadol Extra,Analgesic,1,600,600,POS/Card,Prescription
+AK-2477,2025-12-25,19:24,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,650,650,Transfer,Walk-in
+AK-2478,2025-12-25,19:25,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,Chloroquine Phosphate,Antimalarial,2,520,1040,Transfer,Walk-in
+AK-2479,2025-12-26,10:13,Trust Pharmacy,Arakale,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,420,420,POS/Card,Insurance (HMO)
+AK-2480,2025-12-26,13:52,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,3,710,2130,Cash,Prescription
+AK-2481,2025-12-26,15:30,Ondo State Pharmacy,FUTA Road,Akure,Ondo,Ciprofloxacin 500mg (Tab),Antibiotic,3,2130,6390,Cash,Walk-in
+AK-2482,2025-12-26,15:59,Trust Pharmacy,Arakale,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,3,2040,6120,POS/Card,Prescription
+AK-2483,2025-12-26,16:31,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Ibuprofen 400mg (Tab),Analgesic,1,430,430,Transfer,Prescription
+AK-2484,2025-12-27,13:41,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,2,1480,2960,Cash,Prescription
+AK-2485,2025-12-27,14:41,Akure City Pharmacy,Oja Oba,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,3,700,2100,Cash,Walk-in
+AK-2486,2025-12-27,19:38,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Metformin 500mg (Tab),Antidiabetic,3,1480,4440,Transfer,Prescription
+AK-2487,2025-12-28,13:11,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Piriton (Chlorpheniramine),Antihistamine,1,380,380,Transfer,Walk-in
+AK-2488,2025-12-28,15:31,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Paracetamol 500mg (Tab),Analgesic,1,460,460,Cash,Prescription
+AK-2489,2025-12-28,15:54,MedPlus Pharmacy,Alagbaka,Akure,Ondo,Folic Acid Tablets,Supplement,4,360,1440,Transfer,Prescription
+AK-2490,2025-12-29,09:09,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Emzor Paracetamol Syrup,Analgesic,1,710,710,Cash,Walk-in
+AK-2491,2025-12-29,13:31,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Folic Acid Tablets,Supplement,4,340,1360,Transfer,Prescription
+AK-2492,2025-12-29,17:34,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,1,870,870,Transfer,Walk-in
+AK-2493,2025-12-29,20:41,Trust Pharmacy,Arakale,Akure,Ondo,Folic Acid Tablets,Supplement,3,440,1320,POS/Card,Walk-in
+AK-2494,2025-12-30,11:31,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Cough Syrup (Benylin),Cold & Flu,2,1620,3240,Transfer,Prescription
+AK-2495,2025-12-30,12:02,Divine Grace Pharmacy,Shagari Village,Akure,Ondo,Chloroquine Phosphate,Antimalarial,1,420,420,Cash,Walk-in
+AK-2496,2025-12-30,13:53,GoodHealth Pharmacy,Oyemekun Road,Akure,Ondo,Diclofenac Gel,Topical,3,1280,3840,POS/Card,Insurance (HMO)
+AK-2497,2025-12-31,13:41,Cornerstone Pharmacy,Ijapo Estate,Akure,Ondo,ORS Sachet,Rehydration,2,170,340,Cash,Prescription
+AK-2498,2025-12-31,14:43,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Flagyl (Metronidazole) 400mg,Antibiotic,5,1040,5200,Cash,Walk-in
+AK-2499,2025-12-31,16:23,Fiwasaye Pharmacy,Fiwasaye Road,Akure,Ondo,Artemether/Lumefantrine (Coartem),Antimalarial,1,1970,1970,Transfer,Walk-in

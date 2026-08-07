@@ -164,6 +164,19 @@ const SMART_HINTS = {
 function normalizeHeader(raw) {
   if (raw == null || raw === '') return '';
   return String(raw)
+    // Split camelCase and PascalCase BEFORE lowercasing, while the boundaries
+    // are still visible. Without this, "TotalAmount_NGN" became the single
+    // token "totalamount", which the matcher could only score by containment --
+    // and "totalamount" contains "amount", a synonym of tax, just as readily as
+    // it contains "total". Tax won, so a pharmacy's revenue column was read as
+    // a tax column. Split, it is ["total","amount","ngn"], which matches
+    // revenue's "total amount" on two exact tokens and settles it.
+    //
+    // Two patterns: "aB" for the ordinary boundary, and "ABCd" for an acronym
+    // running into a word, so "NGNTotal" parts as "NGN Total" rather than
+    // "NGNTota l".
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
     .toLowerCase()
     .replace(/[₦$€£¥]/g, '')               // currency symbols
     .replace(/[^a-z0-9\s]/g, ' ')           // punctuation → space
